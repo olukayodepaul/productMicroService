@@ -1,5 +1,6 @@
-#### productMicroService
+## productMicro-Service
 
+### Product features
 ###### product registration
 You can use the following `curl` command to test the product creation API:
 - Product creation. The product is created with the organisation_id to maintain ownership.
@@ -16,6 +17,7 @@ curl -X POST "/api/products" \
     "category_id": 2
 }'
 ```
+<br>
 
 ###### product update
 You can use the following `curl` command to test the product update API:
@@ -33,43 +35,58 @@ curl -X PUT " /api/products/{id}" \
   "category_id": 11
 }'
 ```
+<br>
 
 ###### product deletion
 You can use the following `curl` command to test the product deletion API:
-- Product deletion. The product is created with the organisation_id to maintain ownership.
+- Product is deleted with the organisation_id to maintain ownership.
 - the token `role*` should be `admin` for the claim
 ```bash
 curl -X DELETE " /api/products/{id}" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer <Role-admin>" \
--d '{
-}'
+-H "Authorization: Bearer <Role-admin>" 
 ```
+<br>
 
 ###### get all product
 You can use the following `curl` command to test the product fetch API:
-- Product deletion. The product is created with the organisation_id to maintain ownership.
+- The product is fetch with the organisation_id to maintain ownership.
 - the token `role*` should be `admin` for the claim
 - get all the product associated with the organisation_id
 ```bash
 curl -X GET " /api/products" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer <Role-admin>" \
--d '{
+-H "Authorization: Bearer <Role-admin>" 
 ```
+<br>
 
 ###### get product by id
 You can use the following `curl` command to test all the individual product fetch API:
-- Product deletion. The product is created with the organisation_id to maintain ownership.
+- The individual products are fetch with the organisation_id to maintain ownership.
 - the token `role*` should be `admin` for the claim
-- get all the product associated with the organisation_id
+- get individual product associated with the organisation_id
 ```bash
 curl -X GET " /api/products/{id}" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer <Role-admin>" \
--d '{
-  "id" 1,
-  "organisation_id": 1,
+-H "Authorization: Bearer <Role-admin>" 
 ```
 
+<br><br>
+
+### Product Media features
+###### add Media data. image or video with primary and secondary listing
+You can use the following `curl` command to test all the individual product fetch API:
+- Product Media creation. The product media is created with the organisation_id to maintain ownership.
+- the token `role*` should be `admin` for the claim
+```bash
+curl -X POST "/api/product-media" \
+-H "Content-Type: multipart/form-data" \
+-F 'data={"product_id": 1}' \
+-F "file=@/path/to/your/image.jpg"
+```
+
+###### Update file media
+
+
+###### Update primary listing
 

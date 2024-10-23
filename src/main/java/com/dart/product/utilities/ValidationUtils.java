@@ -27,11 +27,13 @@ public class ValidationUtils {
         validateField(token, "Access Token");
     }
 
+    public void productIdValidation(Integer productId) {
+        validateField(productId, "Product Id");
+    }
+
     public void IdValidation(String token) {
         validateField(token, "Product ID");
     }
-
-
 
     public void sanitizeEmail(String email) {
         if (!emailValidator.isValid(email)) {

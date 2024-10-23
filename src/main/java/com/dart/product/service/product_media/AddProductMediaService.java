@@ -3,6 +3,7 @@ package com.dart.product.service.product_media;
 
 import com.dart.product.entity.product_media_model.*;
 import com.dart.product.mapper.ProductMappers;
+import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -11,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.UUID;
+
 
 @Service
 public class AddProductMediaService {
@@ -23,7 +24,8 @@ public class AddProductMediaService {
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
     private final SaveAndUpdateRecord saveAndUpdateRecord;
-    protected final RedisProductCacheRepo redisProductCacheRepo;
+    private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ProductMediaRepo productMediaRepo;
 
     public AddProductMediaService(
             UtilitiesManager utilitiesManager,
@@ -32,7 +34,8 @@ public class AddProductMediaService {
             MediaService mediaService,
             ProductMappers productMappers,
             SaveAndUpdateRecord saveAndUpdateRecord,
-            RedisProductCacheRepo redisProductCacheRepo
+            RedisProductCacheRepo redisProductCacheRepo,
+            ProductMediaRepo productMediaRepo
     ) {
         this.utilitiesManager = utilitiesManager;
         this.validationUtils = validationUtils;
@@ -41,6 +44,7 @@ public class AddProductMediaService {
         this.productMappers = productMappers;
         this.saveAndUpdateRecord = saveAndUpdateRecord;
         this.redisProductCacheRepo = redisProductCacheRepo;
+        this.productMediaRepo = productMediaRepo;
     }
 
     public ResponseEntity<ProductMediaResModel> addProductMedia(MultipartFile file, String data, String token) {
@@ -55,12 +59,21 @@ public class AddProductMediaService {
 
             ObjectMapper objectMapper = new ObjectMapper();
             MediaUploadReqModel mediaData = objectMapper.readValue(data, MediaUploadReqModel.class);
+
+            //delete the product if failed
             MediaUploadResponse mediaFile = mediaService.uploadFile(file);
 
-            MediaDbModel mediaRecord = productMappers.toProductMedia(mediaData.getProductId(), organisationId, mediaFile.getMediaType(), mediaFile.getFileName(), true);
+            boolean confirmPrimaryListing = productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimary(
+                    mediaData.getProductId(),
+                    organisationId,
+                    mediaFile.getMediaType(),
+                    true
+            ).isPresent();
+
+            MediaDbModel mediaRecord = productMappers.toProductMedia(mediaData.getProductId(), organisationId, mediaFile.getMediaType(), mediaFile.getFileName(), !confirmPrimaryListing);
             SaveAndUpdateMediaResponse saveResult = saveAndUpdateRecord.saveProductMedia(mediaRecord);
 
-            if(!saveResult.getStatus()){
+            if(!saveResult.getStatus()) {
                 throw new CustomRuntimeException(
                         new ErrorHandler(false, saveResult.getError(), saveResult.getError()),
                         HttpStatus.BAD_REQUEST
@@ -83,6 +96,8 @@ public class AddProductMediaService {
             throw new RuntimeException(e);
         }
     }
+
+    //set initial product as a primary
 
     private void validateRequest(String token,  String uuid, String role) {
 //        validationUtils.userRoleValidateRequest(role);

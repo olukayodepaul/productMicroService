@@ -33,7 +33,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final Set<String> OPEN_ENDPOINTS = new HashSet<>();
 
     static {
-        OPEN_ENDPOINTS.add("/api/test");
+        OPEN_ENDPOINTS.add("/images/**");
     }
 
     private static final int UNAUTHORIZED_STATUS = HttpServletResponse.SC_UNAUTHORIZED;
@@ -43,6 +43,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+
+        // Skip authentication for open endpoints
+        if (OPEN_ENDPOINTS.contains(request.getRequestURI())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
 
         String authHeader = request.getHeader("Authorization");
 

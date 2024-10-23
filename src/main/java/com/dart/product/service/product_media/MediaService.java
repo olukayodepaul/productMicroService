@@ -3,6 +3,11 @@ package com.dart.product.service.product_media;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.dart.product.entity.product_media_model.MediaUploadResponse;
+import com.dart.product.utilities.AppConfig;
+import com.dart.product.utilities.CustomRuntimeException;
+import com.dart.product.utilities.ErrorHandler;
+import com.dart.product.utilities.UtilitiesManager;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +25,12 @@ import java.util.UUID;
 @Service
 public class MediaService {
 
+    private final UtilitiesManager utilitiesManager;
+
+    public MediaService(UtilitiesManager utilitiesManager) {
+        this.utilitiesManager = utilitiesManager;
+    }
+
     // Directory where files will be saved
     private final String storageDirectory = "/Users/upload";
 
@@ -27,6 +38,7 @@ public class MediaService {
     public MediaUploadResponse uploadFile(MultipartFile file) throws IOException {
         // Ensure the storage directory exists
         Path storagePath = Paths.get(storageDirectory);
+
         if (!Files.exists(storagePath)) {
             Files.createDirectories(storagePath);
         }
@@ -47,11 +59,11 @@ public class MediaService {
 
         // Check the media type
         String mediaType;
-        if (isImageFile(extension)) {
+        if (utilitiesManager.isImageFile(extension)) {
             // Handle image file upload and resizing
             uploadAndResizeImage(file, filePath);
             mediaType = "image"; // Return media type without extension
-        } else if (isVideoFile(extension)) {
+        } else if (utilitiesManager.isVideoFile(extension)) {
             // Handle video file upload
             uploadVideo(file, filePath);
             mediaType = "video"; // Return media type without extension
@@ -63,21 +75,7 @@ public class MediaService {
         return new MediaUploadResponse(extension, fileName, mediaType);
     }
 
-    private boolean isImageFile(String extension) {
-        return extension.equalsIgnoreCase("jpg") ||
-                extension.equalsIgnoreCase("jpeg") ||
-                extension.equalsIgnoreCase("png") ||
-                extension.equalsIgnoreCase("gif") ||
-                extension.equalsIgnoreCase("webp"); // Added WebP format
-    }
 
-    private boolean isVideoFile(String extension) {
-        return extension.equalsIgnoreCase("mp4") ||
-                extension.equalsIgnoreCase("mov") ||
-                extension.equalsIgnoreCase("avi") ||
-                extension.equalsIgnoreCase("mkv") ||
-                extension.equalsIgnoreCase("webm"); // Added WebM format
-    }
 
     private void uploadAndResizeImage(MultipartFile file, Path filePath) throws IOException {
         // Save the file temporarily
@@ -143,4 +141,29 @@ public class MediaService {
                 .sign(Algorithm.HMAC256(secret));
         return token;
     }
+
+
+    // Method to delete an image from the file system
+    public boolean deleteImage(String fileName) {
+        // Define the full path of the file
+        Path filePath = Paths.get(storageDirectory, fileName);
+        System.out.println("images deleted "+fileName);
+
+        try {
+            // Check if the file exists before attempting to delete
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                System.out.println("File deleted successfully: " + fileName);
+                return true;
+            } else {
+                System.out.println("File not found: " + fileName);
+                return false;
+            }
+        } catch (IOException e) {
+            // Log or handle the exception properly
+            System.err.println("Error deleting file: " + e.getMessage());
+            return false;
+        }
+    }
+
 }

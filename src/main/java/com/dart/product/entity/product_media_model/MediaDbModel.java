@@ -37,5 +37,4 @@ public class MediaDbModel {
     private LocalDateTime updatedAt;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
 }

@@ -1,8 +1,6 @@
 package com.dart.product.mapper;
 
-import com.dart.product.entity.product_media_model.MediaDbModel;
-import com.dart.product.entity.product_media_model.ProductMediaCacheModel;
-import com.dart.product.entity.product_media_model.ProductMediaResModel;
+import com.dart.product.entity.product_media_model.*;
 import com.dart.product.entity.product_model.*;
 import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.stereotype.Component;
@@ -128,6 +126,7 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
+
     //here is for media mapper.
     public MediaDbModel toProductMedia(
             Integer productId,
@@ -148,6 +147,52 @@ public class ProductMappers {
                 .build();
     }
 
+    public MediaDbModel toUpdateProductMedia(
+            MediaDbModel mediaData,
+            MediaUploadResponse mediaUploadResponse,
+            boolean isPrimary
+    ) {
+        return MediaDbModel.builder()
+                .id(mediaData.getId())
+                .productId(mediaData.getProductId())
+                .organisationId(mediaData.getOrganisationId())
+                .mediaType(mediaUploadResponse.getMediaType())
+                .mediaUrl(mediaUploadResponse.getFileName())
+                .isPrimary(isPrimary)
+                .isActive(mediaData.getIsActive())
+                .updatedAt(LocalDateTime.now())
+                .createdAt(mediaData.getCreatedAt())
+                .build();
+    }
+
+    public MediaDbModel productMediaBuilder(MediaDbModel productMedia, String media) {
+        return MediaDbModel.builder()
+                .id(productMedia.getId())
+                .productId(productMedia.getProductId())
+                .organisationId(productMedia.getOrganisationId())
+                .mediaType(productMedia.getMediaType())
+                .mediaUrl(media)
+                .isPrimary(productMedia.getIsPrimary())
+                .isActive(productMedia.getIsActive())
+                .updatedAt(LocalDateTime.now())
+                .createdAt(productMedia.getCreatedAt())
+                .build();
+    }
+
+    public MediaDbModel primaryProductBuilder(MediaDbModel productMedia, boolean primary) {
+        return MediaDbModel.builder()
+                .id(productMedia.getId())
+                .productId(productMedia.getProductId())
+                .organisationId(productMedia.getOrganisationId())
+                .mediaType(productMedia.getMediaType())
+                .mediaUrl(productMedia.getMediaUrl())
+                .isPrimary(primary)
+                .isActive(productMedia.getIsActive())
+                .updatedAt(LocalDateTime.now())
+                .createdAt(productMedia.getCreatedAt())
+                .build();
+    }
+
     public ProductMediaCacheModel toCacheProductMedia(MediaDbModel productMedia) {
         return ProductMediaCacheModel.builder()
                 .id(productMedia.getId())
@@ -162,6 +207,7 @@ public class ProductMappers {
                 .build();
     }
 
+
     public ProductMediaResModel.ProductMedia toProductMediaResponse(MediaDbModel productMedia) {
         return ProductMediaResModel.ProductMedia.builder()
                 .id(productMedia.getId())
@@ -175,6 +221,72 @@ public class ProductMappers {
                 .build();
     }
 
+    public List<GetAllMediaModel.ImageMedia> filterAndMapMediaImage(List<MediaDbModel> mediaList, String mediaType) {
+        return mediaList.stream()
+                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
+                .map(media -> GetAllMediaModel.ImageMedia.builder()
+                        .id(media.getId())
+                        .is_primary(media.getIsPrimary())
+                        .media_url(media.getMediaUrl())
+                        .updated_at(media.getUpdatedAt())
+                        .created_at(media.getCreatedAt())
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
+    public List<GetAllMediaModel.VideoMedia> filterAndMapMediaVideo(List<MediaDbModel> mediaList, String mediaType) {
+        return mediaList.stream()
+                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
+                .map(media -> GetAllMediaModel.VideoMedia.builder()
+                        .id(media.getId())
+                        .is_primary(media.getIsPrimary())
+                        .media_url(media.getMediaUrl())
+                        .updated_at(media.getUpdatedAt())
+                        .created_at(media.getCreatedAt())
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
+    public List<GetAllMediaModel.ImageMedia> filterAndMapCacheMediaImage(List<ProductMediaCacheModel> mediaList, String mediaType) {
+        return mediaList.stream()
+                .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
+                .map(media -> GetAllMediaModel.ImageMedia.builder()
+                        .id(media.getId())
+                        .is_primary(media.getIs_primary())
+                        .media_url(media.getMedia_url())
+                        .updated_at(media.getUpdated_at())
+                        .created_at(media.getCreated_at())
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
+    public List<GetAllMediaModel.VideoMedia> filterAndMapCacheMediaVideo(List<ProductMediaCacheModel> mediaList, String mediaType) {
+        return mediaList.stream()
+                .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
+                .map(media -> GetAllMediaModel.VideoMedia.builder()
+                        .id(media.getId())
+                        .is_primary(media.getIs_primary())
+                        .media_url(media.getMedia_url())
+                        .updated_at(media.getUpdated_at())
+                        .created_at(media.getCreated_at())
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
+    public List<ProductMediaCacheModel> mapCacheProductMedia(List<MediaDbModel> productMedia) {
+        return productMedia.stream()
+                .map(media -> ProductMediaCacheModel.builder()
+                        .id(media.getId())
+                        .product_id(media.getProductId())
+                        .organisation_id(media.getOrganisationId())
+                        .media_type(media.getMediaType())
+                        .media_url(media.getMediaUrl())
+                        .is_primary(media.getIsPrimary())
+                        .isActive(media.getIsActive())
+                        .updated_at(media.getUpdatedAt())
+                        .created_at(media.getCreatedAt())
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
 }
-
-

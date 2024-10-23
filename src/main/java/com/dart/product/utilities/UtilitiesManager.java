@@ -98,4 +98,33 @@ public class UtilitiesManager {
         return LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+    public boolean isImageFile(String extension) {
+        return extension.equalsIgnoreCase("jpg") ||
+                extension.equalsIgnoreCase("jpeg") ||
+                extension.equalsIgnoreCase("png") ||
+                extension.equalsIgnoreCase("gif") ||
+                extension.equalsIgnoreCase("webp"); // Added WebP format
+    }
+
+    public boolean isVideoFile(String extension) {
+        return extension.equalsIgnoreCase("mp4") ||
+                extension.equalsIgnoreCase("mov") ||
+                extension.equalsIgnoreCase("avi") ||
+                extension.equalsIgnoreCase("mkv") ||
+                extension.equalsIgnoreCase("webm"); // Added WebM format
+    }
+
+    public  String getFileExtension(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return "";
+        }
+
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+            return fileName.substring(dotIndex + 1).toLowerCase();
+        } else {
+            return "";
+        }
+    }
+
 }

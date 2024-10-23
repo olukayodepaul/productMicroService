@@ -20,7 +20,6 @@ public class AllProductResModel {
     private String message;
     private List<Product> product;
 
-
     @Builder
     @Data
     @AllArgsConstructor

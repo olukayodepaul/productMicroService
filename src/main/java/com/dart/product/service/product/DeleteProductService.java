@@ -55,7 +55,7 @@ public class DeleteProductService {
 
         validateRequest(token, plainUUID, roles);
 
-        ProductDbModel isProductExisting = isProductExisting(id, organisationId);
+        ProductDbModel isProductExisting = isProductExisting(id, organisationId); //not available, throw error
 
         //check if product is deleted
         if(!isProductExisting.getIsActive()){
@@ -85,6 +85,7 @@ public class DeleteProductService {
         //todo: if grpc failed, then reroute through kafka
 
         return new ResponseEntity<>(new ResponseHandler(true, AppConfig.DELETE_PRODUCT_SUCCESS_RESPONSE), HttpStatus.OK);
+
     }
 
     private void validateRequest(String token,  String uuid, String role) {

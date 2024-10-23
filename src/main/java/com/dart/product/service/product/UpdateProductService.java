@@ -58,7 +58,7 @@ public class UpdateProductService {
         validateRequest(token, reqModel, plainUUID, roles, id.toString());
 
 
-        ProductDbModel isProductExisting = isProductExisting(id, organisationId);
+        ProductDbModel isProductExisting = productExisting(id, organisationId);
 
         SaveAndUpdateResponse updatedResult = saveAndUpdateRecord.updateProductRecord(
                 mappers.toProductBuilder(isProductExisting, reqModel)
@@ -96,7 +96,7 @@ public class UpdateProductService {
         validationUtils.bruteForceProtection(AppConfig.UPDATE_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private ProductDbModel isProductExisting(Integer id, UUID organisationId) {
+    private ProductDbModel productExisting(Integer id, UUID organisationId) {
         return productsRepo.findByIdAndOrganisationIdAndIsActive(id, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, AppConfig.UPDATE_PRODUCT_ERROR_TAG, AppConfig.UPDATE_PRODUCT_ERROR_RESPONSE),

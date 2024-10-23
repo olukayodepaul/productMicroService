@@ -1,6 +1,8 @@
 ##image upload permission
 sudo chmod 777 /Users/upload
 
+https://www.youtube.com/watch?v=oH7gllwI80I
+
 
 ChatGPT said:
 ChatGPT

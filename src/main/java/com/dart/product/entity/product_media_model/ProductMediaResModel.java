@@ -32,4 +32,5 @@ public class ProductMediaResModel {
         private LocalDateTime updated_at;
         private LocalDateTime created_at;
     }
+
 }

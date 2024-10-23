@@ -1,5 +1,6 @@
 package com.dart.product.repository;
 
+import com.dart.product.entity.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.entity.product_media_model.ProductMediaCacheModel;
 import com.dart.product.entity.product_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_model.FetchProductsResModel;
@@ -150,6 +151,7 @@ public class RedisProductCacheRepo {
         try {
             // Sub-key for identifying the user by their email
             String subKey = productMedia.getId().toString();
+            String defineProductId =  PRODUCT_MEDIA_KEY+"_"+productMedia.getOrganisation_id()+"_"+productMedia.getProduct_id();
 
             // Save or update user details in Redis hash
             redisTemplate.opsForHash().put(PRODUCT_MEDIA_KEY+"_"+productMedia.getOrganisation_id(), subKey, productMedia);
@@ -159,6 +161,42 @@ public class RedisProductCacheRepo {
         } catch (Exception e) {
             // Log the error and return failure response
             logger.error("RedisCacheRepo::saveUpdateProductMedia  {}", e.getMessage());
+            return SAVE_UPDATE_FAILED;
+        }
+    }
+
+    public FetchAllProductMediaModel getAllProductMedia(String organisationId, String productId) {
+        try {
+
+            String key = PRODUCT_MEDIA_KEY+"_"+organisationId+"_"+productId;
+            Map<Object, Object> productMediaMap = redisTemplate.opsForHash().entries(key);
+            if (!productMediaMap.isEmpty()) {
+                List<ProductMediaCacheModel> productMedia = productMediaMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductMediaCacheModel.class))
+                        .collect(Collectors.toList());
+                return new FetchAllProductMediaModel(true, "Addresses fetched successfully", productMedia);
+            }
+            return new FetchAllProductMediaModel(false, "No addresses found", Collections.emptyList());
+
+        } catch (Exception e) {
+            logger.error("Error fetching addresses for getAllProductMedia {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+    public Boolean saveAllProductMedia(List<ProductMediaCacheModel> productMedia) {
+        try {
+            // Sub-key for identifying the user by their email
+            for(ProductMediaCacheModel mediaProduct: productMedia){
+                String subKey = mediaProduct.getId().toString();
+                String defineProductId =  PRODUCT_MEDIA_KEY+"_"+mediaProduct.getOrganisation_id()+"_"+mediaProduct.getProduct_id();
+                redisTemplate.opsForHash().put(defineProductId, subKey, productMedia);
+            }
+            // Return success
+            return SAVE_UPDATE_SUCCESS;
+        } catch (Exception e) {
+            // Log the error and return failure response
+            logger.error("RedisCacheRepo::saveAllUpdateProductMedia  {}", e.getMessage());
             return SAVE_UPDATE_FAILED;
         }
     }
