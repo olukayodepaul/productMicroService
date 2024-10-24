@@ -31,6 +31,10 @@ public class ValidationUtils {
         validateField(mediaType, "Media Type");
     }
 
+    public void mediaIdValidation(Integer mediaId) {
+        validateField(mediaId, "Media Id");
+    }
+
     public void productIdValidation(Integer productId) {
         validateField(productId, "Product Id");
     }

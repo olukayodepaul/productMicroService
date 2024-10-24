@@ -1,6 +1,7 @@
 package com.dart.product.repository;
 
 import com.dart.product.entity.product_media_model.FetchAllProductMediaModel;
+import com.dart.product.entity.product_media_model.FetchIndividualMediaProductModel;
 import com.dart.product.entity.product_media_model.ProductMediaCacheModel;
 import com.dart.product.entity.product_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_model.FetchProductsResModel;
@@ -153,20 +154,13 @@ public class RedisProductCacheRepo {
     }
 
     //The start of product media catch
-
-    /**
-     * this is to save data into redis
-     * @param productMedia
-     * @return
-     */
     public Boolean saveUpdateProductMedia(ProductMediaCacheModel productMedia) {
         try {
             // Sub-key for identifying the user by their email
             String subKey = productMedia.getId().toString();
-            String defineProductId =  PRODUCT_MEDIA_KEY+"_"+productMedia.getOrganisation_id()+"_"+productMedia.getProduct_id();
-
+            String primaryKey =  PRODUCT_MEDIA_KEY +"_"+ productMedia.getOrganisation_id() +"_"+ productMedia.getProduct_id();
             // Save or update user details in Redis hash
-            redisTemplate.opsForHash().put(PRODUCT_MEDIA_KEY+"_"+productMedia.getOrganisation_id(), subKey, productMedia);
+            redisTemplate.opsForHash().put(primaryKey, subKey, productMedia);
 
             // Return success
             return SAVE_UPDATE_SUCCESS;
@@ -177,18 +171,14 @@ public class RedisProductCacheRepo {
         }
     }
 
-    /**
-     *
-     * @param productMedia
-     * @return
-     */
+
     public Boolean saveAllProductMedia(List<ProductMediaCacheModel> productMedia) {
         try {
             for(ProductMediaCacheModel mediaProduct: productMedia) {
                 String subKey = mediaProduct.getId().toString();  // Unique sub-key for each media product
-                String defineProductId = PRODUCT_MEDIA_KEY + "_" + mediaProduct.getOrganisation_id() + "_" + mediaProduct.getProduct_id();
+                String primaryKey = PRODUCT_MEDIA_KEY + "_" + mediaProduct.getOrganisation_id() + "_" + mediaProduct.getProduct_id();
                 // Save each ProductMediaCacheModel individually
-                redisTemplate.opsForHash().put(defineProductId, subKey, mediaProduct);
+                redisTemplate.opsForHash().put(primaryKey, subKey, mediaProduct);
             }
             // Return success
             return SAVE_UPDATE_SUCCESS;
@@ -199,13 +189,8 @@ public class RedisProductCacheRepo {
         }
     }
 
-    /**
-     *
-     * @param organisationId
-     * @param productId
-     * @return
-     */
-    public FetchAllProductMediaModel getAllProductMedia(String organisationId, String productId) {
+
+    public FetchAllProductMediaModel findAllProductMedia(String organisationId, String productId) {
         try {
             String key = PRODUCT_MEDIA_KEY + "_" + organisationId + "_" + productId;
             Map<Object, Object> productMediaMap = redisTemplate.opsForHash().entries(key);
@@ -223,6 +208,25 @@ public class RedisProductCacheRepo {
         } catch (Exception e) {
             logger.error("Error fetching media for getAllProductMedia {}: {}", organisationId, e.getMessage());
             return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+    public FetchIndividualMediaProductModel findOneProductMedia(String organisationId, Integer productId, Integer mediaId) {
+        try {
+
+            String subKey = mediaId.toString();
+            String primaryKey =  PRODUCT_MEDIA_KEY +"_"+ organisationId +"_"+ productId;
+            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
+
+            if (cachedObject == null) {
+                return new FetchIndividualMediaProductModel(false,  "No user found in redis", null);
+            }
+            ProductMediaCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductMediaCacheModel.class);
+            return new FetchIndividualMediaProductModel(true, "", cacheModel);
+
+        } catch (Exception e) {
+            logger.error("RedisCacheService::findOneProductMedia - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
+            return new FetchIndividualMediaProductModel(false, e.getMessage(), new ProductMediaCacheModel());
         }
     }
 

@@ -41,4 +41,11 @@ public interface ProductMediaRepo extends JpaRepository<MediaDbModel, Long> {
             Boolean is_active
     );
 
+    Optional<MediaDbModel> findByProductIdAndOrganisationIdAndIsActiveAndId(
+            Integer product_id,
+            UUID organisation_id,
+            Boolean is_active,
+            Integer id
+    );
+
 }

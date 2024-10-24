@@ -37,7 +37,7 @@ public class GetSpecificProductMediaService {
         UUID organisationId = serviceLocator.getUtilitiesManager().convertStringToUUID(plainUUID);
         validateBruteForceProtection(plainUUID);
 
-        FetchAllProductMediaModel cachedProductMedia = serviceLocator.getRedisProductCacheRepo().getAllProductMedia(organisationId.toString(), productId.toString());
+        FetchAllProductMediaModel cachedProductMedia = serviceLocator.getRedisProductCacheRepo().findAllProductMedia(organisationId.toString(), productId.toString());
 
         if (cachedProductMedia.getStatus()) {
 

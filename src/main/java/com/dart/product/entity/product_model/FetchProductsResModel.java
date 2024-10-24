@@ -2,7 +2,6 @@ package com.dart.product.entity.product_model;
 
 import lombok.*;
 
-import java.util.List;
 
 @Data
 @Builder

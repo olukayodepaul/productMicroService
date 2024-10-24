@@ -317,4 +317,31 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
+    public MediaDbModel mapSingleProductMediaToCache(ProductMediaCacheModel media) {
+        return MediaDbModel.builder()
+                .id(media.getId())
+                .isPrimary(media.getIs_primary())
+                .productId(media.getProduct_id())
+                .mediaType(media.getMedia_type())
+                .isActive(media.getIsActive())
+                .organisationId(media.getOrganisation_id())
+                .mediaUrl(media.getMedia_url())
+                .updatedAt(media.getUpdated_at())
+                .createdAt(media.getCreated_at())
+                .build();
+    }
+
+    public GetIndividualProductMediaModel.ProductMedia filterAndMapSingleProductMedia(MediaDbModel mediaList) {
+       return GetIndividualProductMediaModel.ProductMedia
+               .builder()
+               .id(mediaList.getId())
+               .product_id(mediaList.getProductId())
+               .media_type(mediaList.getMediaType())
+               .is_primary(mediaList.getIsPrimary())
+               .media_url(mediaList.getMediaUrl())
+               .is_active(mediaList.getIsActive())
+               .updated_at(mediaList.getUpdatedAt())
+               .created_at(mediaList.getCreatedAt())
+               .build();
+    }
 }

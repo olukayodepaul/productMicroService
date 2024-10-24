@@ -1,10 +1,7 @@
 package com.dart.product.controller.product;
 
 
-import com.dart.product.entity.product_media_model.GetAllMediaModel;
-import com.dart.product.entity.product_media_model.GetSpecMediaModel;
-import com.dart.product.entity.product_media_model.PrimaryProductResModel;
-import com.dart.product.entity.product_media_model.ProductMediaResModel;
+import com.dart.product.entity.product_media_model.*;
 import com.dart.product.service.product_media.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +19,8 @@ public class ProductMediaController {
     private final DeleteProductMediaService deleteProductMediaService;
     private final FetchProductMediaService fetchProductMediaService;
     private final GetSpecificProductMediaService getSpecificProductMediaService;
+    private final GetIndividualProductMediaService getIndividualProductMediaService;
+
 
     public ProductMediaController(
             AddProductMediaService addProductMediaService,
@@ -29,7 +28,8 @@ public class ProductMediaController {
             UpdatePrimaryProductService updatePrimaryProductService,
             DeleteProductMediaService deleteProductMediaService,
             FetchProductMediaService fetchProductMediaService,
-            GetSpecificProductMediaService getSpecificProductMediaService
+            GetSpecificProductMediaService getSpecificProductMediaService,
+            GetIndividualProductMediaService getIndividualProductMediaService
 
     )
     {
@@ -39,6 +39,8 @@ public class ProductMediaController {
         this.deleteProductMediaService = deleteProductMediaService;
         this.fetchProductMediaService = fetchProductMediaService;
         this.getSpecificProductMediaService = getSpecificProductMediaService;
+        this.getIndividualProductMediaService = getIndividualProductMediaService;
+
     }
 
     @PostMapping("/product-media")
@@ -94,12 +96,12 @@ public class ProductMediaController {
     }
 
     @GetMapping("/product_media/product_id/{product_id}/media_id/{media_id}")
-    public ResponseEntity<GetSpecMediaModel> getProductMediaByMediaId(
+    public ResponseEntity<GetIndividualProductMediaModel> getProductMediaByMediaId(
             @RequestHeader("Authorization") String token,
             @PathVariable("product_id") Integer productId,
-            @PathVariable("media_id") String mediaId
+            @PathVariable("media_id") Integer mediaId
     ){
-        return getSpecificProductMediaService.getProductMediaByMediaType(token, productId, mediaId);
+        return getIndividualProductMediaService.getProductMediaByMediaId(token, productId, mediaId);
     }
 
 
