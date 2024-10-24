@@ -1,5 +1,6 @@
 package com.dart.product.di;
 
+import com.dart.product.repository.ProductSpecificationRepo;
 import com.dart.product.service.product_media.MediaService;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductMediaRepo;
@@ -27,4 +28,9 @@ public interface ServiceLocator {
     RedisProductCacheRepo getRedisProductCacheRepo();
 
     ProductMediaRepo getProductMediaRepo();
+
+    ProductSpecificationRepo getProductSpecificationRepo();
+
+
+
 }

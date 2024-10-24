@@ -2,6 +2,9 @@ package com.dart.product.mapper;
 
 import com.dart.product.entity.product_media_model.*;
 import com.dart.product.entity.product_model.*;
+import com.dart.product.entity.product_specification.AddProductSpecResModel;
+import com.dart.product.entity.product_specification.ProductSpecificationCacheModel;
+import com.dart.product.entity.product_specification.ProductSpecificationDbModel;
 import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.stereotype.Component;
 
@@ -344,4 +347,37 @@ public class ProductMappers {
                .created_at(mediaList.getCreatedAt())
                .build();
     }
+
+    //product Specification
+    public ProductSpecificationDbModel mapProductSpec(AddProductSpecResModel reqBody) {
+        System.out.println(reqBody);
+        return ProductSpecificationDbModel.builder()
+                .productId(reqBody.getProduct_id())
+                .organisationId(reqBody.getOrganisation_id())
+                .length(reqBody.getDimensions().getLength())
+                .width(reqBody.getDimensions().getWidth())
+                .height(reqBody.getDimensions().getHeight())
+                .weight(reqBody.getWeight())
+                .materialDescription(reqBody.getMaterial_description())
+                .certificationDescription(reqBody.getCertification_description())
+                .createdAt(reqBody.getCreated_at())
+                .build();
+    }
+
+    public ProductSpecificationCacheModel mapProductSpecToCache(ProductSpecificationDbModel reqBody) {
+        System.out.println(reqBody);
+        return ProductSpecificationCacheModel.builder()
+                .id(reqBody.getId())
+                .productId(reqBody.getProductId())
+                .organisationId(reqBody.getOrganisationId())
+                .length(reqBody.getLength())
+                .width(reqBody.getWidth())
+                .height(reqBody.getHeight())
+                .weight(reqBody.getWeight())
+                .material_description(reqBody.getMaterialDescription())
+                .certification_description(reqBody.getCertificationDescription())
+                .created_at(reqBody.getCreatedAt())
+                .build();
+    }
+
 }

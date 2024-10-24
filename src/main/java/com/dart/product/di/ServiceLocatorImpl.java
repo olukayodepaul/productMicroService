@@ -2,6 +2,7 @@ package com.dart.product.di;
 
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductMediaRepo;
+import com.dart.product.repository.ProductSpecificationRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.service.product_media.MediaService;
@@ -23,6 +24,8 @@ public class ServiceLocatorImpl implements ServiceLocator {
     private SaveAndUpdateRecord saveAndUpdateRecord;
     private RedisProductCacheRepo redisProductCacheRepo;
     private ProductMediaRepo productMediaRepo;
+    private ProductSpecificationRepo productSpecificationRepo;
+
 
     public ServiceLocatorImpl(
             UtilitiesManager utilitiesManager,
@@ -32,7 +35,9 @@ public class ServiceLocatorImpl implements ServiceLocator {
             ProductMappers productMappers,
             SaveAndUpdateRecord saveAndUpdateRecord,
             RedisProductCacheRepo redisProductCacheRepo,
-            ProductMediaRepo productMediaRepo)
+            ProductMediaRepo productMediaRepo,
+            ProductSpecificationRepo productSpecificationRepo
+    )
     {
         this.utilitiesManager = utilitiesManager;
         this.validationUtils = validationUtils;
@@ -42,6 +47,7 @@ public class ServiceLocatorImpl implements ServiceLocator {
         this.saveAndUpdateRecord = saveAndUpdateRecord;
         this.redisProductCacheRepo = redisProductCacheRepo;
         this.productMediaRepo = productMediaRepo;
+        this.productSpecificationRepo = productSpecificationRepo;
     }
 
     @Override
@@ -82,6 +88,11 @@ public class ServiceLocatorImpl implements ServiceLocator {
     @Override
     public ProductMediaRepo getProductMediaRepo() {
         return productMediaRepo;
+    }
+
+    @Override
+    public ProductSpecificationRepo getProductSpecificationRepo() {
+        return productSpecificationRepo;
     }
 
 }

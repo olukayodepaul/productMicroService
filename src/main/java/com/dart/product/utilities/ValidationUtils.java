@@ -1,6 +1,7 @@
 package com.dart.product.utilities;
 
 import com.dart.product.entity.product_model.ProductReqModel;
+import com.dart.product.entity.product_specification.AddProductSpecResModel;
 import com.dart.product.rate_limit.BruteForceRateLimitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -102,9 +103,19 @@ public class ValidationUtils {
         validateField(request.getCategory_id(), "Product Category");
     }
 
+    public void productSpecValidate(AddProductSpecResModel request) {
+        validateField(request.getProduct_id(), "Product Id");
+        validateField(request.getDimensions().getLength(), "length");
+        validateField(request.getWeight(), "Weight");
+        validateField(request.getDimensions().getHeight(), "Height");
+        validateField(request.getDimensions().getWidth(), "Width");
+        validateField(request.getCertification_description(), "Certification Description");
+        validateField(request.getMaterial_description(), "Material Description");
+    }
+
     //u can add more access role for users
     public void roleValidation(String role) {
-        if(!role.equalsIgnoreCase("sys_admin")){
+        if(!role.equalsIgnoreCase("admin")){
             throw new CustomRuntimeException(new ErrorHandler(false, "Administrative role"," Administrative protected role"), HttpStatus.BAD_REQUEST);
         }
     }
