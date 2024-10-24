@@ -6,6 +6,7 @@ import com.dart.product.entity.product_media_model.ProductMediaCacheModel;
 import com.dart.product.entity.product_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_model.FetchProductsResModel;
 import com.dart.product.entity.product_model.ProductCacheModel;
+import com.dart.product.entity.product_specification.ProductSpecificationCacheModel;
 import com.dart.product.security.FilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class RedisProductCacheRepo {
 
     private static final String PRODUCT_KEY = "product";
     private static final String PRODUCT_MEDIA_KEY = "product_media";
+    private static final String PRODUCT_SPECIFICATION_KEY = "product_specification";
 
 
     //Response
@@ -227,6 +229,25 @@ public class RedisProductCacheRepo {
         } catch (Exception e) {
             logger.error("RedisCacheService::findOneProductMedia - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
             return new FetchIndividualMediaProductModel(false, e.getMessage(), new ProductMediaCacheModel());
+        }
+    }
+
+
+    //save record for product specification
+    public Boolean saveUpdateProductSpec(ProductSpecificationCacheModel productSpec) {
+        try {
+            // Sub-key for identifying the user by their email
+            String subKey = productSpec.getId().toString();
+            String primaryKey =  PRODUCT_SPECIFICATION_KEY +"_"+ productSpec.getOrganisationId() +"_"+ productSpec.getProductId();
+            // Save or update user details in Redis hash
+            redisTemplate.opsForHash().put(primaryKey, subKey, productSpec);
+
+            // Return success
+            return SAVE_UPDATE_SUCCESS;
+        } catch (Exception e) {
+            // Log the error and return failure response
+            logger.error("RedisCacheRepo::saveUpdateProductSpec  {}", e.getMessage());
+            return SAVE_UPDATE_FAILED;
         }
     }
 

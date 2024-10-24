@@ -41,15 +41,17 @@ public class AddProductSpecService {
                 .saveProductSpecification(serviceLocator.getProductMappers().mapProductSpec(reqBody));
 
         validateIfRecordIsSave(saveRecordInDb);
-        serviceLocator.getProductMappers().mapProductSpecToCache(saveRecordInDb.getProductSpec());
 
-        //save in local repo.....
+        boolean cacheRecord = serviceLocator.getRedisProductCacheRepo()
+                .saveUpdateProductSpec(serviceLocator.getProductMappers().mapProductSpecToCache(saveRecordInDb.getProductSpec()));
+
+        validateIfRecordIsCache(cacheRecord);
 
         return null;
     }
 
-    private void validateIfRecordIsSave(SaveAndUpdateProductSpecResponse isSave){
-        if(!isSave.getStatus()){
+    private void validateIfRecordIsSave(SaveAndUpdateProductSpecResponse isSave) {
+        if(!isSave.getStatus()) {
             throw new CustomRuntimeException(
                     new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
                     HttpStatus.BAD_REQUEST
@@ -57,7 +59,13 @@ public class AddProductSpecService {
         }
     }
 
-    private void validateRequestBody(AddProductSpecResModel reqBody){
+    private void validateIfRecordIsCache(boolean isRecord){
+        if(!isRecord){
+            //send through kafka
+        }
+    }
+
+    private void validateRequestBody(AddProductSpecResModel reqBody) {
         serviceLocator.getValidationUtils().productSpecValidate(reqBody);
     }
 
