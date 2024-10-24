@@ -39,7 +39,7 @@ public class FetchProductMediaService {
         // Fetch from the cache
         FetchAllProductMediaModel cachedProductMedia = serviceLocator.getRedisProductCacheRepo().getAllProductMedia(organisationId.toString(), productId.toString());
 
-        if (cachedProductMedia.getStatus() && !cachedProductMedia.getProductMedia().isEmpty()) {
+        if (cachedProductMedia.getStatus()) {
             System.out.println(1);
             List<GetAllMediaModel.ImageMedia> imageMediaList = serviceLocator.getProductMappers().filterAndMapCacheMediaImage(cachedProductMedia.getProductMedia(), IMAGE_MEDIA_TYPE);
             List<GetAllMediaModel.VideoMedia> videoMediaList = serviceLocator.getProductMappers().filterAndMapCacheMediaVideo(cachedProductMedia.getProductMedia(), VIDEO_MEDIA_TYPE);
@@ -48,7 +48,7 @@ public class FetchProductMediaService {
             System.out.println(2);
             List<MediaDbModel> productMediaFromDb = findMediaByProductIdAndOrganisationId(productId, organisationId);
             validateIfProductMediaExists(productMediaFromDb);
-//            serviceLocator.getRedisProductCacheRepo().saveAllProductMedia(serviceLocator.getProductMappers().mapCacheProductMedia(productMediaFromDb));
+            serviceLocator.getRedisProductCacheRepo().saveAllProductMedia(serviceLocator.getProductMappers().mapCacheProductMedia(productMediaFromDb));
             List<GetAllMediaModel.ImageMedia> imageMediaList = serviceLocator.getProductMappers().filterAndMapMediaImage(productMediaFromDb, IMAGE_MEDIA_TYPE);
             List<GetAllMediaModel.VideoMedia> videoMediaList = serviceLocator.getProductMappers().filterAndMapMediaVideo(productMediaFromDb, VIDEO_MEDIA_TYPE);
             return buildResponse(imageMediaList, videoMediaList, productId);

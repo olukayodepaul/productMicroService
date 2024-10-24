@@ -133,6 +133,12 @@ public class RedisProductCacheRepo {
         }
     }
 
+    /**
+     *
+     * @param productModels
+     * @param organisationId
+     * @return
+     */
     public Boolean saveAllProducts(List<ProductCacheModel> productModels,String organisationId) {
         try {
             for (ProductCacheModel products : productModels) {
@@ -146,7 +152,13 @@ public class RedisProductCacheRepo {
         }
     }
 
-    //save product media
+    //The start of product media catch
+
+    /**
+     * this is to save data into redis
+     * @param productMedia
+     * @return
+     */
     public Boolean saveUpdateProductMedia(ProductMediaCacheModel productMedia) {
         try {
             // Sub-key for identifying the user by their email
@@ -165,39 +177,52 @@ public class RedisProductCacheRepo {
         }
     }
 
-    public FetchAllProductMediaModel getAllProductMedia(String organisationId, String productId) {
-        try {
-
-            String key = PRODUCT_MEDIA_KEY+"_"+organisationId+"_"+productId;
-            Map<Object, Object> productMediaMap = redisTemplate.opsForHash().entries(key);
-            if (!productMediaMap.isEmpty()) {
-                List<ProductMediaCacheModel> productMedia = productMediaMap.values().stream()
-                        .map(value -> objectMapper.convertValue(value, ProductMediaCacheModel.class))
-                        .collect(Collectors.toList());
-                return new FetchAllProductMediaModel(true, "Addresses fetched successfully", productMedia);
-            }
-            return new FetchAllProductMediaModel(false, "No addresses found", Collections.emptyList());
-
-        } catch (Exception e) {
-            logger.error("Error fetching addresses for getAllProductMedia {}: {}", organisationId, e.getMessage());
-            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
-        }
-    }
-
+    /**
+     *
+     * @param productMedia
+     * @return
+     */
     public Boolean saveAllProductMedia(List<ProductMediaCacheModel> productMedia) {
         try {
-            // Sub-key for identifying the user by their email
-            for(ProductMediaCacheModel mediaProduct: productMedia){
-                String subKey = mediaProduct.getId().toString();
-                String defineProductId =  PRODUCT_MEDIA_KEY+"_"+mediaProduct.getOrganisation_id()+"_"+mediaProduct.getProduct_id();
-                redisTemplate.opsForHash().put(defineProductId, subKey, productMedia);
+            for(ProductMediaCacheModel mediaProduct: productMedia) {
+                String subKey = mediaProduct.getId().toString();  // Unique sub-key for each media product
+                String defineProductId = PRODUCT_MEDIA_KEY + "_" + mediaProduct.getOrganisation_id() + "_" + mediaProduct.getProduct_id();
+                // Save each ProductMediaCacheModel individually
+                redisTemplate.opsForHash().put(defineProductId, subKey, mediaProduct);
             }
             // Return success
             return SAVE_UPDATE_SUCCESS;
         } catch (Exception e) {
             // Log the error and return failure response
-            logger.error("RedisCacheRepo::saveAllUpdateProductMedia  {}", e.getMessage());
+            logger.error("RedisCacheRepo::saveAllProductMedia  {}", e.getMessage());
             return SAVE_UPDATE_FAILED;
+        }
+    }
+
+    /**
+     *
+     * @param organisationId
+     * @param productId
+     * @return
+     */
+    public FetchAllProductMediaModel getAllProductMedia(String organisationId, String productId) {
+        try {
+            String key = PRODUCT_MEDIA_KEY + "_" + organisationId + "_" + productId;
+            Map<Object, Object> productMediaMap = redisTemplate.opsForHash().entries(key);
+
+            System.out.println(productMediaMap);
+
+            if (!productMediaMap.isEmpty()) {
+                List<ProductMediaCacheModel> productMedia = productMediaMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductMediaCacheModel.class))  // Convert each value to ProductMediaCacheModel
+                        .collect(Collectors.toList());
+                return new FetchAllProductMediaModel(true, "Media fetched successfully", productMedia);
+            }
+            return new FetchAllProductMediaModel(false, "No media found", Collections.emptyList());
+
+        } catch (Exception e) {
+            logger.error("Error fetching media for getAllProductMedia {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
         }
     }
 

@@ -207,7 +207,6 @@ public class ProductMappers {
                 .build();
     }
 
-
     public ProductMediaResModel.ProductMedia toProductMediaResponse(MediaDbModel productMedia) {
         return ProductMediaResModel.ProductMedia.builder()
                 .id(productMedia.getId())
@@ -287,6 +286,35 @@ public class ProductMappers {
                         .created_at(media.getCreatedAt())
                         .build()
                 ).collect(Collectors.toList());
+    }
+
+    public List<GetSpecMediaModel.Media> filterAndMapMedia(List<MediaDbModel> mediaList, String mediaType) {
+        return mediaList.stream()
+                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
+                .map(media -> GetSpecMediaModel.Media.builder()
+                        .id(media.getId())
+                        .is_primary(media.getIsPrimary())
+                        .media_url(media.getMediaUrl())
+                        .updated_at(media.getUpdatedAt())
+                        .created_at(media.getCreatedAt())
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
+    public List<MediaDbModel> mapProductMedia(List<ProductMediaCacheModel> productMedia) {
+        return productMedia.stream().map(media-> MediaDbModel
+                .builder()
+                .id(media.getId())
+                .isPrimary(media.getIs_primary())
+                .productId(media.getProduct_id())
+                .mediaType(media.getMedia_type())
+                .isActive(media.getIsActive())
+                .organisationId(media.getOrganisation_id())
+                .mediaUrl(media.getMedia_url())
+                .updatedAt(media.getUpdated_at())
+                .createdAt(media.getCreated_at())
+                .build()
+        ).collect(Collectors.toList());
     }
 
 }

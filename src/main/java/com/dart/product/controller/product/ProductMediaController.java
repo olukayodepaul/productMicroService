@@ -2,6 +2,7 @@ package com.dart.product.controller.product;
 
 
 import com.dart.product.entity.product_media_model.GetAllMediaModel;
+import com.dart.product.entity.product_media_model.GetSpecMediaModel;
 import com.dart.product.entity.product_media_model.PrimaryProductResModel;
 import com.dart.product.entity.product_media_model.ProductMediaResModel;
 import com.dart.product.service.product_media.*;
@@ -20,13 +21,16 @@ public class ProductMediaController {
     private final UpdatePrimaryProductService updatePrimaryProductService;
     private final DeleteProductMediaService deleteProductMediaService;
     private final FetchProductMediaService fetchProductMediaService;
+    private final GetSpecificProductMediaService getSpecificProductMediaService;
 
     public ProductMediaController(
             AddProductMediaService addProductMediaService,
             UpdateProductMediaService updateProductMediaService,
             UpdatePrimaryProductService updatePrimaryProductService,
             DeleteProductMediaService deleteProductMediaService,
-            FetchProductMediaService fetchProductMediaService
+            FetchProductMediaService fetchProductMediaService,
+            GetSpecificProductMediaService getSpecificProductMediaService
+
     )
     {
         this.addProductMediaService = addProductMediaService;
@@ -34,6 +38,7 @@ public class ProductMediaController {
         this.updatePrimaryProductService = updatePrimaryProductService;
         this.deleteProductMediaService = deleteProductMediaService;
         this.fetchProductMediaService = fetchProductMediaService;
+        this.getSpecificProductMediaService = getSpecificProductMediaService;
     }
 
     @PostMapping("/product-media")
@@ -77,6 +82,24 @@ public class ProductMediaController {
             @PathVariable("product_id") Integer productId
     ){
         return fetchProductMediaService.getProductMedia(token, productId);
+    }
+
+    @GetMapping("/product_media/product_id/{product_id}/media_type/{media_type}")
+    public ResponseEntity<GetSpecMediaModel> getProductMediaByMediaType(
+            @RequestHeader("Authorization") String token,
+            @PathVariable("product_id") Integer productId,
+            @PathVariable("media_type") String mediaType
+    ){
+        return getSpecificProductMediaService.getProductMediaByMediaType(token, productId, mediaType);
+    }
+
+    @GetMapping("/product_media/product_id/{product_id}/media_id/{media_id}")
+    public ResponseEntity<GetSpecMediaModel> getProductMediaByMediaId(
+            @RequestHeader("Authorization") String token,
+            @PathVariable("product_id") Integer productId,
+            @PathVariable("media_id") String mediaId
+    ){
+        return getSpecificProductMediaService.getProductMediaByMediaType(token, productId, mediaId);
     }
 
 

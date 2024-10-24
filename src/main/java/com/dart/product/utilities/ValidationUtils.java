@@ -27,6 +27,10 @@ public class ValidationUtils {
         validateField(token, "Access Token");
     }
 
+    public void mediaTypeValidation(String mediaType) {
+        validateField(mediaType, "Media Type");
+    }
+
     public void productIdValidation(Integer productId) {
         validateField(productId, "Product Id");
     }

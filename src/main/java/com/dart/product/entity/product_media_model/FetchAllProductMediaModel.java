@@ -1,6 +1,5 @@
 package com.dart.product.entity.product_media_model;
 
-import com.dart.product.entity.product_model.ProductCacheModel;
 import lombok.*;
 
 import java.util.List;
