@@ -1,8 +1,9 @@
 package com.dart.product.service.product_specification;
 
 import com.dart.product.di.ServiceLocator;
-import com.dart.product.entity.product_specification.AddProductSpecResModel;
-import com.dart.product.entity.product_specification.SaveAndUpdateProductSpecResponse;
+import com.dart.product.entity.product_specification_model.AddProductSpecReqModel;
+import com.dart.product.entity.product_specification_model.AddProductSpecResModel;
+import com.dart.product.entity.product_specification_model.SaveAndUpdateProductSpecResponse;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
 import com.dart.product.utilities.ErrorHandler;
@@ -21,10 +22,10 @@ public class AddProductSpecService {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<String> addProductSpec(AddProductSpecResModel reqBody, String token) {
+    public ResponseEntity<AddProductSpecResModel> addProductSpec(AddProductSpecReqModel reqBody, String token) {
 
-        validateRequestBody(reqBody);
         validateRequestToken(token);
+        validateRequestBody(reqBody);
 
         String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
         String roles = serviceLocator.getJwtService().extractRole(jwtToken);
@@ -36,21 +37,26 @@ public class AddProductSpecService {
 
         reqBody.setOrganisation_id(organisationId);
         reqBody.setCreated_at(LocalDateTime.now());
+        reqBody.setUpdated_at(LocalDateTime.now());
+        reqBody.set_active(true);
+        reqBody.setId(0);
         SaveAndUpdateProductSpecResponse saveRecordInDb = serviceLocator
                 .getSaveAndUpdateRecord()
                 .saveProductSpecification(serviceLocator.getProductMappers().mapProductSpec(reqBody));
 
-        validateIfRecordIsSave(saveRecordInDb);
+        isRecordSaveInTheDb(saveRecordInDb);
 
-        boolean cacheRecord = serviceLocator.getRedisProductCacheRepo()
+        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo()
                 .saveUpdateProductSpec(serviceLocator.getProductMappers().mapProductSpecToCache(saveRecordInDb.getProductSpec()));
 
-        validateIfRecordIsCache(cacheRecord);
+        isRecordSaveInTheCache(cacheRecordInMemory);
 
-        return null;
+        //todo: send newly created product specification to searchMicroService (grpc)
+
+        return new ResponseEntity<>(serviceLocator.getProductMappers().productsSpecResponse(saveRecordInDb.getProductSpec(), "product specification successfully created"), HttpStatus.CREATED);
     }
 
-    private void validateIfRecordIsSave(SaveAndUpdateProductSpecResponse isSave) {
+    private void isRecordSaveInTheDb(SaveAndUpdateProductSpecResponse isSave) {
         if(!isSave.getStatus()) {
             throw new CustomRuntimeException(
                     new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
@@ -59,13 +65,13 @@ public class AddProductSpecService {
         }
     }
 
-    private void validateIfRecordIsCache(boolean isRecord){
+    private void isRecordSaveInTheCache(boolean isRecord) {
         if(!isRecord){
             //send through kafka
         }
     }
 
-    private void validateRequestBody(AddProductSpecResModel reqBody) {
+    private void validateRequestBody(AddProductSpecReqModel reqBody) {
         serviceLocator.getValidationUtils().productSpecValidate(reqBody);
     }
 

@@ -1,4 +1,4 @@
-package com.dart.product.controller.product;
+package com.dart.product.controller;
 
 
 import com.dart.product.entity.product_model.AllProductResModel;
@@ -8,8 +8,6 @@ import com.dart.product.service.product.*;
 import com.dart.product.utilities.ResponseHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")

@@ -2,9 +2,11 @@ package com.dart.product.mapper;
 
 import com.dart.product.entity.product_media_model.*;
 import com.dart.product.entity.product_model.*;
-import com.dart.product.entity.product_specification.AddProductSpecResModel;
-import com.dart.product.entity.product_specification.ProductSpecificationCacheModel;
-import com.dart.product.entity.product_specification.ProductSpecificationDbModel;
+import com.dart.product.entity.product_specification_model.*;
+import com.dart.product.entity.shipping_details_model.AddShippingDetailsReqModel;
+import com.dart.product.entity.shipping_details_model.ShippingDetailsCacheModel;
+import com.dart.product.entity.shipping_details_model.ShippingDetailsDbModel;
+import com.dart.product.entity.shipping_details_model.ShippingDetailsResModel;
 import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.stereotype.Component;
 
@@ -349,23 +351,24 @@ public class ProductMappers {
     }
 
     //product Specification
-    public ProductSpecificationDbModel mapProductSpec(AddProductSpecResModel reqBody) {
-        System.out.println(reqBody);
+    public ProductSpecificationDbModel mapProductSpec(AddProductSpecReqModel reqBody) {
         return ProductSpecificationDbModel.builder()
+                .id(reqBody.getId())
                 .productId(reqBody.getProduct_id())
                 .organisationId(reqBody.getOrganisation_id())
-                .length(reqBody.getDimensions().getLength())
-                .width(reqBody.getDimensions().getWidth())
-                .height(reqBody.getDimensions().getHeight())
-                .weight(reqBody.getWeight())
+                .length(Double.parseDouble(reqBody.getDimensions().getLength()))
+                .width(Double.parseDouble(reqBody.getDimensions().getWidth()))
+                .height(Double.parseDouble(reqBody.getDimensions().getHeight()))
+                .weight(Double.parseDouble(reqBody.getWeight()))
                 .materialDescription(reqBody.getMaterial_description())
                 .certificationDescription(reqBody.getCertification_description())
+                .isActive(reqBody.is_active())
+                .updatedAt(reqBody.getUpdated_at())
                 .createdAt(reqBody.getCreated_at())
                 .build();
     }
 
     public ProductSpecificationCacheModel mapProductSpecToCache(ProductSpecificationDbModel reqBody) {
-        System.out.println(reqBody);
         return ProductSpecificationCacheModel.builder()
                 .id(reqBody.getId())
                 .productId(reqBody.getProductId())
@@ -376,7 +379,172 @@ public class ProductMappers {
                 .weight(reqBody.getWeight())
                 .material_description(reqBody.getMaterialDescription())
                 .certification_description(reqBody.getCertificationDescription())
+                .is_active(reqBody.isActive())
+                .updated_at(reqBody.getUpdatedAt())
                 .created_at(reqBody.getCreatedAt())
+                .build();
+    }
+
+    public ProductSpecificationDbModel mapCacheToProductSpec(ProductSpecificationCacheModel reqBody) {
+        return ProductSpecificationDbModel.builder()
+                .id(reqBody.getId())
+                .productId(reqBody.getProductId())
+                .organisationId(reqBody.getOrganisationId())
+                .length(reqBody.getLength())
+                .width(reqBody.getWidth())
+                .height(reqBody.getHeight())
+                .weight(reqBody.getWeight())
+                .materialDescription(reqBody.getMaterial_description())
+                .certificationDescription(reqBody.getCertification_description())
+                .isActive(reqBody.is_active())
+                .updatedAt(reqBody.getUpdated_at())
+                .createdAt(reqBody.getCreated_at())
+                .build();
+    }
+
+    public ProductSpecificationDbModel mapProductSpecToProductSpec(ProductSpecificationDbModel reqBody) {
+        return ProductSpecificationDbModel.builder()
+                .id(reqBody.getId())
+                .productId(reqBody.getProductId())
+                .organisationId(reqBody.getOrganisationId())
+                .length(reqBody.getLength())
+                .width(reqBody.getWidth())
+                .height(reqBody.getHeight())
+                .weight(reqBody.getWeight())
+                .materialDescription(reqBody.getMaterialDescription())
+                .certificationDescription(reqBody.getCertificationDescription())
+                .isActive(reqBody.isActive())
+                .updatedAt(reqBody.getUpdatedAt())
+                .createdAt(reqBody.getCreatedAt())
+                .build();
+    }
+
+    public AddProductSpecResModel productsSpecResponse(ProductSpecificationDbModel reqBody, String responseMessage) {
+        return AddProductSpecResModel
+                .builder()
+                .status(true)
+                .message(responseMessage)
+                .id(reqBody.getId())
+                .product_id(reqBody.getProductId())
+                .weight(reqBody.getWeight())
+                .dimensions(
+                        AddProductSpecResModel.Dimensions
+                                .builder()
+                                .length(reqBody.getLength())
+                                .width(reqBody.getWidth())
+                                .height(reqBody.getHeight())
+                                .build()
+                        )
+                .material_description(reqBody.getMaterialDescription())
+                .certification_description(reqBody.getCertificationDescription())
+                .updated_at(reqBody.getUpdatedAt())
+                .created_at(reqBody.getCreatedAt())
+                .build();
+    }
+
+    public FetchAllProductSpecResModel productsSpecFetchAllResponse(List<ProductSpecificationDbModel> reqBody) {
+        return FetchAllProductSpecResModel.builder()
+                .status(true)
+                .message("product specification successfully fetch")
+                .products_specifications(reqBody.stream().map(spec -> FetchAllProductSpecResModel.ProductsSpecifications
+                        .builder()
+                        .id(spec.getId())
+                        .product_id(spec.getProductId())
+                        .weight(spec.getWeight())
+                        .dimensions(FetchAllProductSpecResModel.ProductsSpecifications.Dimensions
+                                .builder()
+                                .length(spec.getLength())
+                                .width(spec.getWidth())
+                                .height(spec.getHeight())
+                                .build())
+                        .material_description(spec.getMaterialDescription())
+                        .certification_description(spec.getCertificationDescription())
+                        .updated_at(spec.getUpdatedAt())
+                        .created_at(spec.getCreatedAt())
+                        .build()).collect(Collectors.toList())
+                )
+                .build();
+    }
+
+    public List<ProductSpecificationDbModel> mapAllCacheToProductSpec(List<ProductSpecificationCacheModel> reqBody) {
+        return reqBody.stream().map(spec -> ProductSpecificationDbModel.builder()
+                .id(spec.getId())
+                .productId(spec.getProductId())
+                .organisationId(spec.getOrganisationId())
+                .length(spec.getLength())
+                .width(spec.getWidth())
+                .height(spec.getHeight())
+                .weight(spec.getWeight())
+                .materialDescription(spec.getMaterial_description())
+                .certificationDescription(spec.getCertification_description())
+                .isActive(spec.is_active())
+                .updatedAt(spec.getUpdated_at())
+                .createdAt(spec.getCreated_at())
+                .build()
+        ).collect(Collectors.toList());
+    }
+
+    //shipping details start from here
+    public ShippingDetailsDbModel mapAddShippingDetailsReqModelToDbModel(AddShippingDetailsReqModel reqModel) {
+        return ShippingDetailsDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .shippingMethod(reqModel.getShipping_method())
+                .shippingCost(reqModel.getShipping_cost())
+                .estimatedDeliveryTime(reqModel.getEstimated_delivery_time())
+                .countryCode(reqModel.getCountry_code())
+                .region(reqModel.getRegion())
+                .customsFees(reqModel.getCustoms_fees())
+                .handlingTime(reqModel.getHandling_time())
+                .crossBorder(reqModel.getCross_border())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+    public  ShippingDetailsCacheModel mapShippingDetailsCacheModelToDbModel(ShippingDetailsDbModel reqModel){
+        return ShippingDetailsCacheModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProductId())
+                .organisationId(reqModel.getOrganisationId())
+                .shippingMethod(reqModel.getShippingMethod())
+                .shippingCost(reqModel.getShippingCost())
+                .estimatedDeliveryTime(reqModel.getEstimatedDeliveryTime())
+                .countryCode(reqModel.getCountryCode())
+                .region(reqModel.getRegion())
+                .customsFees(reqModel.getCustomsFees())
+                .handlingTime(reqModel.getHandlingTime())
+                .crossBorder(reqModel.getCrossBorder())
+                .isActive(reqModel.isActive())
+                .updatedAt(reqModel.getUpdatedAt())
+                .createdAt(reqModel.getCreatedAt())
+                .build();
+    }
+
+    public ShippingDetailsResModel shippingDetailsResponseBuilder(ShippingDetailsDbModel reqBody, String message) {
+        return ShippingDetailsResModel.builder()
+                .status(true)
+                .message(message)
+                .shipping_details(
+                        ShippingDetailsResModel.ShippingDetails
+                                .builder()
+                                .id(reqBody.getId())
+                                .product_id(reqBody.getProductId())
+                                .organisation_id(reqBody.getOrganisationId())
+                                .shipping_method(reqBody.getShippingMethod())
+                                .estimated_delivery_time(reqBody.getEstimatedDeliveryTime())
+                                .country_code(reqBody.getCountryCode())
+                                .region(reqBody.getRegion())
+                                .customs_fees(reqBody.getCustomsFees())
+                                .handling_time(reqBody.getHandlingTime())
+                                .cross_border(reqBody.getCrossBorder())
+                                .is_active(reqBody.isActive())
+                                .updated_at(reqBody.getUpdatedAt())
+                                .created_at(reqBody.getCreatedAt())
+                                .build()
+                )
                 .build();
     }
 

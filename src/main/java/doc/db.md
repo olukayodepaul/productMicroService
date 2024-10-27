@@ -43,9 +43,13 @@ height DECIMAL(10, 2),                                          -- Height of the
 weight DECIMAL(10, 2),                                          -- Weight of the product
 material_description TEXT,                                      -- Description of the material used
 certification_description TEXT,                                 -- Certification details of the product
+is_active BOOLEAN DEFAULT TRUE,                                 -- Status of the product (active or inactive)
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,                  -- Timestamp when the product was last updated
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,                 -- Timestamp when specifications were added
 FOREIGN KEY (product_id) REFERENCES products(id)                -- Relationship: One-to-One (a product has unique specifications)
 );
+
+
 -- 4. Updated Shipping Details Table (Cross-border shipping support)
 -- Stores shipping information for products, including domestic and international options.
 CREATE TABLE shipping_details (
@@ -59,7 +63,9 @@ country_code VARCHAR(3) DEFAULT 'ALL',                   -- ISO country code (e.
 region VARCHAR(100),                                     -- Region or specific area (e.g., Europe, West Africa, etc.)
 customs_fees DECIMAL(10, 2) DEFAULT 0.00,                -- Customs or import fees if applicable
 handling_time VARCHAR(50),                               -- Time required to process the order before shipping (e.g., 1-2 days)
-cross_border BOOLEAN DEFAULT FALSE,                      -- Indicates if this is a cross-border/international shipping method
+cross_border VARCHAR(30),                                -- Indicates if this is a cross-border/international/local shipping method
+is_active BOOLEAN DEFAULT TRUE,                          -- Status of the product (active or inactive)
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,          -- Timestamp when the product was last updated
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,          -- Timestamp when shipping details were added
 FOREIGN KEY (product_id) REFERENCES products(id)         -- Relationship: One-to-Many (a product can have multiple shipping options)
 );

@@ -37,12 +37,12 @@ public class FetchProductMediaService {
         validateBruteForceProtection(plainUUID);
 
         // Fetch from the cache
-        FetchAllProductMediaModel cachedProductMedia = serviceLocator.getRedisProductCacheRepo().findAllProductMedia(organisationId.toString(), productId.toString());
+        FetchAllProductMediaModel fetchAllProductMediaFromCache = serviceLocator.getRedisProductCacheRepo().findAllProductMedia(organisationId.toString(), productId.toString());
 
-        if (cachedProductMedia.getStatus()) {
+        if (fetchAllProductMediaFromCache.getStatus()) {
             System.out.println(1);
-            List<GetAllMediaModel.ImageMedia> imageMediaList = serviceLocator.getProductMappers().filterAndMapCacheMediaImage(cachedProductMedia.getProductMedia(), IMAGE_MEDIA_TYPE);
-            List<GetAllMediaModel.VideoMedia> videoMediaList = serviceLocator.getProductMappers().filterAndMapCacheMediaVideo(cachedProductMedia.getProductMedia(), VIDEO_MEDIA_TYPE);
+            List<GetAllMediaModel.ImageMedia> imageMediaList = serviceLocator.getProductMappers().filterAndMapCacheMediaImage(fetchAllProductMediaFromCache.getProductMedia(), IMAGE_MEDIA_TYPE);
+            List<GetAllMediaModel.VideoMedia> videoMediaList = serviceLocator.getProductMappers().filterAndMapCacheMediaVideo(fetchAllProductMediaFromCache.getProductMedia(), VIDEO_MEDIA_TYPE);
             return buildResponse(imageMediaList, videoMediaList, productId);
         } else {
             List<MediaDbModel> productMediaFromDb = findMediaByProductIdAndOrganisationId(productId, organisationId);

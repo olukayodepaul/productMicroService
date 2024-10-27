@@ -14,11 +14,11 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 @Service
-public class GetIndividualProductMediaService {
+public class GetOneProductMediaService {
 
     private final ServiceLocator serviceLocator;
 
-    public GetIndividualProductMediaService(ServiceLocator serviceLocator) {
+    public GetOneProductMediaService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
@@ -34,7 +34,7 @@ public class GetIndividualProductMediaService {
         UUID organisationId = serviceLocator.getUtilitiesManager().convertStringToUUID(plainUUID);
         validateBruteForceProtection(plainUUID);
 
-        FetchIndividualMediaProductModel cachedProductMedia = serviceLocator.getRedisProductCacheRepo().findOneProductMedia(organisationId.toString(), productId, mediaId);
+        FetchOneProductMediaModel cachedProductMedia = serviceLocator.getRedisProductCacheRepo().findOneProductMedia(organisationId.toString(), productId, mediaId);
 
         if(cachedProductMedia.getStatus()) {
             return buildResponse(serviceLocator.getProductMappers().mapSingleProductMediaToCache(cachedProductMedia.getProductMedia()));

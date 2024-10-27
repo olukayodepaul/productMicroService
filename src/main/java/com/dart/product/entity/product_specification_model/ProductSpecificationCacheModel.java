@@ -1,4 +1,4 @@
-package com.dart.product.entity.product_specification;
+package com.dart.product.entity.product_specification_model;
 
 
 
@@ -34,6 +34,8 @@ public class ProductSpecificationCacheModel implements Serializable {
     private double weight;
     private String material_description;
     private String certification_description;
+    private boolean is_active;
+    private LocalDateTime updated_at;
     private LocalDateTime created_at;
 
 }

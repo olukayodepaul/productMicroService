@@ -1,4 +1,4 @@
-package com.dart.product.entity.product_specification;
+package com.dart.product.entity.product_specification_model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -37,6 +37,13 @@ public class ProductSpecificationDbModel {
 
     @Column(name = "certification_description")
     private String certificationDescription;
+
+
+    @Column(name = "is_active")
+    private boolean isActive;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

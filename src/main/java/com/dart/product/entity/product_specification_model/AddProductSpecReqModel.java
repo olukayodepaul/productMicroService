@@ -1,4 +1,4 @@
-package com.dart.product.entity.product_specification;
+package com.dart.product.entity.product_specification_model;
 
 
 
@@ -13,10 +13,10 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddProductSpecResModel {
+public class AddProductSpecReqModel {
 
-    private Integer product_id;
-    private double weight;
+    private Integer product_id;  //not optional create, optional for update
+    private String weight;
     private String material_description;
     private String certification_description;
     private Dimensions dimensions;
@@ -26,13 +26,17 @@ public class AddProductSpecResModel {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Dimensions {
-        private double length;
-        private double width;
-        private double height;
+        private String length;
+        private String width;
+        private String height;
     }
 
-    //extract data not part of the request data
+    //not part of the request
+    private Integer id;
     private UUID organisation_id;
+    private boolean is_active;
+    private LocalDateTime updated_at;
     private LocalDateTime created_at;
+    private String message;
 
 }

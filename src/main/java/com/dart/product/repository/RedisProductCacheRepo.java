@@ -1,12 +1,15 @@
 package com.dart.product.repository;
 
 import com.dart.product.entity.product_media_model.FetchAllProductMediaModel;
-import com.dart.product.entity.product_media_model.FetchIndividualMediaProductModel;
+import com.dart.product.entity.product_media_model.FetchOneProductMediaModel;
 import com.dart.product.entity.product_media_model.ProductMediaCacheModel;
 import com.dart.product.entity.product_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_model.FetchProductsResModel;
 import com.dart.product.entity.product_model.ProductCacheModel;
-import com.dart.product.entity.product_specification.ProductSpecificationCacheModel;
+import com.dart.product.entity.product_specification_model.FetchAllProductSpecModel;
+import com.dart.product.entity.product_specification_model.FetchOnelProductSpecModel;
+import com.dart.product.entity.product_specification_model.ProductSpecificationCacheModel;
+import com.dart.product.entity.shipping_details_model.ShippingDetailsCacheModel;
 import com.dart.product.security.FilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -32,6 +35,7 @@ public class RedisProductCacheRepo {
     private static final String PRODUCT_KEY = "product";
     private static final String PRODUCT_MEDIA_KEY = "product_media";
     private static final String PRODUCT_SPECIFICATION_KEY = "product_specification";
+    private static final String SHIPPING_DETAILS_KEY = "shipping_details";
 
 
     //Response
@@ -213,7 +217,7 @@ public class RedisProductCacheRepo {
         }
     }
 
-    public FetchIndividualMediaProductModel findOneProductMedia(String organisationId, Integer productId, Integer mediaId) {
+    public FetchOneProductMediaModel findOneProductMedia(String organisationId, Integer productId, Integer mediaId) {
         try {
 
             String subKey = mediaId.toString();
@@ -221,14 +225,14 @@ public class RedisProductCacheRepo {
             Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
 
             if (cachedObject == null) {
-                return new FetchIndividualMediaProductModel(false,  "No user found in redis", null);
+                return new FetchOneProductMediaModel(false,  "No user found in redis", null);
             }
             ProductMediaCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductMediaCacheModel.class);
-            return new FetchIndividualMediaProductModel(true, "", cacheModel);
+            return new FetchOneProductMediaModel(true, "", cacheModel);
 
         } catch (Exception e) {
             logger.error("RedisCacheService::findOneProductMedia - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
-            return new FetchIndividualMediaProductModel(false, e.getMessage(), new ProductMediaCacheModel());
+            return new FetchOneProductMediaModel(false, e.getMessage(), new ProductMediaCacheModel());
         }
     }
 
@@ -250,5 +254,80 @@ public class RedisProductCacheRepo {
             return SAVE_UPDATE_FAILED;
         }
     }
+
+    public boolean deleteProductSpec(ProductSpecificationCacheModel productSpec) {
+        try {
+
+            String subKey = productSpec.getId().toString();
+            String primaryKey =  PRODUCT_SPECIFICATION_KEY +"_"+ productSpec.getOrganisationId() +"_"+ productSpec.getProductId();
+
+            Long result = redisTemplate.opsForHash().delete(primaryKey, subKey);
+
+            return result > 0;
+        } catch (Exception e) {
+            logger.error("RedisCacheRepo::deleteProductSpec - Error occurred while saving/updating user with email {}: {}", productSpec.getOrganisationId(), e.getMessage());
+            return false;
+        }
+    }
+
+    public FetchOnelProductSpecModel findOneProductSpec(String organisationId, Integer productId, Integer productSpecId) {
+        try {
+
+            String subKey = productSpecId.toString();
+            String primaryKey =  PRODUCT_SPECIFICATION_KEY +"_"+ organisationId +"_"+ productId;
+            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
+
+            if (cachedObject == null) {
+                return new FetchOnelProductSpecModel(false,  "No user found in redis", null);
+            }
+            ProductSpecificationCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductSpecificationCacheModel.class);
+            return new FetchOnelProductSpecModel(true, "", cacheModel);
+
+        } catch (Exception e) {
+            logger.error("RedisCacheService::findOneProductSpec - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
+            return new FetchOnelProductSpecModel(false, e.getMessage(), new ProductSpecificationCacheModel());
+        }
+    }
+
+    public FetchAllProductSpecModel findAllProductSpec(String organisationId, Integer productId) {
+        try {
+            String key = PRODUCT_SPECIFICATION_KEY + "_" + organisationId + "_" + productId;
+            Map<Object, Object> productSpecMap = redisTemplate.opsForHash().entries(key);
+
+            System.out.println(productSpecMap);
+
+            if (!productSpecMap.isEmpty()) {
+                List<ProductSpecificationCacheModel> productSpec = productSpecMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductSpecificationCacheModel.class))
+                        .collect(Collectors.toList());
+                return new FetchAllProductSpecModel(true, "Product Specification fetched successfully", productSpec);
+            }
+            return new FetchAllProductSpecModel(false, "No media found", Collections.emptyList());
+
+        } catch (Exception e) {
+            logger.error("Error fetching media for findAllProductSpec {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductSpecModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+    //shipping Details
+    public Boolean saveUpdateShippingDetails(ShippingDetailsCacheModel shippingDetails) {
+        try {
+            // Sub-key for identifying the user by their email
+            String subKey = shippingDetails.getId().toString();
+            String primaryKey =  SHIPPING_DETAILS_KEY +"_"+ shippingDetails.getOrganisationId() +"_"+ shippingDetails.getProductId();
+            // Save or update user details in Redis hash
+            redisTemplate.opsForHash().put(primaryKey, subKey, shippingDetails);
+
+            // Return success
+            return SAVE_UPDATE_SUCCESS;
+        } catch (Exception e) {
+            // Log the error and return failure response
+            logger.error("RedisCacheRepo::saveUpdateShippingDetails  {}", e.getMessage());
+            return SAVE_UPDATE_FAILED;
+        }
+    }
+
+
 
 }

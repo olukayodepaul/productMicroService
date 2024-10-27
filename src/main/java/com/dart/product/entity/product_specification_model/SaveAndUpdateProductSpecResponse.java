@@ -1,6 +1,5 @@
-package com.dart.product.entity.product_specification;
+package com.dart.product.entity.product_specification_model;
 
-import com.dart.product.entity.product_media_model.MediaDbModel;
 import lombok.*;
 
 @Data

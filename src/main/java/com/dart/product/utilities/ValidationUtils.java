@@ -1,7 +1,8 @@
 package com.dart.product.utilities;
 
 import com.dart.product.entity.product_model.ProductReqModel;
-import com.dart.product.entity.product_specification.AddProductSpecResModel;
+import com.dart.product.entity.product_specification_model.AddProductSpecReqModel;
+import com.dart.product.entity.shipping_details_model.AddShippingDetailsReqModel;
 import com.dart.product.rate_limit.BruteForceRateLimitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,6 +39,10 @@ public class ValidationUtils {
 
     public void productIdValidation(Integer productId) {
         validateField(productId, "Product Id");
+    }
+
+    public void productSpecValidation(Integer id) {
+        validateField(id, "Product specification id");
     }
 
     public void IdValidation(String token) {
@@ -91,10 +96,6 @@ public class ValidationUtils {
         }
     }
 
-    public void userRoleValidateRequest(String role) {
-        validateField(role, "Role");
-    }
-
     public void productValidateRequest(ProductReqModel request, int target) {
         validateField(request.getName(), "Product Name");
         validateField(request.getDescription(), "Description");
@@ -103,7 +104,7 @@ public class ValidationUtils {
         validateField(request.getCategory_id(), "Product Category");
     }
 
-    public void productSpecValidate(AddProductSpecResModel request) {
+    public void productSpecValidate(AddProductSpecReqModel request) {
         validateField(request.getProduct_id(), "Product Id");
         validateField(request.getDimensions().getLength(), "length");
         validateField(request.getWeight(), "Weight");
@@ -112,6 +113,11 @@ public class ValidationUtils {
         validateField(request.getCertification_description(), "Certification Description");
         validateField(request.getMaterial_description(), "Material Description");
     }
+
+    public void shippingDetailsValidation(AddShippingDetailsReqModel reqBody){
+
+    }
+
 
     //u can add more access role for users
     public void roleValidation(String role) {

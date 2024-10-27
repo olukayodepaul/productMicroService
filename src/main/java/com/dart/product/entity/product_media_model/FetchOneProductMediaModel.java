@@ -1,6 +1,5 @@
 package com.dart.product.entity.product_media_model;
 
-import com.dart.product.entity.product_model.ProductCacheModel;
 import lombok.*;
 
 
@@ -10,7 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FetchIndividualMediaProductModel {
+public class FetchOneProductMediaModel {
     private Boolean status;
     private String message;
     private ProductMediaCacheModel productMedia;

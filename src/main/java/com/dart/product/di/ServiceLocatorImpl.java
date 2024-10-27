@@ -1,9 +1,7 @@
 package com.dart.product.di;
 
 import com.dart.product.mapper.ProductMappers;
-import com.dart.product.repository.ProductMediaRepo;
-import com.dart.product.repository.ProductSpecificationRepo;
-import com.dart.product.repository.RedisProductCacheRepo;
+import com.dart.product.repository.*;
 import com.dart.product.security.FilterService;
 import com.dart.product.service.product_media.MediaService;
 import com.dart.product.utilities.SaveAndUpdateRecord;
@@ -25,6 +23,8 @@ public class ServiceLocatorImpl implements ServiceLocator {
     private RedisProductCacheRepo redisProductCacheRepo;
     private ProductMediaRepo productMediaRepo;
     private ProductSpecificationRepo productSpecificationRepo;
+    private ShippingDetailsRepo shippingDetailsRepo;
+    private ProductsRepo productsRepo;
 
 
     public ServiceLocatorImpl(
@@ -36,7 +36,9 @@ public class ServiceLocatorImpl implements ServiceLocator {
             SaveAndUpdateRecord saveAndUpdateRecord,
             RedisProductCacheRepo redisProductCacheRepo,
             ProductMediaRepo productMediaRepo,
-            ProductSpecificationRepo productSpecificationRepo
+            ProductSpecificationRepo productSpecificationRepo,
+            ShippingDetailsRepo shippingDetailsRepo,
+            ProductsRepo productsRepo
     )
     {
         this.utilitiesManager = utilitiesManager;
@@ -48,6 +50,8 @@ public class ServiceLocatorImpl implements ServiceLocator {
         this.redisProductCacheRepo = redisProductCacheRepo;
         this.productMediaRepo = productMediaRepo;
         this.productSpecificationRepo = productSpecificationRepo;
+        this.shippingDetailsRepo = shippingDetailsRepo;
+        this.productsRepo = productsRepo;
     }
 
     @Override
@@ -86,6 +90,11 @@ public class ServiceLocatorImpl implements ServiceLocator {
     }
 
     @Override
+    public ProductsRepo getProductsRepo() {
+        return productsRepo;
+    }
+
+    @Override
     public ProductMediaRepo getProductMediaRepo() {
         return productMediaRepo;
     }
@@ -93,6 +102,11 @@ public class ServiceLocatorImpl implements ServiceLocator {
     @Override
     public ProductSpecificationRepo getProductSpecificationRepo() {
         return productSpecificationRepo;
+    }
+
+    @Override
+    public ShippingDetailsRepo getShippingDetailsRepo() {
+        return shippingDetailsRepo;
     }
 
 }

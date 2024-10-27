@@ -1,4 +1,4 @@
-package com.dart.product.controller.product;
+package com.dart.product.controller;
 
 
 import com.dart.product.entity.product_media_model.*;
@@ -19,7 +19,7 @@ public class ProductMediaController {
     private final DeleteProductMediaService deleteProductMediaService;
     private final FetchProductMediaService fetchProductMediaService;
     private final GetSpecificProductMediaService getSpecificProductMediaService;
-    private final GetIndividualProductMediaService getIndividualProductMediaService;
+    private final GetOneProductMediaService getIndividualProductMediaService;
 
 
     public ProductMediaController(
@@ -29,7 +29,7 @@ public class ProductMediaController {
             DeleteProductMediaService deleteProductMediaService,
             FetchProductMediaService fetchProductMediaService,
             GetSpecificProductMediaService getSpecificProductMediaService,
-            GetIndividualProductMediaService getIndividualProductMediaService
+            GetOneProductMediaService getIndividualProductMediaService
 
     )
     {
