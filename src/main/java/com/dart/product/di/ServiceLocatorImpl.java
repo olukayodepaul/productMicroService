@@ -25,6 +25,16 @@ public class ServiceLocatorImpl implements ServiceLocator {
     private ProductSpecificationRepo productSpecificationRepo;
     private ShippingDetailsRepo shippingDetailsRepo;
     private ProductsRepo productsRepo;
+    private ProductPolicyRepo productPolicyRepo;
+    private ProductReviewRepo productReviewRepo;
+    private RelatedProductsRepo relatedProductsRepo;
+    private SpecialOffersRepo specialOffersRepo;
+    private ProductTagRepo productTagRepo;
+    private ProductCommentRepo productCommentRepo;
+    private ProductFeedBackRepo productFeedBackRepo;
+
+
+
 
 
     public ServiceLocatorImpl(
@@ -38,7 +48,14 @@ public class ServiceLocatorImpl implements ServiceLocator {
             ProductMediaRepo productMediaRepo,
             ProductSpecificationRepo productSpecificationRepo,
             ShippingDetailsRepo shippingDetailsRepo,
-            ProductsRepo productsRepo
+            ProductsRepo productsRepo,
+            ProductPolicyRepo productPolicyRepo,
+            ProductReviewRepo productReviewRepo,
+            RelatedProductsRepo relatedProductsRepo,
+            SpecialOffersRepo specialOffersRepo,
+            ProductTagRepo productTagRepo,
+            ProductCommentRepo productCommentRepo,
+            ProductFeedBackRepo productFeedBackRepo
     )
     {
         this.utilitiesManager = utilitiesManager;
@@ -52,6 +69,13 @@ public class ServiceLocatorImpl implements ServiceLocator {
         this.productSpecificationRepo = productSpecificationRepo;
         this.shippingDetailsRepo = shippingDetailsRepo;
         this.productsRepo = productsRepo;
+        this.productPolicyRepo = productPolicyRepo;
+        this.productReviewRepo = productReviewRepo;
+        this.relatedProductsRepo = relatedProductsRepo;
+        this.specialOffersRepo = specialOffersRepo;
+        this.productTagRepo =productTagRepo;
+        this.productCommentRepo = productCommentRepo;
+        this.productFeedBackRepo = productFeedBackRepo;
     }
 
     @Override
@@ -107,6 +131,41 @@ public class ServiceLocatorImpl implements ServiceLocator {
     @Override
     public ShippingDetailsRepo getShippingDetailsRepo() {
         return shippingDetailsRepo;
+    }
+
+    @Override
+    public ProductPolicyRepo getProductPolicyRepo() {
+        return productPolicyRepo;
+    }
+
+    @Override
+    public ProductReviewRepo getProductReviewRepo() {
+        return productReviewRepo;
+    }
+
+    @Override
+    public RelatedProductsRepo getRelatedProductsDbModel() {
+        return relatedProductsRepo;
+    }
+
+    @Override
+    public SpecialOffersRepo getSpecialOffersRepo() {
+        return specialOffersRepo;
+    }
+
+    @Override
+    public ProductTagRepo getProductTagRepo() {
+        return productTagRepo;
+    }
+
+    @Override
+    public ProductCommentRepo getProductCommentRepo() {
+        return productCommentRepo;
+    }
+
+    @Override
+    public ProductFeedBackRepo getProductFeedBackRepo() {
+        return productFeedBackRepo;
     }
 
 }

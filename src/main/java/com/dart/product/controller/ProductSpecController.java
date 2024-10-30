@@ -46,19 +46,20 @@ public class ProductSpecController {
     public ResponseEntity<AddProductSpecResModel> updateProductSpec(
             @RequestBody AddProductSpecReqModel reqBody,
             @RequestHeader("Authorization") String token,
+            @PathVariable("product_id") Integer productId,
             @PathVariable("id") Integer id)
     {
-        return updateProductSpecService.updateProductSpec(reqBody, token, id);
+        return updateProductSpecService.updateProductSpec(reqBody, token, productId, id);
     }
 
     @DeleteMapping("/products/{product_id}/specifications/{id}")
     public ResponseEntity<AddProductSpecResModel> deleteProductSpec(
             @RequestHeader("Authorization") String token,
             @PathVariable("id") Integer id,
-            @PathVariable("product_id") Integer productId //this is newly added
+            @PathVariable("product_id") Integer productId
     )
     {
-        return deleteProductSpecService.updateProductSpec( id, token);
+        return deleteProductSpecService.updateProductSpec( id, token, productId);
     }
 
     @GetMapping("/products/{product_id}/specifications/{id}")

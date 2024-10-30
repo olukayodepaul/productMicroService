@@ -31,7 +31,7 @@ public class AddProductSpecReqModel {
         private String height;
     }
 
-    //not part of the request
+    //extract data not part of the request data
     private Integer id;
     private UUID organisation_id;
     private boolean is_active;

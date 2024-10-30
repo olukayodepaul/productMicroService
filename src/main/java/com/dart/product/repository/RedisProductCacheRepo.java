@@ -6,9 +6,15 @@ import com.dart.product.entity.product_media_model.ProductMediaCacheModel;
 import com.dart.product.entity.product_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_model.FetchProductsResModel;
 import com.dart.product.entity.product_model.ProductCacheModel;
+import com.dart.product.entity.product_policy_model.FetchAllProductPolicyModel;
+import com.dart.product.entity.product_policy_model.FetchOnelProductPolicyModel;
+import com.dart.product.entity.product_policy_model.ProductPolicyAllResModel;
+import com.dart.product.entity.product_policy_model.ProductPolicyCacheModel;
 import com.dart.product.entity.product_specification_model.FetchAllProductSpecModel;
 import com.dart.product.entity.product_specification_model.FetchOnelProductSpecModel;
 import com.dart.product.entity.product_specification_model.ProductSpecificationCacheModel;
+import com.dart.product.entity.shipping_details_model.FetchAllShippingDetailsModel;
+import com.dart.product.entity.shipping_details_model.FetchOnelShippingDetailsModel;
 import com.dart.product.entity.shipping_details_model.ShippingDetailsCacheModel;
 import com.dart.product.security.FilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +42,7 @@ public class RedisProductCacheRepo {
     private static final String PRODUCT_MEDIA_KEY = "product_media";
     private static final String PRODUCT_SPECIFICATION_KEY = "product_specification";
     private static final String SHIPPING_DETAILS_KEY = "shipping_details";
+    private static final String PRODUCT_POLICY_KEY = "product_policy";
 
 
     //Response
@@ -327,6 +334,134 @@ public class RedisProductCacheRepo {
             return SAVE_UPDATE_FAILED;
         }
     }
+
+    public boolean deleteShippingDetails(ShippingDetailsCacheModel shippingDetails) {
+        try {
+
+            String subKey = shippingDetails.getId().toString();
+            String primaryKey =  SHIPPING_DETAILS_KEY +"_"+ shippingDetails.getOrganisationId() +"_"+ shippingDetails.getProductId();
+
+            Long result = redisTemplate.opsForHash().delete(primaryKey, subKey);
+
+            return result > 0;
+        } catch (Exception e) {
+            logger.error("RedisCacheRepo::deleteShippingDetails - Error occurred while saving/updating user with email {}: {}", shippingDetails.getOrganisationId(), e.getMessage());
+            return false;
+        }
+    }
+
+    public FetchOnelShippingDetailsModel findOneShippingDetails(String organisationId, Integer productId, Integer productSpecId) {
+        try {
+
+            String subKey = productSpecId.toString();
+            String primaryKey =  SHIPPING_DETAILS_KEY +"_"+ organisationId +"_"+ productId;
+            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
+
+            if (cachedObject == null) {
+                return new FetchOnelShippingDetailsModel(false,  "No user found in redis", null);
+            }
+            ShippingDetailsCacheModel cacheModel = objectMapper.convertValue(cachedObject, ShippingDetailsCacheModel.class);
+            return new FetchOnelShippingDetailsModel(true, "", cacheModel);
+
+        } catch (Exception e) {
+            logger.error("RedisCacheService::findOneShippingDetails - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
+            return new FetchOnelShippingDetailsModel(false, e.getMessage(), new ShippingDetailsCacheModel());
+        }
+    }
+
+
+    public FetchAllShippingDetailsModel findAllShippingDetails(String organisationId, Integer productId) {
+        try {
+            String key = SHIPPING_DETAILS_KEY + "_" + organisationId + "_" + productId;
+            Map<Object, Object> productSpecMap = redisTemplate.opsForHash().entries(key);
+
+            System.out.println(productSpecMap);
+
+            if (!productSpecMap.isEmpty()) {
+                List<ShippingDetailsCacheModel> productSpec = productSpecMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ShippingDetailsCacheModel.class))
+                        .collect(Collectors.toList());
+                return new FetchAllShippingDetailsModel(true, "Product Specification fetched successfully", productSpec);
+            }
+            return new FetchAllShippingDetailsModel(false, "No media found", Collections.emptyList());
+
+        } catch (Exception e) {
+            logger.error("Error fetching media for findAllShippingDetails {}: {}", organisationId, e.getMessage());
+            return new FetchAllShippingDetailsModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+    //save record for product policies
+    public Boolean saveUpdateProductPolicy(ProductPolicyCacheModel productSpec) {
+        try {
+            // Sub-key for identifying the user by their email
+            String subKey = productSpec.getId().toString();
+            String primaryKey =  PRODUCT_POLICY_KEY +"_"+ productSpec.getOrganisationId() +"_"+ productSpec.getProductId();
+            // Save or update user details in Redis hash
+            redisTemplate.opsForHash().put(primaryKey, subKey, productSpec);
+
+            // Return success
+            return SAVE_UPDATE_SUCCESS;
+        } catch (Exception e) {
+            // Log the error and return failure response
+            logger.error("RedisCacheRepo::saveUpdateProductPolicy  {}", e.getMessage());
+            return SAVE_UPDATE_FAILED;
+        }
+    }
+
+    public boolean deleteProductPolicy(ProductPolicyCacheModel productSpec) {
+        try {
+
+            String subKey = productSpec.getId().toString();
+            String primaryKey =  PRODUCT_POLICY_KEY +"_"+ productSpec.getOrganisationId() +"_"+ productSpec.getProductId();
+
+            Long result = redisTemplate.opsForHash().delete(primaryKey, subKey);
+
+            return result > 0;
+        } catch (Exception e) {
+            logger.error("RedisCacheRepo::deleteProductPolicy - Error occurred while saving/updating user with email {}: {}", productSpec.getOrganisationId(), e.getMessage());
+            return false;
+        }
+    }
+
+    public FetchOnelProductPolicyModel findOneProductPolicy(String organisationId, Integer productId, Integer productSpecId) {
+        try {
+
+            String subKey = productSpecId.toString();
+            String primaryKey =  PRODUCT_POLICY_KEY +"_"+ organisationId +"_"+ productId;
+            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
+
+            if (cachedObject == null) {
+                return new FetchOnelProductPolicyModel(false,  "No user found in redis", null);
+            }
+            ProductPolicyCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductPolicyCacheModel.class);
+            return new FetchOnelProductPolicyModel(true, "", cacheModel);
+
+        } catch (Exception e) {
+            logger.error("RedisCacheService::findOneProductPolicy - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
+            return new FetchOnelProductPolicyModel(false, e.getMessage(), new ProductPolicyCacheModel());
+        }
+    }
+
+    public FetchAllProductPolicyModel findAllProductPolicy(String organisationId, Integer productId) {
+        try {
+            String key = PRODUCT_POLICY_KEY + "_" + organisationId + "_" + productId;
+            Map<Object, Object> productPolicyMap = redisTemplate.opsForHash().entries(key);
+
+            if (!productPolicyMap.isEmpty()) {
+                List<ProductPolicyCacheModel> productPolicy = productPolicyMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductPolicyCacheModel.class))
+                        .collect(Collectors.toList());
+                return new FetchAllProductPolicyModel(true, "Product Specification fetched successfully", productPolicy);
+            }
+            return new FetchAllProductPolicyModel(false, "No media found", Collections.emptyList());
+
+        } catch (Exception e) {
+            logger.error("Error fetching media for findAllProductPolicy {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductPolicyModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
 
 
 

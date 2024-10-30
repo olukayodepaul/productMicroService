@@ -3,6 +3,7 @@ package com.dart.product.service.product_specification;
 import com.dart.product.di.ServiceLocator;
 import com.dart.product.entity.product_specification_model.AddProductSpecReqModel;
 import com.dart.product.entity.product_specification_model.AddProductSpecResModel;
+import com.dart.product.entity.product_specification_model.ProductSpecificationDbModel;
 import com.dart.product.entity.product_specification_model.SaveAndUpdateProductSpecResponse;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
@@ -35,6 +36,9 @@ public class AddProductSpecService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
+        //prevent multiple creation
+        findIsActiveAndProductIdAndByOrganisationId(organisationId, reqBody.getProduct_id());
+
         reqBody.setOrganisation_id(organisationId);
         reqBody.setCreated_at(LocalDateTime.now());
         reqBody.setUpdated_at(LocalDateTime.now());
@@ -51,7 +55,7 @@ public class AddProductSpecService {
 
         isRecordSaveInTheCache(cacheRecordInMemory);
 
-        //todo: send newly created product specification to searchMicroService (grpc)
+        //todo: send newly created product specification to searchMicroService through (grpc) if fail then, kafka using same proto buffer
 
         return new ResponseEntity<>(serviceLocator.getProductMappers().productsSpecResponse(saveRecordInDb.getProductSpec(), "product specification successfully created"), HttpStatus.CREATED);
     }
@@ -85,6 +89,15 @@ public class AddProductSpecService {
 
     private void validationUserRole(String role){
         serviceLocator.getValidationUtils().roleValidation(role);
+    }
+
+    private void findIsActiveAndProductIdAndByOrganisationId(UUID organisationId, Integer ProductId) {
+        if(serviceLocator.getProductSpecificationRepo().findIsActiveAndProductIdAndByOrganisationId(true, ProductId, organisationId).isPresent()){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), ""),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
     }
 
 }

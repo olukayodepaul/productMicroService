@@ -66,7 +66,6 @@ public class GetOneProductSpecService {
     }
 
     private ProductSpecificationDbModel findByIdAndOrganisationIdAndIsActiveAndProductId(Integer id, UUID organisationId, Integer productId) {
-
         return serviceLocator.getProductSpecificationRepo().findByIdAndOrganisationIdAndIsActiveAndProductId(id, organisationId, true,productId)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),

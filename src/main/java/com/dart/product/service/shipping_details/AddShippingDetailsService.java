@@ -4,7 +4,7 @@ package com.dart.product.service.shipping_details;
 import com.dart.product.di.ServiceLocator;
 import com.dart.product.entity.shipping_details_model.AddShippingDetailsReqModel;
 import com.dart.product.entity.shipping_details_model.SaveAndUpdateShippingDetailsResponse;
-import com.dart.product.entity.shipping_details_model.ShippingDetailsResModel;
+import com.dart.product.entity.shipping_details_model.ShippingDetailsOneResModel;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
 import com.dart.product.utilities.ErrorHandler;
@@ -23,9 +23,7 @@ public class AddShippingDetailsService {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<ShippingDetailsResModel> addShippingDetails(
-            AddShippingDetailsReqModel reqBody, String token)
-    {
+    public ResponseEntity<ShippingDetailsOneResModel> addShippingDetails(String token, AddShippingDetailsReqModel reqBody) {
 
         validateRequestToken(token);
         validateRequestBody(reqBody);
@@ -54,7 +52,7 @@ public class AddShippingDetailsService {
 
         isRecordSaveInTheCache(cacheRecordInMemory);
 
-        return new ResponseEntity<>(serviceLocator.getProductMappers().shippingDetailsResponseBuilder
+        return new ResponseEntity<>(serviceLocator.getProductMappers().shippingDetailsOneResponseBuilder
                 (saveRecordInDb.getShippingDetails(),"Shipping details successfully created"), HttpStatus.CREATED);
     }
 

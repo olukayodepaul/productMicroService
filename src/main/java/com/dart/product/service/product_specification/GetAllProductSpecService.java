@@ -47,7 +47,6 @@ public class GetAllProductSpecService {
 
             List<ProductSpecificationDbModel> allProductSpec = findByOrganisationIdAndIsActiveAndProductId(organisationId, productId);
             validateIfProductSpecExists(allProductSpec);
-            serviceLocator.getProductMappers().productsSpecFetchAllResponse(allProductSpec);
             return new ResponseEntity<>(serviceLocator.getProductMappers().productsSpecFetchAllResponse(allProductSpec), HttpStatus.OK);
 
         }

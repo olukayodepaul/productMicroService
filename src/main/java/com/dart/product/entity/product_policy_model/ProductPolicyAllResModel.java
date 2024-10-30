@@ -1,10 +1,9 @@
-package com.dart.product.entity.shipping_details_model;
-
-
+package com.dart.product.entity.product_policy_model;
 
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -14,31 +13,27 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShippingDetailsResModel {
+public class ProductPolicyAllResModel {
 
     private boolean status;
     private String message;
-    private ShippingDetails shipping_details;
+    private List<ProductPolicy> product_policies;
 
     @Builder
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class ShippingDetails {
+    public static class ProductPolicy {
 
         private Integer id;
         private Integer product_id;
         private UUID organisation_id;
-        private String shipping_method;
-        private double shipping_cost;
-        private String estimated_delivery_time;
-        private String country_code;
-        private String region;
-        private double customs_fees;
-        private String handling_time;
-        private String cross_border;
+        private String warranty_description;
+        private String warranty_period;
+        private String return_policy_description;
         private boolean is_active;
         private LocalDateTime updated_at;
         private LocalDateTime created_at;
+
     }
 }

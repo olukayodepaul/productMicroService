@@ -126,6 +126,15 @@ public class ValidationUtils {
         }
     }
 
+    //u can add more access role for users
+    public void customerRoleValidation(String role) {
+        if(!role.equalsIgnoreCase("customer")){
+            throw new CustomRuntimeException(new ErrorHandler(false, "Administrative role"," Administrative protected role"), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
+
     public static void validateField(Object field, String fieldName) {
         if (field == null) {
             throw new CustomRuntimeException(new ErrorHandler(false, "validation error", fieldName + " cannot be null"), HttpStatus.BAD_REQUEST);

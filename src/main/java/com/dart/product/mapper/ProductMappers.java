@@ -1,12 +1,23 @@
 package com.dart.product.mapper;
 
+import com.dart.product.entity.product_comments_model.AddProductCommentReqModel;
+import com.dart.product.entity.product_comments_model.ProductCommentDbModel;
+import com.dart.product.entity.product_feedback.AddProductFeedBackReqModel;
+import com.dart.product.entity.product_feedback.ProductFeedBackDbModel;
 import com.dart.product.entity.product_media_model.*;
 import com.dart.product.entity.product_model.*;
+import com.dart.product.entity.product_policy_model.*;
+import com.dart.product.entity.product_reviews_model.AddProductReviewReqModel;
+import com.dart.product.entity.product_reviews_model.ProductReviewCacheModel;
+import com.dart.product.entity.product_reviews_model.ProductReviewDbModel;
 import com.dart.product.entity.product_specification_model.*;
-import com.dart.product.entity.shipping_details_model.AddShippingDetailsReqModel;
-import com.dart.product.entity.shipping_details_model.ShippingDetailsCacheModel;
-import com.dart.product.entity.shipping_details_model.ShippingDetailsDbModel;
-import com.dart.product.entity.shipping_details_model.ShippingDetailsResModel;
+import com.dart.product.entity.product_tags_model.AddProductTagReqModel;
+import com.dart.product.entity.product_tags_model.ProductTagDbModel;
+import com.dart.product.entity.related_products_model.AddRelatedProductsReqModel;
+import com.dart.product.entity.related_products_model.RelatedProductsDbModel;
+import com.dart.product.entity.shipping_details_model.*;
+import com.dart.product.entity.special_offers_model.AddSpecialOffersReqModel;
+import com.dart.product.entity.special_offers_model.SpecialOffersDbModel;
 import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.stereotype.Component;
 
@@ -307,7 +318,7 @@ public class ProductMappers {
     }
 
     public List<MediaDbModel> mapProductMedia(List<ProductMediaCacheModel> productMedia) {
-        return productMedia.stream().map(media-> MediaDbModel
+        return productMedia.stream().map(media -> MediaDbModel
                 .builder()
                 .id(media.getId())
                 .isPrimary(media.getIs_primary())
@@ -337,17 +348,17 @@ public class ProductMappers {
     }
 
     public GetIndividualProductMediaModel.ProductMedia filterAndMapSingleProductMedia(MediaDbModel mediaList) {
-       return GetIndividualProductMediaModel.ProductMedia
-               .builder()
-               .id(mediaList.getId())
-               .product_id(mediaList.getProductId())
-               .media_type(mediaList.getMediaType())
-               .is_primary(mediaList.getIsPrimary())
-               .media_url(mediaList.getMediaUrl())
-               .is_active(mediaList.getIsActive())
-               .updated_at(mediaList.getUpdatedAt())
-               .created_at(mediaList.getCreatedAt())
-               .build();
+        return GetIndividualProductMediaModel.ProductMedia
+                .builder()
+                .id(mediaList.getId())
+                .product_id(mediaList.getProductId())
+                .media_type(mediaList.getMediaType())
+                .is_primary(mediaList.getIsPrimary())
+                .media_url(mediaList.getMediaUrl())
+                .is_active(mediaList.getIsActive())
+                .updated_at(mediaList.getUpdatedAt())
+                .created_at(mediaList.getCreatedAt())
+                .build();
     }
 
     //product Specification
@@ -434,7 +445,7 @@ public class ProductMappers {
                                 .width(reqBody.getWidth())
                                 .height(reqBody.getHeight())
                                 .build()
-                        )
+                )
                 .material_description(reqBody.getMaterialDescription())
                 .certification_description(reqBody.getCertificationDescription())
                 .updated_at(reqBody.getUpdatedAt())
@@ -504,7 +515,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public  ShippingDetailsCacheModel mapShippingDetailsCacheModelToDbModel(ShippingDetailsDbModel reqModel){
+    public ShippingDetailsCacheModel mapShippingDetailsCacheModelToDbModel(ShippingDetailsDbModel reqModel) {
         return ShippingDetailsCacheModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProductId())
@@ -523,12 +534,31 @@ public class ProductMappers {
                 .build();
     }
 
-    public ShippingDetailsResModel shippingDetailsResponseBuilder(ShippingDetailsDbModel reqBody, String message) {
-        return ShippingDetailsResModel.builder()
+    public ShippingDetailsDbModel mapCacheModelToDbModel(ShippingDetailsCacheModel reqModel) {
+        return ShippingDetailsDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProductId())
+                .organisationId(reqModel.getOrganisationId())
+                .shippingMethod(reqModel.getShippingMethod())
+                .shippingCost(reqModel.getShippingCost())
+                .estimatedDeliveryTime(reqModel.getEstimatedDeliveryTime())
+                .countryCode(reqModel.getCountryCode())
+                .region(reqModel.getRegion())
+                .customsFees(reqModel.getCustomsFees())
+                .handlingTime(reqModel.getHandlingTime())
+                .crossBorder(reqModel.getCrossBorder())
+                .isActive(reqModel.isActive())
+                .updatedAt(reqModel.getUpdatedAt())
+                .createdAt(reqModel.getCreatedAt())
+                .build();
+    }
+
+    public ShippingDetailsOneResModel shippingDetailsOneResponseBuilder(ShippingDetailsDbModel reqBody, String message) {
+        return ShippingDetailsOneResModel.builder()
                 .status(true)
                 .message(message)
                 .shipping_details(
-                        ShippingDetailsResModel.ShippingDetails
+                        ShippingDetailsOneResModel.ShippingDetails
                                 .builder()
                                 .id(reqBody.getId())
                                 .product_id(reqBody.getProductId())
@@ -547,5 +577,243 @@ public class ProductMappers {
                 )
                 .build();
     }
+
+    public List<ShippingDetailsDbModel> mapAllCacheToDbModel(List<ShippingDetailsCacheModel> reqBody) {
+        return reqBody.stream().map(spec -> ShippingDetailsDbModel.builder()
+                .id(spec.getId())
+                .productId(spec.getProductId())
+                .organisationId(spec.getOrganisationId())
+                .shippingMethod(spec.getShippingMethod())
+                .shippingCost(spec.getShippingCost())
+                .estimatedDeliveryTime(spec.getEstimatedDeliveryTime())
+                .countryCode(spec.getCountryCode())
+                .region(spec.getRegion())
+                .customsFees(spec.getCustomsFees())
+                .handlingTime(spec.getHandlingTime())
+                .crossBorder(spec.getCrossBorder())
+                .isActive(spec.isActive())
+                .updatedAt(spec.getUpdatedAt())
+                .createdAt(spec.getCreatedAt())
+                .build()
+        ).collect(Collectors.toList());
+    }
+
+    public ShippingDetailsAllResModel shippingDetailsAllResponseBuilder(List<ShippingDetailsDbModel> reqBody, String message) {
+        return ShippingDetailsAllResModel.builder()
+                .status(true)
+                .message(message)
+                .shipping_details(
+                        reqBody.stream().map(ship -> ShippingDetailsAllResModel.ShippingDetails
+                                .builder()
+                                .id(ship.getId())
+                                .product_id(ship.getProductId())
+                                .organisation_id(ship.getOrganisationId())
+                                .shipping_method(ship.getShippingMethod())
+                                .estimated_delivery_time(ship.getEstimatedDeliveryTime())
+                                .country_code(ship.getCountryCode())
+                                .region(ship.getRegion())
+                                .customs_fees(ship.getCustomsFees())
+                                .handling_time(ship.getHandlingTime())
+                                .cross_border(ship.getCrossBorder())
+                                .is_active(ship.isActive())
+                                .updated_at(ship.getUpdatedAt())
+                                .created_at(ship.getCreatedAt())
+                                .build()
+                        ).collect(Collectors.toList())
+                )
+                .build();
+    }
+
+    //product policies
+    public ProductPolicyOneResModel productPolicyOneResponseBuilder(ProductPolicyDbModel reqBody, String message) {
+        return ProductPolicyOneResModel.builder()
+                .status(true)
+                .message(message)
+                .product_policies(
+                        ProductPolicyOneResModel.ProductPolicy
+                                .builder()
+                                .id(reqBody.getId())
+                                .product_id(reqBody.getProductId())
+                                .organisation_id(reqBody.getOrganisationId())
+                                .return_policy_description(reqBody.getReturnPolicyDescription())
+                                .warranty_period(reqBody.getWarrantyPeriod())
+                                .return_policy_description(reqBody.getReturnPolicyDescription())
+                                .is_active(reqBody.isActive())
+                                .updated_at(reqBody.getUpdatedAt())
+                                .created_at(reqBody.getCreatedAt())
+                                .build()
+                )
+                .build();
+    }
+
+    public ProductPolicyDbModel mapAddProductPolicyReqModelToDbModel(AddProductPolicyReqModel reqModel) {
+        return ProductPolicyDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .warrantyDescription(reqModel.getWarranty_description())
+                .warrantyPeriod(reqModel.getWarranty_period())
+                .returnPolicyDescription(reqModel.getReturn_policy_description())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+    public ProductPolicyCacheModel mapProductPolicyToCache(ProductPolicyDbModel reqBody) {
+        return ProductPolicyCacheModel.builder()
+                .id(reqBody.getId())
+                .productId(reqBody.getProductId())
+                .organisationId(reqBody.getOrganisationId())
+                .warrantyDescription(reqBody.getWarrantyDescription())
+                .warrantyPeriod(reqBody.getWarrantyPeriod())
+                .returnPolicyDescription(reqBody.getReturnPolicyDescription())
+                .isActive(reqBody.isActive())
+                .updatedAt(reqBody.getUpdatedAt())
+                .createdAt(reqBody.getCreatedAt())
+                .build();
+    }
+
+    public  ProductPolicyDbModel mapCacheToProductPolicy(ProductPolicyCacheModel reqBody) {
+        return ProductPolicyDbModel.builder()
+                .id(reqBody.getId())
+                .productId(reqBody.getProductId())
+                .organisationId(reqBody.getOrganisationId())
+                .warrantyDescription(reqBody.getWarrantyDescription())
+                .warrantyPeriod(reqBody.getWarrantyPeriod())
+                .returnPolicyDescription(reqBody.getReturnPolicyDescription())
+                .isActive(reqBody.isActive())
+                .updatedAt(reqBody.getUpdatedAt())
+                .createdAt(reqBody.getCreatedAt())
+                .build();
+    }
+
+    public ProductPolicyAllResModel productPolicyResponseBuilder(List<ProductPolicyDbModel> reqBody) {
+        return ProductPolicyAllResModel.builder()
+                .status(true)
+                .message("")
+                .product_policies(
+                        reqBody.stream().map(policy -> ProductPolicyAllResModel.ProductPolicy
+                                .builder()
+                                .id(policy.getId())
+                                .product_id(policy.getProductId())
+                                .organisation_id(policy.getOrganisationId())
+                                .warranty_description(policy.getWarrantyDescription())
+                                .warranty_period(policy.getWarrantyPeriod())
+                                .return_policy_description(policy.getReturnPolicyDescription())
+                                .is_active(policy.isActive())
+                                .updated_at(policy.getUpdatedAt())
+                                .created_at(policy.getCreatedAt())
+                                .build()
+                        ).collect(Collectors.toList())
+                )
+                .build();
+    }
+
+    public List<ProductPolicyDbModel> mapAllCacheToProductPolicy(List<ProductPolicyCacheModel> reqBody) {
+        return reqBody.stream().map(spec -> ProductPolicyDbModel.builder()
+                .id(spec.getId())
+                .productId(spec.getProductId())
+                .organisationId(spec.getOrganisationId())
+                .warrantyDescription(spec.getWarrantyDescription())
+                .warrantyPeriod(spec.getWarrantyPeriod())
+                .returnPolicyDescription(spec.getReturnPolicyDescription())
+                .isActive(spec.isActive())
+                .updatedAt(spec.getUpdatedAt())
+                .createdAt(spec.getCreatedAt())
+                .build()
+        ).collect(Collectors.toList());
+    }
+
+
+    //Product_Review
+    public ProductReviewDbModel mapAddProductReviewReqModelToDbModel(AddProductReviewReqModel reqModel) {
+        return ProductReviewDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .userId(utilitiesManager.convertStringToUUID(reqModel.getUser_id()))
+                .rating(reqModel.getRating())
+                .reviewText(reqModel.getReview_text())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+
+    //Related_Product
+    public RelatedProductsDbModel  mapAddRelatedProductModelToDbModel(AddRelatedProductsReqModel reqModel) {
+        return RelatedProductsDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .relatedProductId(reqModel.getRelated_product_id())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+    //Special_Offer
+    public SpecialOffersDbModel mapAddSpecialOfferModelToDbModel(AddSpecialOffersReqModel reqModel) {
+        return SpecialOffersDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .offerDescription(reqModel.getOffer_description())
+                .discountPercentage(reqModel.getDiscount_percentage())
+                .startDate(reqModel.getStart_date())
+                .endDate(reqModel.getEnd_date())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+    //Product Tags
+    public ProductTagDbModel  mapAddProductTagModelToDbModel(AddProductTagReqModel reqModel) {
+        return ProductTagDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .tag(reqModel.getTag())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+
+    //Product Comment
+    public ProductCommentDbModel mapAddProductCommentModelToDbModel(AddProductCommentReqModel reqModel) {
+        return ProductCommentDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .userId(utilitiesManager.convertStringToUUID(reqModel.getUser_id()))
+                .commentText(reqModel.getComment_text())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+    //Product Feedback
+    public ProductFeedBackDbModel mapAddProductFeedBackModelToDbModel(AddProductFeedBackReqModel reqModel) {
+        return ProductFeedBackDbModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .userId(utilitiesManager.convertStringToUUID(reqModel.getUser_id()))
+                .feedbackType(reqModel.getFeedback_type())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+
+
 
 }

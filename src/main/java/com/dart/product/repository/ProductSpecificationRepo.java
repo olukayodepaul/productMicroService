@@ -11,9 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface ProductSpecificationRepo extends JpaRepository<ProductSpecificationDbModel, Long> {
-
-    Optional<ProductSpecificationDbModel> findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisation_id, boolean is_active);
     Optional<ProductSpecificationDbModel> findByIdAndOrganisationIdAndIsActiveAndProductId(Integer id, UUID organisation_id, boolean is_active, Integer product_id);
     Optional<List<ProductSpecificationDbModel>> findByOrganisationIdAndIsActiveAndProductId(UUID organisation_id, boolean is_active, Integer product_id);
-
+    Optional<ProductSpecificationDbModel> findIsActiveAndProductIdAndByOrganisationId(boolean is_active, Integer product_id, UUID organisation_id);
 }

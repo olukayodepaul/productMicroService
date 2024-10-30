@@ -11,6 +11,8 @@ import com.dart.product.utilities.ErrorHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -22,10 +24,11 @@ public class UpdateProductSpecService {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<AddProductSpecResModel> updateProductSpec(AddProductSpecReqModel reqBody, String token, Integer id) {
+    public ResponseEntity<AddProductSpecResModel> updateProductSpec(AddProductSpecReqModel reqBody, String token, Integer productId, Integer id) {
 
         validateRequestToken(token);
         validateRequestBody(reqBody);
+        //validateProductId(productId);
 
         String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
         String roles = serviceLocator.getJwtService().extractRole(jwtToken);
@@ -36,10 +39,11 @@ public class UpdateProductSpecService {
         validateBruteForceProtection(plainUUID);
 
 
-        ProductSpecificationDbModel isProductSpecExistingInDb =  findByIdAndOrganisationIdAndIsActive(id, organisationId);
+        ProductSpecificationDbModel isProductSpecExistingInDb =  findByIdAndOrganisationIdAndIsActive(id, organisationId, productId);
 
         reqBody.setOrganisation_id(isProductSpecExistingInDb.getOrganisationId());
         reqBody.setCreated_at(isProductSpecExistingInDb.getCreatedAt());
+        reqBody.setUpdated_at(LocalDateTime.now());
         reqBody.set_active(isProductSpecExistingInDb.isActive());
         reqBody.setId(isProductSpecExistingInDb.getId());
         SaveAndUpdateProductSpecResponse updateRecordInDb = serviceLocator
@@ -52,6 +56,8 @@ public class UpdateProductSpecService {
                 .saveUpdateProductSpec(serviceLocator.getProductMappers().mapProductSpecToCache(updateRecordInDb.getProductSpec()));
 
         validateIfRecordIsCache(cacheRecord);
+
+        //todo: send newly updated product specification to searchMicroService through (grpc) if fail then, kafka using same proto buffer
 
         return new ResponseEntity<>(serviceLocator.getProductMappers().productsSpecResponse(updateRecordInDb.getProductSpec(), "product specification successfully updated"), HttpStatus.OK);
 
@@ -88,8 +94,8 @@ public class UpdateProductSpecService {
         serviceLocator.getValidationUtils().roleValidation(role);
     }
 
-    private ProductSpecificationDbModel findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisationId) {
-        return serviceLocator.getProductSpecificationRepo().findByIdAndOrganisationIdAndIsActive(id, organisationId, true)
+    private ProductSpecificationDbModel findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisationId, Integer productId) {
+        return serviceLocator.getProductSpecificationRepo().findByIdAndOrganisationIdAndIsActiveAndProductId(id, organisationId, true, productId)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND

@@ -33,6 +33,17 @@ public interface ServiceLocator {
 
     ShippingDetailsRepo getShippingDetailsRepo();
 
+    ProductPolicyRepo getProductPolicyRepo();
 
+    ProductReviewRepo getProductReviewRepo();
 
+    RelatedProductsRepo getRelatedProductsDbModel();
+
+    SpecialOffersRepo getSpecialOffersRepo();
+
+    ProductTagRepo getProductTagRepo();
+
+    ProductCommentRepo getProductCommentRepo();
+
+    ProductFeedBackRepo getProductFeedBackRepo();
 }

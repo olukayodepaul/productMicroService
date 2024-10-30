@@ -1,3 +1,16 @@
+jwt uuid for admin is user_id
+jwt uuid for customer is user_id
+
+product_policies
+
+6- product_review (customer): -- Relationship: One-to-Many (a product can have multiple reviews)
+7- related_products (Admin): -- Relationship: One-to-Many (a product can have multiple related products)
+8-special_offers(Admin): -- Relationship: One-to-Many (a product can have multiple offers)
+9-product_tags(Admin): -- Relationship: One-to-Many (a product can have multiple tags)
+10-product_comments (Customers): -- Relationship: One-to-Many (a product can have multiple comments)
+11-product_feedback(Customers): -- Relationship: One-to-Many (a product can have multiple feedback entries)
+
+
 -- 1. Products Table
 -- Stores information about products available for sale.
 -- Admin: Manages product details.
@@ -74,36 +87,39 @@ FOREIGN KEY (product_id) REFERENCES products(id)         -- Relationship: One-to
 -- Stores warranty and return policy information for products.
 -- Admin: Defines policies for products.
 CREATE TABLE product_policies (
-id SERIAL PRIMARY KEY,                   -- Unique identifier for each policy entry
-product_id INTEGER NOT NULL UNIQUE,      -- ID of the product associated with the policies
-organisation_id UUID NOT NULL,           -- ID of the organisation that owns the product policies
-warranty_description TEXT,               -- Description of the warranty
-warranty_period VARCHAR(50),             -- Period of the warranty
-return_policy_description TEXT,          -- Description of the return policy
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when policies were added
-FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-One (a product has unique policies)
-FOREIGN KEY (organisation_id) REFERENCES organisations(id) -- Relationship to organisations
+id SERIAL PRIMARY KEY,                                      -- Unique identifier for each policy entry
+product_id INTEGER NOT NULL UNIQUE,                         -- ID of the product associated with the policies
+organisation_id UUID NOT NULL,                              -- ID of the organisation that owns the product policies
+warranty_description TEXT,                                  -- Description of the warranty
+warranty_period VARCHAR(50),                                -- Period of the warranty
+return_policy_description TEXT,                             -- Description of the return policy
+is_active BOOLEAN DEFAULT TRUE,                             -- Status of the product (active or inactive)
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,             -- Timestamp when the product was last updated
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,             -- Timestamp when policies were added
+FOREIGN KEY (product_id) REFERENCES products(id),           -- Relationship: One-to-One (a product has unique policies)
+FOREIGN KEY (organisation_id) REFERENCES organisations(id)  -- Relationship to organisations
 );
 
 -- 6. Product Reviews Table
 -- Stores customer reviews for products.
 -- Customers: Submit reviews based on their experiences.
 CREATE TABLE product_reviews (
-id SERIAL PRIMARY KEY,                   -- Unique identifier for each review entry
-product_id INTEGER NOT NULL,             -- ID of the product being reviewed
-organisation_id UUID NOT NULL,           -- ID of the organisation that owns the product reviews
-uuid_id INTEGER NOT NULL,                -- ID of the user who wrote the review
-rating INTEGER CHECK (rating BETWEEN 1 AND 5), -- Rating given to the product
-review_text TEXT,                        -- Text of the review
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the review was created
-FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-Many (a product can have multiple reviews)
-FOREIGN KEY (organisation_id) REFERENCES organisations(id) -- Relationship to organisations
+id SERIAL PRIMARY KEY,                                      -- Unique identifier for each review entry
+product_id INTEGER NOT NULL,                                -- ID of the product being reviewed
+organisation_id UUID NOT NULL,                              -- ID of the organisation that owns the product reviews
+user_id INTEGER NOT NULL,                              -- ID of the user who wrote the review
+rating INTEGER CHECK (rating BETWEEN 1 AND 5),              -- Rating given to the product
+review_text TEXT,                                           -- Text of the review
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,             -- Timestamp when the review was created
+FOREIGN KEY (product_id) REFERENCES products(id),           -- Relationship: One-to-Many (a product can have multiple reviews)
+FOREIGN KEY (organisation_id) REFERENCES organisations(id)  -- Relationship to organisations
 );
+
 
 -- 7. Related Products Table
 -- Stores relationships between products for cross-selling or upselling.
 -- Admin: Manages relationships between products.
-CREATE TABLE related_products (
+CREATE TABLE related_products (aUUU
 id SERIAL PRIMARY KEY,                   -- Unique identifier for each related product entry
 product_id INTEGER NOT NULL,             -- ID of the product
 related_product_id INTEGER NOT NULL,     -- ID of the related product
@@ -113,6 +129,7 @@ FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-Many (
 FOREIGN KEY (related_product_id) REFERENCES products(id), -- Relationship to related products
 FOREIGN KEY (organisation_id) REFERENCES organisations(id) -- Relationship to organisations
 );
+
 
 -- 8. Special Offers Table
 -- Stores special offers and discounts for products.
@@ -165,4 +182,6 @@ product_id INTEGER NOT NULL,             -- ID of the product being liked or dis
 user_id INTEGER NOT NULL,                -- ID of the user giving the feedback
 feedback_type VARCHAR(10) CHECK (feedback_type IN ('like', 'dislike')), -- Type of feedback (like or dislike)
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the feedback was given
-FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship
+FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-Many (a product can have multiple feedback entries)
+FOREIGN KEY (user_id) REFERENCES users(id) -- Relationship to users
+);

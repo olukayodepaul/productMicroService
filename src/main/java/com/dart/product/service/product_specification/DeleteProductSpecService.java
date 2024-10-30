@@ -25,10 +25,11 @@ public class DeleteProductSpecService {
     }
 
 
-    public ResponseEntity<AddProductSpecResModel> updateProductSpec(Integer id, String token) {
+    public ResponseEntity<AddProductSpecResModel> updateProductSpec(Integer id, String token, Integer productId) {
 
         validateRequestToken(token);
         validationUserId(id);
+       // validateProductId(productId);
 
         String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
         String roles = serviceLocator.getJwtService().extractRole(jwtToken);
@@ -38,7 +39,7 @@ public class DeleteProductSpecService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
-        ProductSpecificationDbModel isProductSpecExistingInDb =  findByIdAndOrganisationIdAndIsActive(id, organisationId);
+        ProductSpecificationDbModel isProductSpecExistingInDb =  findByIdAndOrganisationIdAndIsActive(id, organisationId, productId);
 
         isProductSpecExistingInDb.setActive(false);
         isProductSpecExistingInDb.setUpdatedAt(LocalDateTime.now());
@@ -51,13 +52,13 @@ public class DeleteProductSpecService {
         boolean deleteCacheRecord = serviceLocator.getRedisProductCacheRepo()
                 .deleteProductSpec(serviceLocator.getProductMappers().mapProductSpecToCache(deleteRecordInDb.getProductSpec()));
 
-        validateIfCacheRecordDeleted(deleteCacheRecord);
+        validateIfCacheIsDeleted(deleteCacheRecord);
 
         return new ResponseEntity<>(serviceLocator.getProductMappers().productsSpecResponse(deleteRecordInDb.getProductSpec(), "product specification successfully deleted"), HttpStatus.OK);
 
     }
 
-    private void validateIfCacheRecordDeleted(boolean isRecord) {
+    private void validateIfCacheIsDeleted(boolean isRecord) {
         if(!isRecord){
             //send through kafka
         }
@@ -79,8 +80,8 @@ public class DeleteProductSpecService {
         serviceLocator.getValidationUtils().productSpecValidation(id);
     }
 
-    private ProductSpecificationDbModel findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisationId) {
-        return serviceLocator.getProductSpecificationRepo().findByIdAndOrganisationIdAndIsActive(id, organisationId, true)
+    private ProductSpecificationDbModel findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisationId, Integer ProductId) {
+        return serviceLocator.getProductSpecificationRepo().findByIdAndOrganisationIdAndIsActiveAndProductId(id, organisationId, true, ProductId)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND
