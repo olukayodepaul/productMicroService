@@ -1,30 +1,27 @@
-package com.dart.product.service.product_reviews;
-
+package com.dart.product.service.product_comments;
 
 import com.dart.product.di.ServiceLocator;
-import com.dart.product.entity.product_reviews_model.FetchOneProductReviewModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewDbModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewOneResModel;
+import com.dart.product.entity.product_comments_model.FetchOneProductCommentModel;
+import com.dart.product.entity.product_comments_model.ProductCommentDbModel;
+import com.dart.product.entity.product_comments_model.ProductCommentOneResModel;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
 import com.dart.product.utilities.ErrorHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 @Service
-public class GetOneProductReviewService {
-
+public class GetOneProductCommentsService {
 
     private final ServiceLocator serviceLocator;
 
-    public GetOneProductReviewService(ServiceLocator serviceLocator) {
+    public GetOneProductCommentsService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<ProductReviewOneResModel> getOneProductPolicy(
+    public ResponseEntity<ProductCommentOneResModel> addProductComment(
             String token,  Integer productId, Integer id) {
 
         validateRequestToken(token);
@@ -37,23 +34,22 @@ public class GetOneProductReviewService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
-        FetchOneProductReviewModel fetchOneProductReviewFromCache = serviceLocator.getRedisProductCacheRepo().findOneProductReview(organisationId.toString(), productId, id);
+        FetchOneProductCommentModel fetchOneProductCommentFromCache = serviceLocator.getRedisProductCacheRepo().findOneProductComment(organisationId.toString(), productId, id);
 
-        if(fetchOneProductReviewFromCache.getStatus()) {
-            return new ResponseEntity<>(serviceLocator.getProductMappers().productReviewOneResponseBuilder(serviceLocator.getProductMappers().mapDbModelToProductReviewCacheModel(fetchOneProductReviewFromCache.getProductReview()), "product policy successfully fetch"), HttpStatus.OK);
+        if(fetchOneProductCommentFromCache.getStatus()){
+            return new ResponseEntity<>(serviceLocator.getProductMappers().productCommentResponseBuilder(serviceLocator.getProductMappers().mapDbModelToProductCommentDbModel(fetchOneProductCommentFromCache.getProductComment()), "product comment successfully fetch"), HttpStatus.OK);
         }else{
-            ProductReviewDbModel isProductReviewExistingInDb =  findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
-            return new ResponseEntity<>(serviceLocator.getProductMappers().productReviewOneResponseBuilder(isProductReviewExistingInDb, "product policy successfully fetch"), HttpStatus.OK);
+            ProductCommentDbModel isProductCommentExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+            return new ResponseEntity<>(serviceLocator.getProductMappers().productCommentResponseBuilder(isProductCommentExistingInDb, "product comment successfully fetch"), HttpStatus.OK);
+
         }
-
     }
-
 
     private void validateRequestToken(String token) {
         serviceLocator.getValidationUtils().jwtValidateRequest(token);
     }
 
-    private void validationUserRole(String role){
+    private void validationUserRole(String role) {
         serviceLocator.getValidationUtils().customerRoleValidation(role);
     }
 
@@ -61,8 +57,8 @@ public class GetOneProductReviewService {
         serviceLocator.getValidationUtils().bruteForceProtection(AppConfig.FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private ProductReviewDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
-        return serviceLocator.getProductReviewRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+    private ProductCommentDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getProductCommentRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND
@@ -70,3 +66,4 @@ public class GetOneProductReviewService {
     }
 
 }
+

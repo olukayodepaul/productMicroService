@@ -1,11 +1,10 @@
-package com.dart.product.service.product_reviews;
-
+package com.dart.product.service.special_offer;
 
 import com.dart.product.di.ServiceLocator;
-import com.dart.product.entity.product_reviews_model.AddProductReviewReqModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewDbModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewOneResModel;
-import com.dart.product.entity.product_reviews_model.SaveAndUpdateProductReviewResponse;
+import com.dart.product.entity.special_offers_model.AddSpecialOffersReqModel;
+import com.dart.product.entity.special_offers_model.SaveAndUpdateSpecialOffersResponse;
+import com.dart.product.entity.special_offers_model.SpecialOffersDbModel;
+import com.dart.product.entity.special_offers_model.SpecialOffersOneResModel;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
 import com.dart.product.utilities.ErrorHandler;
@@ -17,17 +16,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-public class DeleteProductReviewService {
-
+public class DeleteSpecialOffersReviewService {
 
     private final ServiceLocator serviceLocator;
 
-    public DeleteProductReviewService(ServiceLocator serviceLocator) {
+    public DeleteSpecialOffersReviewService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<ProductReviewOneResModel> updateProductPolicy(
-            String token,  Integer productId, Integer id) {
+    public ResponseEntity<SpecialOffersOneResModel> addProductPolicy(
+            String token, Integer productId, Integer id) {
 
         validateRequestToken(token);
 
@@ -39,26 +37,25 @@ public class DeleteProductReviewService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
-        ProductReviewDbModel isProductReviewExistingInDb =  findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+        SpecialOffersDbModel isSpecialOfferExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
 
-        isProductReviewExistingInDb.setUpdatedAt(LocalDateTime.now());
-        isProductReviewExistingInDb.setActive(false);
-        SaveAndUpdateProductReviewResponse updateRecordInDb = serviceLocator
+        isSpecialOfferExistingInDb.setUpdatedAt(LocalDateTime.now());
+        isSpecialOfferExistingInDb.setActive(false);
+        SaveAndUpdateSpecialOffersResponse updateRecordInDb = serviceLocator
                 .getSaveAndUpdateRecord()
-                .saveProductReview(isProductReviewExistingInDb);
+                .saveSpecialOffer(isSpecialOfferExistingInDb);
 
         isRecordDeletedInTheDb(updateRecordInDb);
+        boolean deleteCacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().deleteSpecialOffers(serviceLocator.getProductMappers().mapSpecialOffersDbModelToDbModel(updateRecordInDb.getSpecialOffers()));
 
-        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().deleteProductReview(serviceLocator.getProductMappers().mapProductReviewCacheModelToDbModel(updateRecordInDb.getProductReviews()));
-
-        isRecordSaveInTheCache(cacheRecordInMemory);
+        isRecordDeletedInTheCache(deleteCacheRecordInMemory);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(serviceLocator.getProductMappers().productReviewOneResponseBuilder(updateRecordInDb.getProductReviews(), "product policy successfully deleted"), HttpStatus.OK);
+        return new ResponseEntity<>(serviceLocator.getProductMappers().specialOffersOneResponseBuilder(updateRecordInDb.getSpecialOffers(), "special offer successfully deleted"), HttpStatus.OK);
 
     }
 
-    private void isRecordSaveInTheCache(boolean isRecord) {
+    private void isRecordDeletedInTheCache(boolean isRecord) {
         if(!isRecord){
             //send through kafka
         }
@@ -69,14 +66,14 @@ public class DeleteProductReviewService {
     }
 
     private void validationUserRole(String role){
-        serviceLocator.getValidationUtils().customerRoleValidation(role);
+        serviceLocator.getValidationUtils().roleValidation(role);
     }
 
     private void validateBruteForceProtection(String uuid) {
         serviceLocator.getValidationUtils().bruteForceProtection(AppConfig.FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private void isRecordDeletedInTheDb(SaveAndUpdateProductReviewResponse isSave) {
+    private void isRecordDeletedInTheDb(SaveAndUpdateSpecialOffersResponse isSave) {
         if(!isSave.getStatus()) {
             throw new CustomRuntimeException(
                     new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
@@ -85,8 +82,8 @@ public class DeleteProductReviewService {
         }
     }
 
-    private ProductReviewDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
-        return serviceLocator.getProductReviewRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+    private SpecialOffersDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getSpecialOffersRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND

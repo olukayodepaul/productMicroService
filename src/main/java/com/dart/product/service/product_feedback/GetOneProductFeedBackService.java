@@ -1,33 +1,31 @@
-package com.dart.product.service.product_reviews;
-
+package com.dart.product.service.product_feedback;
 
 import com.dart.product.di.ServiceLocator;
-import com.dart.product.entity.product_reviews_model.FetchOneProductReviewModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewDbModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewOneResModel;
+import com.dart.product.entity.product_feedback.FetchOneProductFeedBackModel;
+import com.dart.product.entity.product_feedback.ProductFeedBackDbModel;
+import com.dart.product.entity.product_feedback.ProductFeedBackOneResModel;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
 import com.dart.product.utilities.ErrorHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 @Service
-public class GetOneProductReviewService {
-
+public class GetOneProductFeedBackService {
 
     private final ServiceLocator serviceLocator;
 
-    public GetOneProductReviewService(ServiceLocator serviceLocator) {
+    public GetOneProductFeedBackService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<ProductReviewOneResModel> getOneProductPolicy(
-            String token,  Integer productId, Integer id) {
+    public ResponseEntity<ProductFeedBackOneResModel> addProductFeedBack(
+            String token, Integer productId, Integer id) {
 
         validateRequestToken(token);
+
 
         String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
         String roles = serviceLocator.getJwtService().extractRole(jwtToken);
@@ -37,17 +35,15 @@ public class GetOneProductReviewService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
-        FetchOneProductReviewModel fetchOneProductReviewFromCache = serviceLocator.getRedisProductCacheRepo().findOneProductReview(organisationId.toString(), productId, id);
+        FetchOneProductFeedBackModel fetchOneProductFeedBackFromCache = serviceLocator.getRedisProductCacheRepo().findOneProductFeedBack(organisationId.toString(), productId, id);
 
-        if(fetchOneProductReviewFromCache.getStatus()) {
-            return new ResponseEntity<>(serviceLocator.getProductMappers().productReviewOneResponseBuilder(serviceLocator.getProductMappers().mapDbModelToProductReviewCacheModel(fetchOneProductReviewFromCache.getProductReview()), "product policy successfully fetch"), HttpStatus.OK);
+        if(fetchOneProductFeedBackFromCache.getStatus()){
+            return new ResponseEntity<>(serviceLocator.getProductMappers().productFeedBackResponseBuilder(serviceLocator.getProductMappers().mapDbModelToProductFeedBackDbModel(fetchOneProductFeedBackFromCache.getProductFeedBack()), "product comment successfully fetch"), HttpStatus.OK);
         }else{
-            ProductReviewDbModel isProductReviewExistingInDb =  findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
-            return new ResponseEntity<>(serviceLocator.getProductMappers().productReviewOneResponseBuilder(isProductReviewExistingInDb, "product policy successfully fetch"), HttpStatus.OK);
+            ProductFeedBackDbModel isProductFeedBackExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+            return new ResponseEntity<>(serviceLocator.getProductMappers().productFeedBackResponseBuilder(isProductFeedBackExistingInDb, "product comment successfully fetch"), HttpStatus.OK);
         }
-
     }
-
 
     private void validateRequestToken(String token) {
         serviceLocator.getValidationUtils().jwtValidateRequest(token);
@@ -61,12 +57,13 @@ public class GetOneProductReviewService {
         serviceLocator.getValidationUtils().bruteForceProtection(AppConfig.FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private ProductReviewDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
-        return serviceLocator.getProductReviewRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+    private ProductFeedBackDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getProductFeedBackRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }
+
 
 }

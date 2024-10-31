@@ -18,13 +18,13 @@ public class ProductTagOneResModel {
 
     private boolean status;
     private String message;
-    private SpecialOffers product_tags;
+    private ProductTag product_tags;
 
     @Builder
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class SpecialOffers {
+    public static class ProductTag {
 
         private Integer id;
         private Integer product_id;

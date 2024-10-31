@@ -6,6 +6,7 @@ package com.dart.product.entity.special_offers_model;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -14,11 +15,11 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SpecialOffersOneResModel {
+public class SpecialOffersAllResModel {
 
     private boolean status;
     private String message;
-    private SpecialOffers special_offers;
+    private List<SpecialOffers> special_offers;
 
     @Builder
     @Data

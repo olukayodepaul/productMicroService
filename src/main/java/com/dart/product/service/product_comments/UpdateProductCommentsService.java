@@ -1,11 +1,11 @@
-package com.dart.product.service.product_reviews;
-
+package com.dart.product.service.product_comments;
 
 import com.dart.product.di.ServiceLocator;
-import com.dart.product.entity.product_reviews_model.AddProductReviewReqModel;
+import com.dart.product.entity.product_comments_model.AddProductCommentReqModel;
+import com.dart.product.entity.product_comments_model.ProductCommentDbModel;
+import com.dart.product.entity.product_comments_model.ProductCommentOneResModel;
+import com.dart.product.entity.product_comments_model.SaveAndUpdateProductCommentResponse;
 import com.dart.product.entity.product_reviews_model.ProductReviewDbModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewOneResModel;
-import com.dart.product.entity.product_reviews_model.SaveAndUpdateProductReviewResponse;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
 import com.dart.product.utilities.ErrorHandler;
@@ -17,18 +17,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-public class UpdateProductReviewService {
-
+public class UpdateProductCommentsService {
 
     private final ServiceLocator serviceLocator;
 
-    public UpdateProductReviewService(ServiceLocator serviceLocator) {
+    public UpdateProductCommentsService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<ProductReviewOneResModel> updateProductPolicy(
-            String token, AddProductReviewReqModel reqBody, Integer productId, Integer id) {
-
+    public ResponseEntity<ProductCommentOneResModel> addProductComment(
+            String token, AddProductCommentReqModel reqBody, Integer productId, Integer id) {
 
         validateRequestToken(token);
         validateRequestBody(reqBody);
@@ -41,25 +39,24 @@ public class UpdateProductReviewService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
-        ProductReviewDbModel isProductReviewExistingInDb =  findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+        ProductCommentDbModel isProductCommentExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
 
-        reqBody.setOrganisation_id(isProductReviewExistingInDb.getOrganisationId());
-        reqBody.setCreated_at(isProductReviewExistingInDb.getCreatedAt());
+        reqBody.setOrganisation_id(isProductCommentExistingInDb.getOrganisationId());
+        reqBody.setCreated_at(isProductCommentExistingInDb.getCreatedAt());
         reqBody.setUpdated_at(LocalDateTime.now());
-        reqBody.set_active(isProductReviewExistingInDb.isActive());
-        reqBody.setId(isProductReviewExistingInDb.getId());
-        SaveAndUpdateProductReviewResponse updateRecordInDb = serviceLocator
+        reqBody.set_active(isProductCommentExistingInDb.isActive());
+        reqBody.setId(isProductCommentExistingInDb.getId());
+        SaveAndUpdateProductCommentResponse updateRecordInDb = serviceLocator
                 .getSaveAndUpdateRecord()
-                .saveProductReview(serviceLocator.getProductMappers().mapAddProductReviewReqModelToDbModel(reqBody));
+                .saveProductComment(serviceLocator.getProductMappers().mapAddProductCommentModelToDbModel(reqBody));
 
-        isRecordUpdatedInTheDb(updateRecordInDb);
-
-        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().saveUpdateProductReview(serviceLocator.getProductMappers().mapProductReviewCacheModelToDbModel(updateRecordInDb.getProductReviews()));
+        isRecordSaveInTheDb(updateRecordInDb);
+        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().saveUpdateProductComment(serviceLocator.getProductMappers().mapProductCommentDbModelToDbModel(updateRecordInDb.getProductComments()));
 
         isRecordSaveInTheCache(cacheRecordInMemory);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(serviceLocator.getProductMappers().productReviewOneResponseBuilder(updateRecordInDb.getProductReviews(), "product policy successfully updated"), HttpStatus.OK);
+        return new ResponseEntity<>(serviceLocator.getProductMappers().productCommentResponseBuilder(updateRecordInDb.getProductComments(), "product comment successfully updated"), HttpStatus.OK);
 
     }
 
@@ -69,7 +66,7 @@ public class UpdateProductReviewService {
         }
     }
 
-    private void validateRequestBody(AddProductReviewReqModel reqBody) {
+    private void validateRequestBody(AddProductCommentReqModel reqBody) {
         //do the validation
         //serviceLocator.getValidationUtils().productSpecValidate(reqBody);
     }
@@ -78,7 +75,7 @@ public class UpdateProductReviewService {
         serviceLocator.getValidationUtils().jwtValidateRequest(token);
     }
 
-    private void validationUserRole(String role){
+    private void validationUserRole(String role) {
         serviceLocator.getValidationUtils().customerRoleValidation(role);
     }
 
@@ -86,7 +83,7 @@ public class UpdateProductReviewService {
         serviceLocator.getValidationUtils().bruteForceProtection(AppConfig.FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private void isRecordUpdatedInTheDb(SaveAndUpdateProductReviewResponse isSave) {
+    private void isRecordSaveInTheDb(SaveAndUpdateProductCommentResponse isSave) {
         if(!isSave.getStatus()) {
             throw new CustomRuntimeException(
                     new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
@@ -95,8 +92,8 @@ public class UpdateProductReviewService {
         }
     }
 
-    private ProductReviewDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
-        return serviceLocator.getProductReviewRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+    private ProductCommentDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getProductCommentRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND
@@ -104,3 +101,4 @@ public class UpdateProductReviewService {
     }
 
 }
+

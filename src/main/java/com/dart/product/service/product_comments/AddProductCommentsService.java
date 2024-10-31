@@ -5,7 +5,11 @@ import com.dart.product.entity.product_comments_model.AddProductCommentReqModel;
 import com.dart.product.entity.product_comments_model.ProductCommentOneResModel;
 import com.dart.product.entity.product_comments_model.SaveAndUpdateProductCommentResponse;
 import com.dart.product.entity.product_reviews_model.SaveAndUpdateProductReviewResponse;
+import com.dart.product.entity.product_tags_model.SaveAndUpdateProductTagResponse;
 import com.dart.product.utilities.AppConfig;
+import com.dart.product.utilities.CustomRuntimeException;
+import com.dart.product.utilities.ErrorHandler;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -44,11 +48,31 @@ public class AddProductCommentsService {
                 .getSaveAndUpdateRecord()
                 .saveProductComment(serviceLocator.getProductMappers().mapAddProductCommentModelToDbModel(reqBody));
 
+        isRecordSaveInTheDb(saveRecordInDb);
+        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().saveUpdateProductComment(serviceLocator.getProductMappers().mapProductCommentDbModelToDbModel(saveRecordInDb.getProductComments()));
 
-        return null;
+
+        isRecordSaveInTheCache(cacheRecordInMemory);
+
+        //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
+        return new ResponseEntity<>(serviceLocator.getProductMappers().productCommentResponseBuilder(saveRecordInDb.getProductComments(), "product comment successfully created"), HttpStatus.CREATED);
 
     }
 
+    private void isRecordSaveInTheCache(boolean isRecord) {
+        if(!isRecord){
+            //send through kafka
+        }
+    }
+
+    private void isRecordSaveInTheDb(SaveAndUpdateProductCommentResponse isSave) {
+        if(!isSave.getStatus()) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
 
     private void validateRequestBody(AddProductCommentReqModel reqBody) {
         //do the validation

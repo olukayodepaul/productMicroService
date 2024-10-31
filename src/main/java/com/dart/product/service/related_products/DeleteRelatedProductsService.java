@@ -2,6 +2,7 @@ package com.dart.product.service.related_products;
 
 import com.dart.product.di.ServiceLocator;
 import com.dart.product.entity.related_products_model.AddRelatedProductsReqModel;
+import com.dart.product.entity.related_products_model.RelatedProductsDbModel;
 import com.dart.product.entity.related_products_model.RelatedProductsOneResModel;
 import com.dart.product.entity.related_products_model.SaveAndUpdateRelatedProductResponse;
 import com.dart.product.utilities.AppConfig;
@@ -15,21 +16,18 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-public class AddRelatedProductsService {
+public class DeleteRelatedProductsService {
 
     private final ServiceLocator serviceLocator;
 
-    public AddRelatedProductsService(ServiceLocator serviceLocator) {
+    public DeleteRelatedProductsService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
     public ResponseEntity<RelatedProductsOneResModel> addProductPolicy(
-            String token, AddRelatedProductsReqModel reqBody) {
-
+            String token, Integer productId, Integer id) {
 
         validateRequestToken(token);
-        validateRequestBody(reqBody);
-
 
         String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
         String roles = serviceLocator.getJwtService().extractRole(jwtToken);
@@ -39,24 +37,22 @@ public class AddRelatedProductsService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
+        RelatedProductsDbModel isRelatedProductExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
 
-        reqBody.setOrganisation_id(organisationId);
-        reqBody.setCreated_at(LocalDateTime.now());
-        reqBody.setUpdated_at(LocalDateTime.now());
-        reqBody.set_active(true);
-        reqBody.setId(0);
-        SaveAndUpdateRelatedProductResponse saveRecordInDb = serviceLocator
+        isRelatedProductExistingInDb.setUpdatedAt(LocalDateTime.now());
+        isRelatedProductExistingInDb.setActive(false);
+        SaveAndUpdateRelatedProductResponse updatedRecordInDb = serviceLocator
                 .getSaveAndUpdateRecord()
-                .saveRelatedProduct(serviceLocator.getProductMappers().mapAddRelatedProductModelToDbModel(reqBody));
+                .saveRelatedProduct(isRelatedProductExistingInDb);
 
 
-        isRecordSaveInTheDb(saveRecordInDb);
-        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().saveUpdateRelatedProduct(serviceLocator.getProductMappers().mapRelatedProductsCacheModelToDbModel(saveRecordInDb.getRelatedProducts()));
+        isRecordSaveInTheDb(updatedRecordInDb);
+        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().deleteRelatedProduct(serviceLocator.getProductMappers().mapRelatedProductsCacheModelToDbModel(updatedRecordInDb.getRelatedProducts()));
 
         isRecordSaveInTheCache(cacheRecordInMemory);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(serviceLocator.getProductMappers().relatedProductsOneResponseBuilder(saveRecordInDb.getRelatedProducts(), "related  product successfully created"), HttpStatus.CREATED);
+        return new ResponseEntity<>(serviceLocator.getProductMappers().relatedProductsOneResponseBuilder(updatedRecordInDb.getRelatedProducts(), "related  product successfully deleted"), HttpStatus.OK);
 
     }
 
@@ -90,6 +86,14 @@ public class AddRelatedProductsService {
                     HttpStatus.BAD_REQUEST
             );
         }
+    }
+
+    private RelatedProductsDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getRelatedProductsDbModel().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+                .orElseThrow(() -> new CustomRuntimeException(
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
+                        HttpStatus.NOT_FOUND
+                ));
     }
 
 

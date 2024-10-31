@@ -31,7 +31,7 @@ public class ProductReviewCacheModel implements Serializable {
     private Integer productId;
     private UUID organisationId;
 
-    private String userId;
+    private UUID userId;
     private Integer rating;
     private String reviewText;
 

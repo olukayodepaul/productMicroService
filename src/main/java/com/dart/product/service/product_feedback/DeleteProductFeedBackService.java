@@ -16,19 +16,19 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-public class AddProductFeedBackService {
+public class DeleteProductFeedBackService {
 
     private final ServiceLocator serviceLocator;
 
-    public AddProductFeedBackService(ServiceLocator serviceLocator) {
+    public DeleteProductFeedBackService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
     public ResponseEntity<ProductFeedBackOneResModel> addProductFeedBack(
-            String token, AddProductFeedBackReqModel reqBody, Integer productId, Integer id) {
+            String token, Integer productId, Integer id) {
 
         validateRequestToken(token);
-        validateRequestBody(reqBody);
+
 
         String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
         String roles = serviceLocator.getJwtService().extractRole(jwtToken);
@@ -38,23 +38,22 @@ public class AddProductFeedBackService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
+        ProductFeedBackDbModel isProductFeedBackExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
 
-        reqBody.setOrganisation_id(organisationId);
-        reqBody.setCreated_at(LocalDateTime.now());
-        reqBody.setUpdated_at(LocalDateTime.now());
-        reqBody.set_active(true);
-        reqBody.setId(0);
+
+        isProductFeedBackExistingInDb.setUpdatedAt(LocalDateTime.now());
+        isProductFeedBackExistingInDb.setActive(false);
         SaveAndUpdateProductFeedBackResponse saveRecordInDb = serviceLocator
                 .getSaveAndUpdateRecord()
-                .saveProductFeedBack(serviceLocator.getProductMappers().mapAddProductFeedBackModelToDbModel(reqBody));
+                .saveProductFeedBack(isProductFeedBackExistingInDb);
 
         isRecordSaveInTheDb(saveRecordInDb);
-        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().saveUpdateProductFeedBack(serviceLocator.getProductMappers().mapProductFeedBackDbModelToDbModel(saveRecordInDb.getProductFeedback()));
+        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().deleteProductFeedBack(serviceLocator.getProductMappers().mapProductFeedBackDbModelToDbModel(saveRecordInDb.getProductFeedback()));
 
         isRecordSaveInTheCache(cacheRecordInMemory);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(serviceLocator.getProductMappers().productFeedBackResponseBuilder(saveRecordInDb.getProductFeedback(), "product comment successfully created"), HttpStatus.CREATED);
+        return new ResponseEntity<>(serviceLocator.getProductMappers().productFeedBackResponseBuilder(saveRecordInDb.getProductFeedback(), "product comment successfully deleted"), HttpStatus.OK);
 
     }
 
@@ -62,11 +61,6 @@ public class AddProductFeedBackService {
         if(!isRecord){
             //send through kafka
         }
-    }
-
-    private void validateRequestBody(AddProductFeedBackReqModel reqBody) {
-        //do the validation
-        //serviceLocator.getValidationUtils().productSpecValidate(reqBody);
     }
 
     private void validateRequestToken(String token) {
@@ -90,5 +84,12 @@ public class AddProductFeedBackService {
         }
     }
 
+    private ProductFeedBackDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getProductFeedBackRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+                .orElseThrow(() -> new CustomRuntimeException(
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
+                        HttpStatus.NOT_FOUND
+                ));
+    }
 
 }

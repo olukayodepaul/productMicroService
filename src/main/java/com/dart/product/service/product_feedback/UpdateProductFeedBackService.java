@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-public class AddProductFeedBackService {
+public class UpdateProductFeedBackService {
 
     private final ServiceLocator serviceLocator;
 
-    public AddProductFeedBackService(ServiceLocator serviceLocator) {
+    public UpdateProductFeedBackService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
@@ -38,12 +38,13 @@ public class AddProductFeedBackService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
+        ProductFeedBackDbModel isProductFeedBackExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
 
-        reqBody.setOrganisation_id(organisationId);
-        reqBody.setCreated_at(LocalDateTime.now());
+        reqBody.setOrganisation_id(isProductFeedBackExistingInDb.getOrganisationId());
+        reqBody.setCreated_at(isProductFeedBackExistingInDb.getCreatedAt());
         reqBody.setUpdated_at(LocalDateTime.now());
-        reqBody.set_active(true);
-        reqBody.setId(0);
+        reqBody.set_active(isProductFeedBackExistingInDb.isActive());
+        reqBody.setId(isProductFeedBackExistingInDb.getId());
         SaveAndUpdateProductFeedBackResponse saveRecordInDb = serviceLocator
                 .getSaveAndUpdateRecord()
                 .saveProductFeedBack(serviceLocator.getProductMappers().mapAddProductFeedBackModelToDbModel(reqBody));
@@ -54,7 +55,7 @@ public class AddProductFeedBackService {
         isRecordSaveInTheCache(cacheRecordInMemory);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(serviceLocator.getProductMappers().productFeedBackResponseBuilder(saveRecordInDb.getProductFeedback(), "product comment successfully created"), HttpStatus.CREATED);
+        return new ResponseEntity<>(serviceLocator.getProductMappers().productFeedBackResponseBuilder(saveRecordInDb.getProductFeedback(), "product comment successfully created"), HttpStatus.OK);
 
     }
 
@@ -90,5 +91,12 @@ public class AddProductFeedBackService {
         }
     }
 
+    private ProductFeedBackDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getProductFeedBackRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+                .orElseThrow(() -> new CustomRuntimeException(
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
+                        HttpStatus.NOT_FOUND
+                ));
+    }
 
 }

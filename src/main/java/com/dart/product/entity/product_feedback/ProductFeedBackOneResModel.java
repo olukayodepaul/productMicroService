@@ -31,6 +31,7 @@ public class ProductFeedBackOneResModel {
         private UUID organisation_id;
 
         private UUID user_id;
+        private String feedback_type;
 
         private boolean is_active;
         private LocalDateTime updated_at;

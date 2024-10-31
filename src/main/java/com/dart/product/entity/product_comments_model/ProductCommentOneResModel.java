@@ -31,6 +31,7 @@ public class ProductCommentOneResModel {
         private UUID organisation_id;
 
         private String comment_text;
+        private UUID user_id;
 
         private boolean is_active;
         private LocalDateTime updated_at;

@@ -1,11 +1,11 @@
-package com.dart.product.service.product_tag;
+package com.dart.product.service.special_offer;
 
 import com.dart.product.di.ServiceLocator;
-import com.dart.product.entity.product_tags_model.AddProductTagReqModel;
-import com.dart.product.entity.product_tags_model.ProductTagOneResModel;
-import com.dart.product.entity.product_tags_model.SaveAndUpdateProductTagResponse;
+import com.dart.product.entity.product_reviews_model.ProductReviewDbModel;
 import com.dart.product.entity.special_offers_model.AddSpecialOffersReqModel;
 import com.dart.product.entity.special_offers_model.SaveAndUpdateSpecialOffersResponse;
+import com.dart.product.entity.special_offers_model.SpecialOffersDbModel;
+import com.dart.product.entity.special_offers_model.SpecialOffersOneResModel;
 import com.dart.product.utilities.AppConfig;
 import com.dart.product.utilities.CustomRuntimeException;
 import com.dart.product.utilities.ErrorHandler;
@@ -17,20 +17,19 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-public class AddProductTagService {
+public class UpdatedSpecialOffersReviewService {
 
     private final ServiceLocator serviceLocator;
 
-    public AddProductTagService(ServiceLocator serviceLocator) {
+    public UpdatedSpecialOffersReviewService(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
     }
 
-    public ResponseEntity<ProductTagOneResModel> addProductPolicy(
-            String token, AddProductTagReqModel reqBody) {
+    public ResponseEntity<SpecialOffersOneResModel> addProductPolicy(
+            String token, AddSpecialOffersReqModel reqBody, Integer productId, Integer id) {
 
         validateRequestToken(token);
         validateRequestBody(reqBody);
-
 
         String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
         String roles = serviceLocator.getJwtService().extractRole(jwtToken);
@@ -40,23 +39,25 @@ public class AddProductTagService {
         validationUserRole(roles);
         validateBruteForceProtection(plainUUID);
 
-        reqBody.setOrganisation_id(organisationId);
-        reqBody.setCreated_at(LocalDateTime.now());
+        SpecialOffersDbModel isSpecialOfferExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+
+        reqBody.setOrganisation_id(isSpecialOfferExistingInDb.getOrganisationId());
+        reqBody.setCreated_at(isSpecialOfferExistingInDb.getCreatedAt());
         reqBody.setUpdated_at(LocalDateTime.now());
-        reqBody.set_active(true);
-        reqBody.setId(0);
-        SaveAndUpdateProductTagResponse saveRecordInDb = serviceLocator
+        reqBody.set_active(isSpecialOfferExistingInDb.isActive());
+        reqBody.setId(isSpecialOfferExistingInDb.getId());
+        SaveAndUpdateSpecialOffersResponse updateRecordInDb = serviceLocator
                 .getSaveAndUpdateRecord()
-                .saveProductTag(serviceLocator.getProductMappers().mapAddProductTagModelToDbModel(reqBody));
+                .saveSpecialOffer(serviceLocator.getProductMappers().mapAddSpecialOfferModelToDbModel(reqBody));
 
 
-        isRecordSaveInTheDb(saveRecordInDb);
-        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().saveUpdateProductTag(serviceLocator.getProductMappers().mapProductTagDbModelToDbModel(saveRecordInDb.getProductTags()));
+        isRecordSaveInTheDb(updateRecordInDb);
+        boolean cacheRecordInMemory = serviceLocator.getRedisProductCacheRepo().saveUpdateSpecialOffers(serviceLocator.getProductMappers().mapSpecialOffersDbModelToDbModel(updateRecordInDb.getSpecialOffers()));
 
         isRecordSaveInTheCache(cacheRecordInMemory);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(serviceLocator.getProductMappers().productTagResponseBuilder(saveRecordInDb.getProductTags(), "product tag successfully created"), HttpStatus.CREATED);
+        return new ResponseEntity<>(serviceLocator.getProductMappers().specialOffersOneResponseBuilder(updateRecordInDb.getSpecialOffers(), "special offer successfully updated"), HttpStatus.OK);
 
     }
 
@@ -66,7 +67,7 @@ public class AddProductTagService {
         }
     }
 
-    private void validateRequestBody(AddProductTagReqModel reqBody) {
+    private void validateRequestBody(AddSpecialOffersReqModel reqBody) {
         //do the validation
         //serviceLocator.getValidationUtils().productSpecValidate(reqBody);
     }
@@ -83,7 +84,7 @@ public class AddProductTagService {
         serviceLocator.getValidationUtils().bruteForceProtection(AppConfig.FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private void isRecordSaveInTheDb(SaveAndUpdateProductTagResponse isSave) {
+    private void isRecordSaveInTheDb(SaveAndUpdateSpecialOffersResponse isSave) {
         if(!isSave.getStatus()) {
             throw new CustomRuntimeException(
                     new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
@@ -92,5 +93,12 @@ public class AddProductTagService {
         }
     }
 
+    private SpecialOffersDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+        return serviceLocator.getSpecialOffersRepo().findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+                .orElseThrow(() -> new CustomRuntimeException(
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
+                        HttpStatus.NOT_FOUND
+                ));
+    }
 
 }
