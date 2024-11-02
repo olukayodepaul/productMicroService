@@ -54,7 +54,7 @@ public class CreateProductService {
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
-        validateUserRole(roles);
+//        validateUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
         reqBody.setOrganisation_id(organisationId);

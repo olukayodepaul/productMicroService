@@ -80,11 +80,13 @@ public class ProductController {
      * @param authToken Authorization token from request header.
      * @return ResponseEntity containing a list of all products.
      */
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<AllProductResDto> getAllProducts(
-            @RequestHeader("Authorization") String authToken
+            @RequestHeader("Authorization") String authToken,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit
     ) {
-        return getAllProductService.retrieveAllProduct(authToken);
+        return getAllProductService.getAllProduct(authToken, offset, limit);
     }
 
     /**

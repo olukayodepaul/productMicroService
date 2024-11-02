@@ -33,10 +33,13 @@ import com.dart.product.dto_model.shipping_details_model.ShippingDetailsCacheMod
 import com.dart.product.dto_model.special_offers_model.FetchAllSpecialOfferModel;
 import com.dart.product.dto_model.special_offers_model.FetchOneSpecialOfferModel;
 import com.dart.product.dto_model.special_offers_model.SpecialOffersCacheModel;
+import com.dart.product.entity.product_entity.ProductDbEntity;
 import com.dart.product.security.FilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -156,6 +159,7 @@ public class RedisProductCacheRepo {
         }
     }
 
+
     public FetchAllProductsResModel getAllProducts(String organisationId) {
         try {
             String key = PRODUCT_KEY + "_" + organisationId;
@@ -166,14 +170,14 @@ public class RedisProductCacheRepo {
                         .map(value -> objectMapper.convertValue(value, ProductCacheEntity.class))
                         .sorted(Comparator.comparing(ProductCacheEntity::getId))
                         .collect(Collectors.toList());
-                return new FetchAllProductsResModel(true, "Addresses fetched successfully", products);
-            }
 
-            return new FetchAllProductsResModel(false, "No addresses found", Collections.emptyList());
+                return new FetchAllProductsResModel(true, "Addresses fetched successfully",  products);
+            }
+            return new FetchAllProductsResModel(false, "No addresses found",  Collections.emptyList());
 
         } catch (Exception e) {
             logger.error("Error fetching addresses for uuid {}: {}", organisationId, e.getMessage());
-            return new FetchAllProductsResModel(false, e.getMessage(), Collections.emptyList());
+            return new FetchAllProductsResModel(false, e.getMessage(),  Collections.emptyList());
         }
     }
 

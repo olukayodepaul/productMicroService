@@ -46,7 +46,7 @@ public class AppConfig {
     public static final String UPDATE_PRODUCT_RESPONSE = "product successfully updated";
     public static final String DELETE_PRODUCT_RESPONSE = "product successfully deleted";
     public static final String PRODUCT_NOT_FOUND_ERROR_RESPONSE = "product not found.";
-    public static final String GET_PRODUCT_RESPONSE = "product successfully fetched";
+    public static final String GET_PRODUCT_RESPONSE = "Products fetched successfully";
 
     //share
     public static final String EMPTY_PRODUCT_USER_ID = "User id cant be empty";
