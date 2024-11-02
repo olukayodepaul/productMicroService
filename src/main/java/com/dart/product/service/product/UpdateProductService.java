@@ -1,107 +1,130 @@
 package com.dart.product.service.product;
 
 
-import com.dart.product.entity.product_model.ProductReqModel;
-import com.dart.product.entity.product_model.ProductResModel;
-import com.dart.product.entity.product_model.ProductDbModel;
+import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
+import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
+import com.dart.product.entity.product_entity.ProductDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductsRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
+
 
 @Service
 public class UpdateProductService {
 
-    private final UtilitiesManager utilitiesManager;
-    private final ValidationUtils validationUtils;
+    private final ProductsRepo productsRepo;
     private final FilterService jwtService;
-    private final ProductMappers mappers;
-    private final SaveAndUpdateRecord saveAndUpdateRecord;
-    private RedisProductCacheRepo redisCacheRepo;
-    private ProductsRepo productsRepo;
+    private final UtilitiesManager utilitiesManager;
+    private final ProductMappers productMappers;
+    private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ValidationUtils validationUtils;
+    private static final Logger logger = LoggerFactory.getLogger(CreateProductService.class);
 
     public UpdateProductService(
-            UtilitiesManager utilitiesManager,
-            ValidationUtils validationUtils,
+            ProductsRepo productsRepo,
             FilterService jwtService,
-            ProductMappers mappers,
-            SaveAndUpdateRecord saveAndUpdateRecord,
-            RedisProductCacheRepo redisCacheRepo,
-            ProductsRepo productsRepo
-    )
-    {
-        this.utilitiesManager = utilitiesManager;
-        this.validationUtils = validationUtils;
-        this.jwtService = jwtService;
-        this.mappers = mappers;
-        this.saveAndUpdateRecord = saveAndUpdateRecord;
-        this.redisCacheRepo = redisCacheRepo;
+            UtilitiesManager utilitiesManager,
+            ProductMappers productMappers,
+            RedisProductCacheRepo redisProductCacheRepo,
+            ValidationUtils validationUtils
+    ) {
         this.productsRepo = productsRepo;
+        this.jwtService = jwtService;
+        this.utilitiesManager = utilitiesManager;
+        this.productMappers = productMappers;
+        this.redisProductCacheRepo = redisProductCacheRepo;
+        this.validationUtils = validationUtils;
     }
 
+    public ResponseEntity<ProductResModelDTO> updateProduct( String authToken, ProductReqDTO reqBody, Integer id) {
 
-    public ResponseEntity<ProductResModel> updateProduct(ProductReqModel reqModel, String token, Integer id) {
+        validateRequestToken(authToken);
+        validateRequestBody(reqBody);
 
-        String jwtToken = jwtService.extractTokenFromHeader(token);
+        String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
-        String plainUUID = jwtService.extractUUID(jwtToken);
+        UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
+        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
-        UUID organisationId =  utilitiesManager.convertStringToUUID(jwtService.extractUUID(jwtToken)); //is a uuid
-        //UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken)); //is a uuid
-        validateRequest(token, reqModel, plainUUID, roles, id.toString());
+        validateUserRole(roles);
+        validateBruteForceProtection(userId.toString());
 
+        ProductDbEntity existingProduct = findByIdAndOrganisationIdAndIsActive(id, organisationId);
 
-        ProductDbModel isProductExisting = productExisting(id, organisationId);
+        reqBody.setOrganisation_id(existingProduct.getOrganisationId());
+        reqBody.setCreated_at(existingProduct.getCreated_at());
+        reqBody.setUpdated_at(LocalDateTime.now());
+        reqBody.set_active(existingProduct.getIsActive());
+        reqBody.setId(existingProduct.getId());
+        SaveAndUpdateProductResponse persistRecord = saveProductRecord(productMappers.toProduct(reqBody));
 
-        SaveAndUpdateResponse updatedResult = saveAndUpdateRecord.updateProductRecord(
-                mappers.toProductBuilder(isProductExisting, reqModel)
-        );
+        checkIfRecordPersisted(persistRecord);
 
-        //check if records is updated.
-        if(!updatedResult.getStatus()) {
-            throw new CustomRuntimeException(
-                    new ErrorHandler(false, updatedResult.getError(), updatedResult.getError()),
-                    HttpStatus.BAD_REQUEST
-            );
-        }
+        boolean cacheRecord = redisProductCacheRepo.saveUpdateProduct(productMappers.toProductCache(persistRecord.getProduct()));
 
-        boolean cacheResult = redisCacheRepo.saveUpdateProduct(mappers.toProductCache(updatedResult.getProduct()));
-        if(!cacheResult){
-            //send to redis........
-        }
+        checkIfRecordCached(cacheRecord);
 
-        //todo: send updated product to searchMicroService (grpc)
-        //todo: if grpc failed, then reroute through kafka
+        // TODO: Send newly created product to searchMicroService through (gRPC)
+        return new ResponseEntity<>(productMappers.toProductResponseBuilder(persistRecord.getProduct(), AppConfig.UPDATE_PRODUCT_RESPONSE), HttpStatus.OK);
 
-        return new ResponseEntity<>(new ProductResModel(
-                true,
-                "message",
-                mappers.toProductResponse(updatedResult.getProduct())
-        ), HttpStatus.OK);
     }
 
-    private void validateRequest(String token, ProductReqModel requestBody, String uuid, String role, String id) {
-//        validationUtils.userRoleValidateRequest(role);
-        validationUtils.IdValidation(id);
-        validationUtils.jwtValidateRequest(token);
-//        validationUtils.roleValidation(role);
-        validationUtils.productValidateRequest(requestBody, 0);
+    private void checkIfRecordCached(boolean isRecord) {
+        if (!isRecord) {
+            // Send failure notification through Kafka
+        }
+    }
+
+    private void validateRequestToken(String token) {
+        validationUtils.accessTokenValidation(token);
+    }
+
+    private void validateUserRole(String role) {
+        validationUtils.adminRoleValidation(role);
+    }
+
+    private void validateBruteForceProtection(String uuid) {
         validationUtils.bruteForceProtection(AppConfig.UPDATE_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private ProductDbModel productExisting(Integer id, UUID organisationId) {
+    private void validateRequestBody(ProductReqDTO reqBody) {
+        validationUtils.productValidateRequest(reqBody);
+        validationUtils.validateProductRecord(reqBody);
+    }
+
+    private ProductDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisationId) {
         return productsRepo.findByIdAndOrganisationIdAndIsActive(id, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
-                        new ErrorHandler(false, AppConfig.UPDATE_PRODUCT_ERROR_TAG, AppConfig.UPDATE_PRODUCT_ERROR_RESPONSE),
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.PRODUCT_NOT_FOUND_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
+    }
+
+    private void checkIfRecordPersisted(SaveAndUpdateProductResponse isSave) {
+        if (!isSave.getStatus()) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    public SaveAndUpdateProductResponse saveProductRecord(ProductDbEntity regDetails) {
+        try {
+            return new SaveAndUpdateProductResponse(true, "", productsRepo.save(regDetails)) ;
+        } catch (Exception e) {
+            logger.error("UpdateProductService::saveProductRecord: {}", e.getMessage());
+            return new SaveAndUpdateProductResponse(false, e.getMessage(), ProductDbEntity.builder().build());
+        }
     }
 
 }

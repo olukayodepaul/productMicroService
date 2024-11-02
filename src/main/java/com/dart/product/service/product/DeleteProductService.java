@@ -1,7 +1,8 @@
 package com.dart.product.service.product;
 
 
-import com.dart.product.entity.product_model.ProductDbModel;
+import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
+import com.dart.product.entity.product_entity.ProductDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductsRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
@@ -10,97 +11,111 @@ import com.dart.product.utilities.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 public class DeleteProductService {
 
-    private final UtilitiesManager utilitiesManager;
-    private final ValidationUtils validationUtils;
+    private final ProductsRepo productsRepo;
     private final FilterService jwtService;
-    private final ProductMappers mappers;
-    private final SaveAndUpdateRecord saveAndUpdateRecord;
-    private RedisProductCacheRepo redisCacheRepo;
-    private ProductsRepo productsRepo;
+    private final UtilitiesManager utilitiesManager;
+    private final ProductMappers productMappers;
+    private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ValidationUtils validationUtils;
 
     public DeleteProductService(
-            UtilitiesManager utilitiesManager,
-            ValidationUtils validationUtils,
+            ProductsRepo productsRepo,
             FilterService jwtService,
-            ProductMappers mappers,
-            SaveAndUpdateRecord saveAndUpdateRecord,
-            RedisProductCacheRepo redisCacheRepo,
-            ProductsRepo productsRepo
-    )
-    {
-        this.utilitiesManager = utilitiesManager;
-        this.validationUtils = validationUtils;
-        this.jwtService = jwtService;
-        this.mappers = mappers;
-        this.saveAndUpdateRecord = saveAndUpdateRecord;
-        this.redisCacheRepo = redisCacheRepo;
+            UtilitiesManager utilitiesManager,
+            ProductMappers productMappers,
+            RedisProductCacheRepo redisProductCacheRepo,
+            ValidationUtils validationUtils
+    ) {
         this.productsRepo = productsRepo;
+        this.jwtService = jwtService;
+        this.utilitiesManager = utilitiesManager;
+        this.productMappers = productMappers;
+        this.redisProductCacheRepo = redisProductCacheRepo;
+        this.validationUtils = validationUtils;
     }
 
-    public ResponseEntity<ResponseHandler> deleteProduct(String token, Integer id)
+    public ResponseEntity<ProductResModelDTO> deleteProduct(String authToken, Integer id)
     {
-        String jwtToken = jwtService.extractTokenFromHeader(token);
+
+        validateRequestToken(authToken);
+        validateProductId(id);
+
+        String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
-        String plainUUID = jwtService.extractUUID(jwtToken);
-        UUID organisationId =  utilitiesManager.convertStringToUUID(jwtService.extractUUID(jwtToken)); //is a uuid
-        //UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken)); //is a uuid
+        UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
+        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
-        validateRequest(token, plainUUID, roles);
+        validateUserRole(roles);
+        validateBruteForceProtection(userId.toString());
 
-        ProductDbModel isProductExisting = isProductExisting(id, organisationId); //not available, throw error
+        ProductDbEntity existingProduct = findByIdAndOrganisationIdAndIsActive(id, organisationId);
 
-        //check if product is deleted
-        if(!isProductExisting.getIsActive()){
-            throw new CustomRuntimeException(
-                    new ErrorHandler(false,AppConfig.DELETE_PRODUCT_ERROR_TAG , AppConfig.DELETE_PRODUCT_RESPONSE),
-                    HttpStatus.BAD_REQUEST
-            );
-        }
+        existingProduct.setUpdated_at(LocalDateTime.now());
+        existingProduct.setIsActive(false);
+        SaveAndUpdateProductResponse persistRecord = saveProductRecord(existingProduct);
 
-        isProductExisting.setUpdated_at(LocalDateTime.now());
-        isProductExisting.setIsActive(false);
-        SaveAndUpdateResponse updatedResult = saveAndUpdateRecord.updateProductRecord(isProductExisting);
+        isPersistedRecordDeleted(persistRecord);
 
-        if(!updatedResult.getStatus()) {
-            throw new CustomRuntimeException(
-                    new ErrorHandler(false, updatedResult.getError(), updatedResult.getError()),
-                    HttpStatus.BAD_REQUEST
-            );
-        }
+        boolean deleteCacheRecord = redisProductCacheRepo.deleteProduct(organisationId.toString(), id);
 
-        boolean deleteCacheResult = redisCacheRepo.deleteProduct(updatedResult.getProduct().getOrganisationId().toString(), updatedResult.getProduct().getId());
-        if(!deleteCacheResult){
-            //send to redis........
-        }
+        isCacheRecordDeleted(deleteCacheRecord);
 
-        //todo: send updated product to searchMicroService (grpc)
-        //todo: if grpc failed, then reroute through kafka
-
-        return new ResponseEntity<>(new ResponseHandler(true, AppConfig.DELETE_PRODUCT_SUCCESS_RESPONSE), HttpStatus.OK);
-
+        // TODO: Send newly created product to searchMicroService through (gRPC)
+        return new ResponseEntity<>(productMappers.toProductResponseBuilder(persistRecord.getProduct(), AppConfig.DELETE_PRODUCT_RESPONSE), HttpStatus.OK);
     }
 
-    private void validateRequest(String token,  String uuid, String role) {
-//        validationUtils.userRoleValidateRequest(role);
-        validationUtils.jwtValidateRequest(token);
-//        validationUtils.roleValidation(role);
+    private void isCacheRecordDeleted(boolean isRecord) {
+        if (!isRecord) {
+            // Send failure notification through Kafka
+        }
+    }
+
+    private void validateUserRole(String role) {
+        validationUtils.adminRoleValidation(role);
+    }
+
+    private void validateBruteForceProtection(String uuid) {
         validationUtils.bruteForceProtection(AppConfig.DELETE_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
     }
-//productsRepo.findById(id, organisationId, true)
-    private ProductDbModel isProductExisting(Integer id, UUID organisationId) {
+
+    private void validateRequestToken(String token) {
+        validationUtils.accessTokenValidation(token);
+    }
+
+    private void validateProductId(Integer id) {
+        validationUtils.validateProductId(id);
+    }
+
+    private ProductDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisationId) {
         return productsRepo.findByIdAndOrganisationIdAndIsActive(id, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
-                        new ErrorHandler(false, AppConfig.UPDATE_PRODUCT_ERROR_TAG, AppConfig.UPDATE_PRODUCT_ERROR_RESPONSE),
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.PRODUCT_NOT_FOUND_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
+    }
+
+    private void isPersistedRecordDeleted(SaveAndUpdateProductResponse isSave) {
+        if (!isSave.getStatus()) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), isSave.getError()),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    public SaveAndUpdateProductResponse saveProductRecord(ProductDbEntity regDetails) {
+        try {
+            return new SaveAndUpdateProductResponse(true, "", productsRepo.save(regDetails)) ;
+        } catch (Exception e) {
+            //logger.error("DbSaveUpdatedService::updateProductRecord: {}", e.getMessage());
+            return new SaveAndUpdateProductResponse(false, e.getMessage(), ProductDbEntity.builder().build());
+        }
     }
 
 }

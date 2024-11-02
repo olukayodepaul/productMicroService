@@ -1,29 +1,31 @@
-jwt uuid for admin is user_id
-jwt uuid for customer is user_id
 
-product_policies
 
-6- product_review (customer): -- Relationship: One-to-Many (a product can have multiple reviews)
-7- related_products (Admin): -- Relationship: One-to-Many (a product can have multiple related products)
-8-special_offers(Admin): -- Relationship: One-to-Many (a product can have multiple offers)
-9-product_tags(Admin): -- Relationship: One-to-Many (a product can have multiple tags)
-10-product_comments (Customers): -- Relationship: One-to-Many (a product can have multiple comments)
-11-product_feedback(Customers): -- Relationship: One-to-Many (a product can have multiple feedback entries)
+CREATE TABLE brands (
+id SERIAL PRIMARY KEY,                -- Unique identifier for each brand
+organisation_id UUID NOT NULL,        -- ID of the organisation that owns the brand
+name VARCHAR(255) NOT NULL,           -- Name of the brand
+logo_url VARCHAR(255),                 -- URL of the brand logo
+description TEXT,                      -- Description of the brand
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp when the brand was created
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp when the brand was last updated
+FOREIGN KEY (organisation_id) REFERENCES organisations(id) -- Foreign key to the organisations table
+);
 
 
 -- 1. Products Table
 -- Stores information about products available for sale.
 -- Admin: Manages product details.
 CREATE TABLE products (
-id SERIAL PRIMARY KEY,                -- Unique identifier for each product
-organisation_id UUID NOT NULL,        -- ID of the organisation that owns the product
-name VARCHAR(255) NOT NULL,           -- Name of the product
-description TEXT,                     -- Description of the product
-price DECIMAL(10, 2) NOT NULL,        -- Price of the product
-discount DECIMAL(10, 2) DEFAULT 0.00, -- Discount on the product
-category_id INTEGER,                  -- ID of the category the product belongs to
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the product was created
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the product was last updated
+id SERIAL PRIMARY KEY,                              -- Unique identifier for each product
+organisation_id UUID NOT NULL,                      -- ID of the organisation that owns the product
+brand_id INTEGER REFERENCES brands(id),             -- Foreign key reference to the brands table
+name VARCHAR(255) NOT NULL,                         -- Name of the product
+description TEXT,                                   -- Description of the product
+price DECIMAL(10, 2) NOT NULL,                      -- Price of the product
+discount DECIMAL(10, 2) DEFAULT 0.00,               -- Discount on the product
+category_id INTEGER,                                -- ID of the category the product belongs to
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp when the product was created
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp when the product was last updated
 is_active BOOLEAN DEFAULT TRUE         -- Status of the product (active or inactive)
 );
 -- Relationship: One-to-Many with product_media, product_specifications, product_policies, product_reviews, product_comments, product_feedback, related_products, special_offers, product_tags, product_wishlists
@@ -164,13 +166,15 @@ FOREIGN KEY (organisation_id) REFERENCES organisations(id) -- Relationship to or
 -- Stores customer comments for products separately from ratings.
 -- Customers: Leave comments regarding their experiences.
 CREATE TABLE product_comments (
-id SERIAL PRIMARY KEY,                   -- Unique identifier for each comment entry
-product_id INTEGER NOT NULL,             -- ID of the product being commented on
-user_id INTEGER NOT NULL,                -- ID of the user who wrote the comment
-comment_text TEXT NOT NULL,              -- Text of the comment
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the comment was created
-FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-Many (a product can have multiple comments)
-FOREIGN KEY (user_id) REFERENCES users(id) -- Relationship to users
+    id SERIAL PRIMARY KEY,                   			-- Unique identifier for each comment entry
+    product_id INTEGER NOT NULL,             			-- ID of the product being commented on
+    user_id UUID NOT NULL,                			-- ID of the user who wrote the comment
+    organisation_id UUID NOT NULL,                      -- ID of the organisation that owns the product
+    comment_text TEXT NOT NULL,              			-- Text of the comment
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 	-- Timestamp when the comment was created
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp when the product was last updated
+    is_active BOOLEAN DEFAULT TRUE ,        			-- Status of the product (active or inactive)
+    FOREIGN KEY (product_id) REFERENCES products(id) 	-- Relationship: One-to-Many (a product can have multiple comments)
 );
 
 -- 11. Product Feedback Table
@@ -184,4 +188,17 @@ feedback_type VARCHAR(10) CHECK (feedback_type IN ('like', 'dislike')), -- Type 
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the feedback was given
 FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-Many (a product can have multiple feedback entries)
 FOREIGN KEY (user_id) REFERENCES users(id) -- Relationship to users
+);
+
+//implement the wishlist
+-- 12. Product Wishlists Table
+-- Stores user wishlists for products they want to purchase later.
+-- Customers: Create wishlists for future purchases.
+CREATE TABLE product_wishlists (
+id SERIAL PRIMARY KEY,                   -- Unique identifier for each wishlist entry
+user_id INTEGER NOT NULL,                -- ID of the user who created the wishlist
+product_id INTEGER NOT NULL,             -- ID of the product added to the wishlist
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the product was added to the wishlist
+FOREIGN KEY (user_id) REFERENCES users(id), -- Relationship to users
+FOREIGN KEY (product_id) REFERENCES products(id) -- Relationship to products
 );

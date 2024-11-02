@@ -1,11 +1,11 @@
 package com.dart.product.utilities;
 
-import com.dart.product.entity.product_model.ProductReqModel;
-import com.dart.product.entity.product_specification_model.AddProductSpecReqModel;
-import com.dart.product.entity.shipping_details_model.AddShippingDetailsReqModel;
+import com.dart.product.dto_model.product_comments_model.AddProductCommentReqlDTO;
+import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
+import com.dart.product.dto_model.product_specification_model.AddProductSpecReqModel;
+import com.dart.product.dto_model.shipping_details_model.AddShippingDetailsReqModel;
 import com.dart.product.rate_limit.BruteForceRateLimitService;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 
@@ -13,17 +13,163 @@ import org.springframework.stereotype.Component;
 public class ValidationUtils {
 
     private final EmailValidator emailValidator;
-    private final BCryptPasswordEncoder encoder;
     private final BruteForceRateLimitService rateLimitService;
+    private final UtilitiesManager utilitiesManager;
 
     public ValidationUtils(
             EmailValidator emailValidator,
-            BruteForceRateLimitService rateLimitService
+            BruteForceRateLimitService rateLimitService,
+            UtilitiesManager utilitiesManager
     ) {
         this.emailValidator = emailValidator;
-        this.encoder = new BCryptPasswordEncoder(12);
         this.rateLimitService = rateLimitService;
+        this.utilitiesManager = utilitiesManager;
     }
+
+    public void accessTokenValidation(String token) {
+        validateField(token, AppConfig.ACCESS_TOKEN_VALIDATION);
+    }
+
+    public void productValidateRequest(ProductReqDTO request) {
+        validateField(request.getName(), AppConfig.PRODUCT_NAME_VALIDATION);
+        validateField(request.getDescription(), AppConfig.PRODUCT_DESCRIPTION_VALIDATION );
+        validateField(request.getPrice(), AppConfig.PRODUCT_PRICE_VALIDATION);
+        validateField(request.getDiscount(), AppConfig.PRODUCT_DISCOUNT_VALIDATION);
+        validateField(request.getCategory_id(), AppConfig.PRODUCT_CATEGORY_VALIDATION);
+    }
+
+    public void validProductId(Integer productId) {
+        validateField(productId, AppConfig.PRODUCT_ID_VALIDATION);
+        if(!utilitiesManager.isWholeNumberGreaterThanZero(productId.toString()) ){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.INVALID_PRODUCT_ID),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    public void validCommentId(Integer id) {
+        validateField(id, AppConfig.PRODUCT_COMMENT_ID_VALIDATION);
+        if(!utilitiesManager.isWholeNumberGreaterThanZero(id.toString()) ){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.INVALID_COMMENT_ID_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    public void productCommentValidateRequest(AddProductCommentReqlDTO request) {
+        validateField(request.getComment_text(), AppConfig.PRODUCT_COMMENT_VALIDATION );
+    }
+
+    public void validateProductCommentRecord(AddProductCommentReqlDTO request) {
+        if(request.getComment_text().isEmpty()){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.EMPTY_PRODUCT_COMMENT_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    public void validateProductRecord(ProductReqDTO request) {
+
+        if(request.getName().isEmpty()){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.EMPTY_PRODUCT_NAME_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        if(request.getDescription().isEmpty()) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.EMPTY_PRODUCT_DESCRIPTION_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+
+        if(!utilitiesManager.isNumber(request.getPrice().toString())){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.INVALID_PRODUCT_PRICE),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        if(!utilitiesManager.isWholeNumberGreaterThanZero(request.getCategory_id().toString())){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.INVALID_PRODUCT_CATEGORY),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        if(!utilitiesManager.isWholeNumberGreaterThanZero(request.getBrand_id().toString()) ){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.INVALID_PRODUCT_BRAND_ID),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    public void adminRoleValidation(String role) {
+        if(!role.equalsIgnoreCase("ADMIN")){
+            throw new CustomRuntimeException(new ErrorHandler(false, String.valueOf(HttpStatus.FORBIDDEN), AppConfig.PERMISSION_VALIDATION), HttpStatus.FORBIDDEN);
+        }
+    }
+
+    public void userRoleValidation(String role) {
+        if(!role.equalsIgnoreCase("USER")){
+            throw new CustomRuntimeException(new ErrorHandler(false, String.valueOf(HttpStatus.FORBIDDEN), AppConfig.PERMISSION_VALIDATION), HttpStatus.FORBIDDEN);
+        }
+    }
+
+    public void bruteForceProtection(String uuid) {
+        if (rateLimitService.isRateLimited(uuid)) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, AppConfig.BRUTE_FORCE_PROTECTION_RATE_LIMIT,AppConfig.BRUTE_FORCE_PROTECTION_RESPONSE),
+                    HttpStatus.TOO_MANY_REQUESTS
+            );
+        }
+    }
+
+    public void validateProductId(Integer id) {
+        validateField(id, AppConfig.PRODUCT_ID_VALIDATION);
+    }
+
+
+    //end here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public void jwtValidateRequest(String token) {
         validateField(token, "Access Token");
@@ -96,14 +242,6 @@ public class ValidationUtils {
         }
     }
 
-    public void productValidateRequest(ProductReqModel request, int target) {
-        validateField(request.getName(), "Product Name");
-        validateField(request.getDescription(), "Description");
-        validateField(request.getPrice(), "Price");
-        validateField(request.getDiscount(), "Discount");
-        validateField(request.getCategory_id(), "Product Category");
-    }
-
     public void productSpecValidate(AddProductSpecReqModel request) {
         validateField(request.getProduct_id(), "Product Id");
         validateField(request.getDimensions().getLength(), "length");
@@ -135,18 +273,10 @@ public class ValidationUtils {
 
 
 
+    //final here
     public static void validateField(Object field, String fieldName) {
         if (field == null) {
-            throw new CustomRuntimeException(new ErrorHandler(false, "validation error", fieldName + " cannot be null"), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    public void bruteForceProtection(String uuid) {
-        if (rateLimitService.isRateLimited(uuid)) {
-            throw new CustomRuntimeException(
-                    new ErrorHandler(false, "Rate limit exceeded", "You have exceeded the maximum number of requests per minute."),
-                    HttpStatus.TOO_MANY_REQUESTS
-            );
+            throw new CustomRuntimeException(new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), " "+fieldName +" "+ AppConfig.NULL_VALIDATION), HttpStatus.BAD_REQUEST);
         }
     }
 

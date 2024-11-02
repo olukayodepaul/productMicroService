@@ -32,7 +32,7 @@ public class CustomUserDetailsService  implements UserDetailsService {
         if(redisTemplate.isTokenBlacklisted(token)) {
             return new User(
                     filterService.extractEmail(token),
-                    encoder.encode(filterService.extractUUID(token)),
+                    encoder.encode(filterService.extractUserId(token)),
                     Collections.emptyList()
             );
         }

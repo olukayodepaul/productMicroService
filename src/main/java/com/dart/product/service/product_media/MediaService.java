@@ -2,12 +2,8 @@ package com.dart.product.service.product_media;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.dart.product.entity.product_media_model.MediaUploadResponse;
-import com.dart.product.utilities.AppConfig;
-import com.dart.product.utilities.CustomRuntimeException;
-import com.dart.product.utilities.ErrorHandler;
+import com.dart.product.dto_model.product_media_model.MediaUploadResponse;
 import com.dart.product.utilities.UtilitiesManager;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

@@ -106,13 +106,13 @@ public class FilterService {
     }
 
     // Method to extract userId from the token
-    public String extractUUID(String token) {
+    public String extractUserId(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return claims.get("uuid", String.class);
+        return claims.get("userId", String.class);
     }
 
     // Method to extract role from the token

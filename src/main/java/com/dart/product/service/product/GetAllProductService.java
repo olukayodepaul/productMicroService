@@ -1,11 +1,13 @@
 package com.dart.product.service.product;
 
-import com.dart.product.entity.product_model.*;
+import com.dart.product.entity.product_entity.ProductDbEntity;
+import com.dart.product.dto_model.product_dto_model.*;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductsRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,81 +19,85 @@ import java.util.UUID;
 @Service
 public class GetAllProductService {
 
-    private final UtilitiesManager utilitiesManager;
-    private final ValidationUtils validationUtils;
+    private final ProductsRepo productsRepo;
     private final FilterService jwtService;
-    private final ProductMappers mappers;
-    private final SaveAndUpdateRecord saveAndUpdateRecord;
-    private RedisProductCacheRepo redisCacheRepo;
-    private ProductsRepo productsRepo;
+    private final UtilitiesManager utilitiesManager;
+    private final ProductMappers productMappers;
+    private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ValidationUtils validationUtils;
 
     public GetAllProductService(
-            UtilitiesManager utilitiesManager,
-            ValidationUtils validationUtils,
+            ProductsRepo productsRepo,
             FilterService jwtService,
-            ProductMappers mappers,
-            SaveAndUpdateRecord saveAndUpdateRecord,
-            RedisProductCacheRepo redisCacheRepo,
-            ProductsRepo productsRepo
-    )
-    {
-        this.utilitiesManager = utilitiesManager;
-        this.validationUtils = validationUtils;
-        this.jwtService = jwtService;
-        this.mappers = mappers;
-        this.saveAndUpdateRecord = saveAndUpdateRecord;
-        this.redisCacheRepo = redisCacheRepo;
+            UtilitiesManager utilitiesManager,
+            ProductMappers productMappers,
+            RedisProductCacheRepo redisProductCacheRepo,
+            ValidationUtils validationUtils
+    ) {
         this.productsRepo = productsRepo;
+        this.jwtService = jwtService;
+        this.utilitiesManager = utilitiesManager;
+        this.productMappers = productMappers;
+        this.redisProductCacheRepo = redisProductCacheRepo;
+        this.validationUtils = validationUtils;
     }
 
-    public ResponseEntity<AllProductResModel> getAllProduct(String token)
+
+    public ResponseEntity<AllProductResDto> retrieveAllProduct(String authToken)
     {
 
-        String jwtToken = jwtService.extractTokenFromHeader(token);
+        validateRequestToken(authToken);
+
+        String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
-        String plainUUID = jwtService.extractUUID(jwtToken);
-        UUID organisationId =  utilitiesManager.convertStringToUUID(jwtService.extractUUID(jwtToken)); //is a uuid
-        //UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken)); //is a uuid
+        UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
+        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
-        validateRequest(token, plainUUID, roles);
+        validateUserRole(roles);
+        validateBruteForceProtection(userId.toString());
 
-        FetchAllProductsResModel getCacheRecord = redisCacheRepo.getAllProducts(organisationId.toString());
+        FetchAllProductsResModel getAllCacheProduct = redisProductCacheRepo.getAllProducts(organisationId.toString());
 
-        if(getCacheRecord.getStatus()){
-            return new ResponseEntity<>(new AllProductResModel(
-                    true,
-                    "message",
-                    mappers.toCacheResponse(getCacheRecord.getProducts())
-            ), HttpStatus.OK);
+        if(getAllCacheProduct.getStatus()){
 
-        }else{
-            List<ProductDbModel> getProductRecord = fetchProduct(organisationId);
-            //note: we may likely not save into cache on pull from db. since the grpc and kafka is use to manage the creating of product
-
-            redisCacheRepo.saveAllProducts(mappers.toCacheFromProduct(getProductRecord), organisationId.toString());
-
-            return new ResponseEntity<>(new AllProductResModel(
-                    true,
-                    "message",
-                    mappers.toCacheResponse(mappers.toCacheFromProduct(getProductRecord))
-            ), HttpStatus.OK);
+            List<ProductDbEntity> mapCacheToPersistence = productMappers.toCacheFromProduct(getAllCacheProduct.getProducts());
+            return new ResponseEntity<>(productMappers.toAllProductResponseBuilder(mapCacheToPersistence, AppConfig.GET_PRODUCT_RESPONSE), HttpStatus.OK);
 
         }
+
+        List<ProductDbEntity> getPersistedProduct = findByOrganisationIdAndIsActive(organisationId);
+        return new ResponseEntity<>(productMappers.toAllProductResponseBuilder(getPersistedProduct, AppConfig.GET_PRODUCT_RESPONSE), HttpStatus.OK);
+
     }
 
-    private List<ProductDbModel> fetchProduct(UUID organisationId) {
-        return productsRepo.findByOrganisationIdAndIsActive(organisationId, true)
+    private void validateRequestToken(String token) {
+        validationUtils.accessTokenValidation(token);
+    }
+
+    private void validateUserRole(String role) {
+        validationUtils.adminRoleValidation(role);
+    }
+
+    private void validateBruteForceProtection(String uuid) {
+        validationUtils.bruteForceProtection(AppConfig.GET_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
+    }
+
+    private List<ProductDbEntity> findByOrganisationIdAndIsActive(UUID organisationId) {
+        return productsRepo.findByOrganisationIdAndIsActive(organisationId, true, Sort.by(Sort.Direction.ASC, "id"))
                 .orElseThrow(() -> new CustomRuntimeException(
-                        new ErrorHandler(false, AppConfig.GET_ALL_PRODUCT_ERROR_TAG, AppConfig.FETCH_ALL_PRODUCT_RESPONSE),
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.PRODUCT_NOT_FOUND_ERROR_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }
 
-    private void validateRequest(String token,  String uuid, String role) {
-//        validationUtils.userRoleValidateRequest(role);
-        validationUtils.jwtValidateRequest(token);
-//        validationUtils.roleValidation(role);
-        validationUtils.bruteForceProtection(AppConfig.FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
+    public SaveAndUpdateProductResponse saveProductRecord(ProductDbEntity regDetails) {
+        try {
+            return new SaveAndUpdateProductResponse(true, "", productsRepo.save(regDetails)) ;
+        } catch (Exception e) {
+            //logger.error("DbSaveUpdatedService::updateProductRecord: {}", e.getMessage());
+            return new SaveAndUpdateProductResponse(false, e.getMessage(), ProductDbEntity.builder().build());
+        }
     }
+
 
 }

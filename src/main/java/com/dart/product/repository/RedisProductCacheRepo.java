@@ -1,38 +1,38 @@
 package com.dart.product.repository;
 
-import com.dart.product.entity.product_comments_model.FetchAllProductCommentModel;
-import com.dart.product.entity.product_comments_model.FetchOneProductCommentModel;
-import com.dart.product.entity.product_comments_model.ProductCommentCacheModel;
-import com.dart.product.entity.product_feedback.FetchAllProductFeedBackModel;
-import com.dart.product.entity.product_feedback.FetchOneProductFeedBackModel;
-import com.dart.product.entity.product_feedback.ProductFeedBackCacheModel;
-import com.dart.product.entity.product_media_model.FetchAllProductMediaModel;
-import com.dart.product.entity.product_media_model.FetchOneProductMediaModel;
-import com.dart.product.entity.product_media_model.ProductMediaCacheModel;
-import com.dart.product.entity.product_model.FetchAllProductsResModel;
-import com.dart.product.entity.product_model.FetchProductsResModel;
-import com.dart.product.entity.product_model.ProductCacheModel;
-import com.dart.product.entity.product_policy_model.FetchAllProductPolicyModel;
-import com.dart.product.entity.product_policy_model.FetchOnelProductPolicyModel;
-import com.dart.product.entity.product_policy_model.ProductPolicyCacheModel;
-import com.dart.product.entity.product_reviews_model.FetchAllProductReviewModel;
-import com.dart.product.entity.product_reviews_model.FetchOneProductReviewModel;
-import com.dart.product.entity.product_reviews_model.ProductReviewCacheModel;
-import com.dart.product.entity.product_specification_model.FetchAllProductSpecModel;
-import com.dart.product.entity.product_specification_model.FetchOnelProductSpecModel;
-import com.dart.product.entity.product_specification_model.ProductSpecificationCacheModel;
-import com.dart.product.entity.product_tags_model.FetchAllProductTagModel;
-import com.dart.product.entity.product_tags_model.FetchOneProductTagModel;
-import com.dart.product.entity.product_tags_model.ProductTagCacheModel;
-import com.dart.product.entity.related_products_model.FetchAllRelatedProductModel;
-import com.dart.product.entity.related_products_model.FetchOneRelatedProductsModel;
-import com.dart.product.entity.related_products_model.RelatedProductsCacheModel;
-import com.dart.product.entity.shipping_details_model.FetchAllShippingDetailsModel;
-import com.dart.product.entity.shipping_details_model.FetchOnelShippingDetailsModel;
-import com.dart.product.entity.shipping_details_model.ShippingDetailsCacheModel;
-import com.dart.product.entity.special_offers_model.FetchAllSpecialOfferModel;
-import com.dart.product.entity.special_offers_model.FetchOneSpecialOfferModel;
-import com.dart.product.entity.special_offers_model.SpecialOffersCacheModel;
+import com.dart.product.dto_model.product_comments_model.FetchAllProductCommentModel;
+import com.dart.product.dto_model.product_comments_model.FetchOneProductCommentModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
+import com.dart.product.dto_model.product_feedback.FetchAllProductFeedBackModel;
+import com.dart.product.dto_model.product_feedback.FetchOneProductFeedBackModel;
+import com.dart.product.dto_model.product_feedback.ProductFeedBackCacheModel;
+import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
+import com.dart.product.dto_model.product_media_model.FetchOneProductMediaModel;
+import com.dart.product.dto_model.product_media_model.ProductMediaCacheModel;
+import com.dart.product.dto_model.product_dto_model.FetchAllProductsResModel;
+import com.dart.product.dto_model.product_dto_model.FetchProductsResModel;
+import com.dart.product.entity.product_entity.ProductCacheEntity;
+import com.dart.product.dto_model.product_policy_model.FetchAllProductPolicyModel;
+import com.dart.product.dto_model.product_policy_model.FetchOnelProductPolicyModel;
+import com.dart.product.dto_model.product_policy_model.ProductPolicyCacheModel;
+import com.dart.product.dto_model.product_reviews_model.FetchAllProductReviewModel;
+import com.dart.product.dto_model.product_reviews_model.FetchOneProductReviewModel;
+import com.dart.product.dto_model.product_reviews_model.ProductReviewCacheModel;
+import com.dart.product.dto_model.product_specification_model.FetchAllProductSpecModel;
+import com.dart.product.dto_model.product_specification_model.FetchOnelProductSpecModel;
+import com.dart.product.dto_model.product_specification_model.ProductSpecificationCacheModel;
+import com.dart.product.dto_model.product_tags_model.FetchAllProductTagModel;
+import com.dart.product.dto_model.product_tags_model.FetchOneProductTagModel;
+import com.dart.product.dto_model.product_tags_model.ProductTagCacheModel;
+import com.dart.product.dto_model.related_products_model.FetchAllRelatedProductModel;
+import com.dart.product.dto_model.related_products_model.FetchOneRelatedProductsModel;
+import com.dart.product.dto_model.related_products_model.RelatedProductsCacheModel;
+import com.dart.product.dto_model.shipping_details_model.FetchAllShippingDetailsModel;
+import com.dart.product.dto_model.shipping_details_model.FetchOnelShippingDetailsModel;
+import com.dart.product.dto_model.shipping_details_model.ShippingDetailsCacheModel;
+import com.dart.product.dto_model.special_offers_model.FetchAllSpecialOfferModel;
+import com.dart.product.dto_model.special_offers_model.FetchOneSpecialOfferModel;
+import com.dart.product.dto_model.special_offers_model.SpecialOffersCacheModel;
 import com.dart.product.security.FilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -41,6 +41,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,15 +80,15 @@ public class RedisProductCacheRepo {
     }
 
     //this is being update by the kafka service to blacklist a token
-    public void saveJWTBlackListedToken(String uuid, String token) {
-        String subKey = "product_jwt_black_service/"+uuid;
+    public void saveJWTBlackListedToken(String userId, String token) {
+        String subKey = "product_jwt_black_service/"+userId;
         redisTemplate.opsForList().leftPush(subKey, token);
     }
 
     //the filter is using token blacklisted. no need to implement it within your application
     public boolean isTokenBlacklisted(String token) {
         try {
-            String subKey = "product_jwt_black_service/" + filterService.extractUUID(token);
+            String subKey = "product_jwt_black_service/" + filterService.extractUserId(token);
             List<Object> tokens = redisTemplate.opsForList().range(subKey, 0, -1);
             System.out.println(tokens);
             List<String> tokenList = tokens.stream().map(Object::toString).collect(Collectors.toList());
@@ -103,19 +104,20 @@ public class RedisProductCacheRepo {
         }
     }
 
-    public Boolean saveUpdateProduct(ProductCacheModel product) {
+    //product
+    public Boolean saveUpdateProduct(ProductCacheEntity product) {
         try {
             // Sub-key for identifying the user by their email
             String subKey = product.getId().toString();
-
+            String primaryKey =  PRODUCT_KEY +"_"+ product.getOrganisation_id();
             // Save or update user details in Redis hash
-            redisTemplate.opsForHash().put(PRODUCT_KEY+"_"+product.getOrganisation_id(), subKey, product);
+            redisTemplate.opsForHash().put(primaryKey, subKey, product);
 
             // Return success
             return SAVE_UPDATE_SUCCESS;
         } catch (Exception e) {
             // Log the error and return failure response
-            logger.error("RedisCacheRepo::saveUpdateProfile  {}", e.getMessage());
+            logger.error("RedisCacheRepo::saveUpdateProduct  {}", e.getMessage());
             return SAVE_UPDATE_FAILED;
         }
     }
@@ -123,24 +125,46 @@ public class RedisProductCacheRepo {
     public boolean deleteProduct(String organisationId, Integer id) {
         try {
 
-            Long result = redisTemplate.opsForHash().delete(PRODUCT_KEY+"_"+organisationId, id);
+            String subKey = id.toString();
+            String primaryKey =  PRODUCT_KEY +"_"+ organisationId;
+
+            Long result = redisTemplate.opsForHash().delete(primaryKey, subKey);
 
             return result > 0;
         } catch (Exception e) {
-            logger.error("RedisCacheRepo::deleteProfile - Error occurred while saving/updating user with email {}: {}", organisationId, e.getMessage());
+            logger.error("RedisCacheRepo::deleteProduct {}: {}",organisationId, e.getMessage());
             return false;
         }
     }
 
+    public FetchProductsResModel getProducts(String organisationId, Integer id) {
+        try {
+
+            String subKey = id.toString();
+            String primaryKey =  PRODUCT_KEY +"_"+ organisationId ;
+            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
+
+            if (cachedObject == null) {
+                return new FetchProductsResModel(false,  "No user found in redis", null);
+            }
+            ProductCacheEntity cacheModel = objectMapper.convertValue(cachedObject, ProductCacheEntity.class);
+            return new FetchProductsResModel(true, "", cacheModel);
+
+        } catch (Exception e) {
+            logger.error("RedisCacheService::getProducts {}: {}", "", e.getMessage());
+            return new FetchProductsResModel(false, e.getMessage(), new ProductCacheEntity());
+        }
+    }
 
     public FetchAllProductsResModel getAllProducts(String organisationId) {
         try {
-            String key = PRODUCT_KEY+"_"+organisationId;
+            String key = PRODUCT_KEY + "_" + organisationId;
             Map<Object, Object> productMap = redisTemplate.opsForHash().entries(key);
 
             if (!productMap.isEmpty()) {
-                List<ProductCacheModel> products = productMap.values().stream()
-                        .map(value -> objectMapper.convertValue(value, ProductCacheModel.class))
+                List<ProductCacheEntity> products = productMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductCacheEntity.class))
+                        .sorted(Comparator.comparing(ProductCacheEntity::getId))
                         .collect(Collectors.toList());
                 return new FetchAllProductsResModel(true, "Addresses fetched successfully", products);
             }
@@ -153,22 +177,7 @@ public class RedisProductCacheRepo {
         }
     }
 
-    public FetchProductsResModel getProducts(String organisationId, Integer id) {
-        try {
 
-            Object cachedObject = redisTemplate.opsForHash().get(PRODUCT_KEY+"_"+organisationId, id.toString());
-
-            if (cachedObject == null) {
-                return new FetchProductsResModel(false,  "No user found in redis", null);
-            }
-            ProductCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductCacheModel.class);
-            return new FetchProductsResModel(true, "", cacheModel);
-
-        } catch (Exception e) {
-            logger.error("RedisCacheService::fetchUserDetails - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
-            return new FetchProductsResModel(false, e.getMessage(), new ProductCacheModel());
-        }
-    }
 
     /**
      *
@@ -176,9 +185,9 @@ public class RedisProductCacheRepo {
      * @param organisationId
      * @return
      */
-    public Boolean saveAllProducts(List<ProductCacheModel> productModels,String organisationId) {
+    public Boolean saveAllProducts(List<ProductCacheEntity> productModels, String organisationId) {
         try {
-            for (ProductCacheModel products : productModels) {
+            for (ProductCacheEntity products : productModels) {
                 String subKey = String.valueOf(products.getId());
                 redisTemplate.opsForHash().put(PRODUCT_KEY+"_"+organisationId, subKey, products);
             }
@@ -188,6 +197,8 @@ public class RedisProductCacheRepo {
             return SAVE_UPDATE_FAILED;
         }
     }
+
+
 
     //The start of product media catch
     public Boolean saveUpdateProductMedia(ProductMediaCacheModel productMedia) {
@@ -838,6 +849,7 @@ public class RedisProductCacheRepo {
             if (!productCommentMap.isEmpty()) {
                 List<ProductCommentCacheModel> productComment = productCommentMap.values().stream()
                         .map(value -> objectMapper.convertValue(value, ProductCommentCacheModel.class))
+                        .sorted(Comparator.comparing(ProductCommentCacheModel::getId))
                         .collect(Collectors.toList());
                 return new FetchAllProductCommentModel(true, "Product Tage fetched successfully", productComment);
             }
@@ -848,7 +860,6 @@ public class RedisProductCacheRepo {
             return new FetchAllProductCommentModel(false, e.getMessage(), Collections.emptyList());
         }
     }
-
 
 
     //save record for product feedback

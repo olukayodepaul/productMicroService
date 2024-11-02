@@ -1,12 +1,15 @@
 package com.dart.product.repository;
 
-import com.dart.product.entity.product_media_model.MediaDbModel;
+import com.dart.product.dto_model.product_media_model.MediaDbModel;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
+@Repository
 public interface ProductMediaRepo extends JpaRepository<MediaDbModel, Long> {
 
     Optional<MediaDbModel> findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimary(

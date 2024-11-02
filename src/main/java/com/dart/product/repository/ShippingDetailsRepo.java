@@ -2,7 +2,7 @@ package com.dart.product.repository;
 
 
 
-import com.dart.product.entity.shipping_details_model.ShippingDetailsDbModel;
+import com.dart.product.dto_model.shipping_details_model.ShippingDetailsDbModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

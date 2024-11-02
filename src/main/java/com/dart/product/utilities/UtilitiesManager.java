@@ -127,4 +127,12 @@ public class UtilitiesManager {
         }
     }
 
+    public  boolean isNumber(String value) {
+        String regex = "^\\d+(\\.\\d+)?$";
+        return value.matches(regex);
+    }
+
+    public boolean isWholeNumberGreaterThanZero(String input) {
+        return input.matches("^[1-9]\\d*$");
+    }
 }

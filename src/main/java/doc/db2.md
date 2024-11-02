@@ -130,6 +130,7 @@ FOREIGN KEY (organisation_id) REFERENCES organisations(id) -- Relationship to or
 CREATE TABLE product_comments (
 id SERIAL PRIMARY KEY,                   -- Unique identifier for each comment entry
 product_id INTEGER NOT NULL,             -- ID of the product being commented on
+organisation_id INTEGER NOT NULL,        -- ID of the organisation that owns the product tags
 user_id INTEGER NOT NULL,                -- ID of the user who wrote the comment
 comment_text TEXT NOT NULL,              -- Text of the comment
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the comment was created
@@ -155,9 +156,12 @@ FOREIGN KEY (user_id) REFERENCES users(id) -- Relationship to users
 -- Customers: Create wishlists for future purchases.
 CREATE TABLE product_wishlists (
 id SERIAL PRIMARY KEY,                   -- Unique identifier for each wishlist entry
+organisation_id INTEGER NOT NULL,        -- ID of the organisation that owns the product tags
 user_id INTEGER NOT NULL,                -- ID of the user who created the wishlist
 product_id INTEGER NOT NULL,             -- ID of the product added to the wishlist
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the product was added to the wishlist
 FOREIGN KEY (user_id) REFERENCES users(id), -- Relationship to users
 FOREIGN KEY (product_id) REFERENCES products(id) -- Relationship to products
 );
+
+

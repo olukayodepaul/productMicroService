@@ -1,7 +1,7 @@
 package com.dart.product.repository;
 
 
-import com.dart.product.entity.product_tags_model.ProductTagDbModel;
+import com.dart.product.dto_model.product_tags_model.ProductTagDbModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

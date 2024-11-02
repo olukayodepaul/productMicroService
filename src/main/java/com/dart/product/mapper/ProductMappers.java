@@ -1,16 +1,20 @@
 package com.dart.product.mapper;
 
-import com.dart.product.entity.product_comments_model.*;
-import com.dart.product.entity.product_feedback.*;
-import com.dart.product.entity.product_media_model.*;
-import com.dart.product.entity.product_model.*;
-import com.dart.product.entity.product_policy_model.*;
-import com.dart.product.entity.product_reviews_model.*;
-import com.dart.product.entity.product_specification_model.*;
-import com.dart.product.entity.product_tags_model.*;
-import com.dart.product.entity.related_products_model.*;
-import com.dart.product.entity.shipping_details_model.*;
-import com.dart.product.entity.special_offers_model.*;
+import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentDbModel;
+import com.dart.product.entity.product_entity.ProductCacheEntity;
+import com.dart.product.entity.product_entity.ProductDbEntity;
+import com.dart.product.dto_model.product_comments_model.*;
+import com.dart.product.dto_model.product_feedback.*;
+import com.dart.product.dto_model.product_media_model.*;
+import com.dart.product.dto_model.product_dto_model.*;
+import com.dart.product.dto_model.product_policy_model.*;
+import com.dart.product.dto_model.product_reviews_model.*;
+import com.dart.product.dto_model.product_specification_model.*;
+import com.dart.product.dto_model.product_tags_model.*;
+import com.dart.product.dto_model.related_products_model.*;
+import com.dart.product.dto_model.shipping_details_model.*;
+import com.dart.product.dto_model.special_offers_model.*;
 import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.stereotype.Component;
 
@@ -28,50 +32,26 @@ public class ProductMappers {
         this.utilitiesManager = utilitiesManager;
     }
 
-    public ProductDbModel toProduct(ProductReqModel product) {
-        return ProductDbModel.builder()
+
+    //product
+    public ProductDbEntity toProduct(ProductReqDTO product) {
+        return ProductDbEntity.builder()
+                .id(product.getId())
                 .organisationId(product.getOrganisation_id())
-                .name(product.getName())
-                .description(product.getDescription())
+                .name(product.getName().toLowerCase())
+                .description(product.getDescription().toLowerCase())
                 .price(product.getPrice())
                 .discount(product.getDiscount())
                 .category_id(product.getCategory_id())
+                .brand_id(product.getBrand_id())
                 .created_at(LocalDateTime.now())
                 .updated_at(LocalDateTime.now())
                 .isActive(true)
                 .build();
     }
 
-    public ProductResModel.Product toProductResponse(ProductDbModel product) {
-        return ProductResModel.Product.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .price(product.getPrice())
-                .discount(product.getDiscount())
-                .category_id(product.getCategory_id())
-                .created_at(LocalDateTime.now())
-                .updated_at(LocalDateTime.now())
-                .is_active(true)
-                .build();
-    }
-
-    public ProductResModel.Product toProductCacheResponse(ProductCacheModel product) {
-        return ProductResModel.Product.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .price(product.getPrice())
-                .discount(product.getDiscount())
-                .category_id(product.getCategory_id())
-                .created_at(LocalDateTime.now())
-                .updated_at(LocalDateTime.now())
-                .is_active(true)
-                .build();
-    }
-
-    public ProductCacheModel toProductCache(ProductDbModel product) {
-        return ProductCacheModel.builder()
+    public ProductCacheEntity toProductCache(ProductDbEntity product) {
+        return ProductCacheEntity.builder()
                 .id(product.getId())
                 .organisation_id(product.getOrganisationId())
                 .name(product.getName())
@@ -79,61 +59,92 @@ public class ProductMappers {
                 .price(product.getPrice())
                 .discount(product.getDiscount())
                 .category_id(product.getCategory_id())
+                .brand_id(product.getBrand_id())
                 .is_active(product.getIsActive())
                 .updated_at(product.getUpdated_at())
                 .created_at(product.getCreated_at())
                 .build();
     }
 
-    public ProductDbModel toProductBuilder(ProductDbModel product, ProductReqModel reqModel) {
-        return ProductDbModel.builder()
-                .id(product.getId())
-                .organisationId(product.getOrganisationId())
-                .name(reqModel.getName())
-                .description(reqModel.getDescription())
-                .price(reqModel.getPrice())
-                .discount(reqModel.getDiscount())
-                .category_id(reqModel.getCategory_id())
-                .isActive(product.getIsActive())
-                .updated_at(LocalDateTime.now())
-                .created_at(product.getCreated_at())
+    public ProductResModelDTO toProductResponseBuilder(ProductDbEntity reqModel, String message) {
+        return ProductResModelDTO.builder()
+                .status(true)
+                .message(message)
+                .product(
+                        ProductResModelDTO.Product
+                                .builder()
+                                .id(reqModel.getId())
+                                .name(reqModel.getName())
+                                .description(reqModel.getDescription())
+                                .price(reqModel.getPrice())
+                                .discount(reqModel.getDiscount())
+                                .category_id(reqModel.getCategory_id())
+                                .brand_id(reqModel.getBrand_id())
+                                .created_at(reqModel.getCreated_at())
+                                .updated_at(reqModel.getUpdated_at())
+                                .is_active(reqModel.getIsActive())
+                                .build()
+                )
                 .build();
     }
 
-    public List<AllProductResModel.Product> toCacheResponse(List<ProductCacheModel> product) {
+
+    public ProductDbEntity mapProductCacheToPersistence(ProductCacheEntity product) {
+        return ProductDbEntity.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .discount(product.getDiscount())
+                .category_id(product.getCategory_id())
+                .brand_id(product.getBrand_id())
+                .created_at(product.getCreated_at())
+                .updated_at(product.getUpdated_at())
+                .isActive(product.getIs_active())
+                .build();
+    }
+
+
+    public  List<ProductDbEntity> toCacheFromProduct(List<ProductCacheEntity> product) {
         return product
                 .stream()
-                .map(products -> AllProductResModel.Product.builder()
+                .map(products -> ProductDbEntity.builder()
                         .id(products.getId())
                         .name(products.getName())
                         .description(products.getDescription())
+                        .organisationId(products.getOrganisation_id())
                         .price(products.getPrice())
                         .discount(products.getDiscount())
                         .category_id(products.getCategory_id())
-                        .is_active(products.getIs_active())
+                        .brand_id(products.getBrand_id())
+                        .isActive(products.getIs_active())
                         .updated_at(products.getUpdated_at())
                         .created_at(products.getCreated_at())
                         .build()
                 ).collect(Collectors.toList());
     }
 
-    public List<ProductCacheModel> toCacheFromProduct(List<ProductDbModel> product) {
-        return product
-                .stream()
-                .map(products -> ProductCacheModel.builder()
-                        .id(products.getId())
-                        .name(products.getName())
-                        .description(products.getDescription())
-                        .organisation_id(product.getLast().getOrganisationId())
-                        .price(products.getPrice())
-                        .discount(products.getDiscount())
-                        .category_id(products.getCategory_id())
-                        .is_active(products.getIsActive())
-                        .updated_at(products.getUpdated_at())
-                        .created_at(products.getCreated_at())
-                        .build()
-                ).collect(Collectors.toList());
+    public AllProductResDto toAllProductResponseBuilder(List<ProductDbEntity> reqModel, String message) {
+        return AllProductResDto.builder()
+                .status(true)
+                .message(message)
+                .product(reqModel.stream().map(product -> AllProductResDto.Product
+                                .builder()
+                                .id(product.getId())
+                                .name(product.getName())
+                                .description(product.getDescription())
+                                .price(product.getPrice())
+                                .discount(product.getDiscount())
+                                .category_id(product.getCategory_id())
+                                .brand_id(product.getBrand_id())
+                                .created_at(product.getCreated_at())
+                                .updated_at(product.getUpdated_at())
+                                .is_active(product.getIsActive())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
     }
+
 
 
     //here is for media mapper.
@@ -546,30 +557,30 @@ public class ProductMappers {
                 .build();
     }
 
-    public ShippingDetailsOneResModel shippingDetailsOneResponseBuilder(ShippingDetailsDbModel reqBody, String message) {
-        return ShippingDetailsOneResModel.builder()
-                .status(true)
-                .message(message)
-                .shipping_details(
-                        ShippingDetailsOneResModel.ShippingDetails
-                                .builder()
-                                .id(reqBody.getId())
-                                .product_id(reqBody.getProductId())
-                                .organisation_id(reqBody.getOrganisationId())
-                                .shipping_method(reqBody.getShippingMethod())
-                                .estimated_delivery_time(reqBody.getEstimatedDeliveryTime())
-                                .country_code(reqBody.getCountryCode())
-                                .region(reqBody.getRegion())
-                                .customs_fees(reqBody.getCustomsFees())
-                                .handling_time(reqBody.getHandlingTime())
-                                .cross_border(reqBody.getCrossBorder())
-                                .is_active(reqBody.isActive())
-                                .updated_at(reqBody.getUpdatedAt())
-                                .created_at(reqBody.getCreatedAt())
-                                .build()
-                )
-                .build();
-    }
+//    public ShippingDetailsOneResModel shippingDetailsOneResponseBuilder(ShippingDetailsDbModel reqBody, String message) {
+//        return ShippingDetailsOneResModel.builder()
+//                .status(true)
+//                .message(message)
+//                .shipping_details(
+//                        ShippingDetailsOneResModel.ShippingDetails
+//                                .builder()
+//                                .id(reqBody.getId())
+//                                .product_id(reqBody.getProductId())
+//                                .organisation_id(reqBody.getOrganisationId())
+//                                .shipping_method(reqBody.getShippingMethod())
+//                                .estimated_delivery_time(reqBody.getEstimatedDeliveryTime())
+//                                .country_code(reqBody.getCountryCode())
+//                                .region(reqBody.getRegion())
+//                                .customs_fees(reqBody.getCustomsFees())
+//                                .handling_time(reqBody.getHandlingTime())
+//                                .cross_border(reqBody.getCrossBorder())
+//                                .is_active(reqBody.isActive())
+//                                .updated_at(reqBody.getUpdatedAt())
+//                                .created_at(reqBody.getCreatedAt())
+//                                .build()
+//                )
+//                .build();
+//    }
 
     public List<ShippingDetailsDbModel> mapAllCacheToDbModel(List<ShippingDetailsCacheModel> reqBody) {
         return reqBody.stream().map(spec -> ShippingDetailsDbModel.builder()
@@ -667,7 +678,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public  ProductPolicyDbModel mapCacheToProductPolicy(ProductPolicyCacheModel reqBody) {
+    public ProductPolicyDbModel mapCacheToProductPolicy(ProductPolicyCacheModel reqBody) {
         return ProductPolicyDbModel.builder()
                 .id(reqBody.getId())
                 .productId(reqBody.getProductId())
@@ -734,7 +745,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductReviewCacheModel  mapProductReviewCacheModelToDbModel(ProductReviewDbModel reqModel) {
+    public ProductReviewCacheModel mapProductReviewCacheModelToDbModel(ProductReviewDbModel reqModel) {
         return ProductReviewCacheModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProductId())
@@ -769,7 +780,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductReviewDbModel  mapDbModelToProductReviewCacheModel(ProductReviewCacheModel reqModel) {
+    public ProductReviewDbModel mapDbModelToProductReviewCacheModel(ProductReviewCacheModel reqModel) {
         return ProductReviewDbModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProductId())
@@ -823,9 +834,8 @@ public class ProductMappers {
     }
 
 
-
     //Related_Product
-    public RelatedProductsDbModel  mapAddRelatedProductModelToDbModel(AddRelatedProductsReqModel reqModel) {
+    public RelatedProductsDbModel mapAddRelatedProductModelToDbModel(AddRelatedProductsReqModel reqModel) {
         return RelatedProductsDbModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProduct_id())
@@ -912,7 +922,6 @@ public class ProductMappers {
                 )
                 .build();
     }
-
 
 
     //Special_Offer
@@ -1023,9 +1032,8 @@ public class ProductMappers {
     }
 
 
-
     //Product Tags
-    public ProductTagDbModel  mapAddProductTagModelToDbModel(AddProductTagReqModel reqModel) {
+    public ProductTagDbModel mapAddProductTagModelToDbModel(AddProductTagReqModel reqModel) {
         return ProductTagDbModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProduct_id())
@@ -1037,7 +1045,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductTagCacheModel  mapProductTagDbModelToDbModel(ProductTagDbModel reqModel) {
+    public ProductTagCacheModel mapProductTagDbModelToDbModel(ProductTagDbModel reqModel) {
         return ProductTagCacheModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProductId())
@@ -1068,7 +1076,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductTagDbModel  mapDbModelToProductTagDbModel(ProductTagCacheModel reqModel) {
+    public ProductTagDbModel mapDbModelToProductTagDbModel(ProductTagCacheModel reqModel) {
         return ProductTagDbModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProductId())
@@ -1115,7 +1123,7 @@ public class ProductMappers {
 
 
     //Product Comment
-    public ProductCommentDbModel mapAddProductCommentModelToDbModel(AddProductCommentReqModel reqModel) {
+    public ProductCommentDbModel mapAddProductCommentModelToDbModel(AddProductCommentReqlDTO reqModel) {
         return ProductCommentDbModel.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProduct_id())
@@ -1141,12 +1149,12 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductCommentOneResModel   productCommentResponseBuilder(ProductCommentDbModel reqModel, String message) {
-        return ProductCommentOneResModel.builder()
+    public ProductCommentOneResDTO productCommentResponseBuilder(ProductCommentDbModel reqModel, String message) {
+        return ProductCommentOneResDTO.builder()
                 .status(true)
                 .message(message)
                 .product_comments(
-                        ProductCommentOneResModel.ProductComment
+                        ProductCommentOneResDTO.ProductComment
                                 .builder()
                                 .id(reqModel.getId())
                                 .product_id(reqModel.getProductId())
@@ -1188,12 +1196,12 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
-    public ProductCommentAllResModel allProductCommentResponseBuilder(List<ProductCommentDbModel> reqBody, String message) {
-        return ProductCommentAllResModel.builder()
+    public ProductCommentAllResDTO allProductCommentResponseBuilder(List<ProductCommentDbModel> reqBody, String message) {
+        return ProductCommentAllResDTO.builder()
                 .status(true)
                 .message(message)
                 .product_comments(
-                        reqBody.stream().map(review -> ProductCommentAllResModel.ProductComment
+                        reqBody.stream().map(review -> ProductCommentAllResDTO.ProductComment
                                 .builder()
                                 .id(review.getId())
                                 .product_id(review.getProductId())
@@ -1237,7 +1245,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductFeedBackOneResModel    productFeedBackResponseBuilder(ProductFeedBackDbModel reqModel, String message) {
+    public ProductFeedBackOneResModel productFeedBackResponseBuilder(ProductFeedBackDbModel reqModel, String message) {
         return ProductFeedBackOneResModel.builder()
                 .status(true)
                 .message(message)
