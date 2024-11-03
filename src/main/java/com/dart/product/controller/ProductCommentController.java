@@ -1,8 +1,8 @@
 package com.dart.product.controller;
 
 import com.dart.product.dto_model.product_comments_model.AddProductCommentReqlDTO;
-import com.dart.product.dto_model.product_comments_model.ProductCommentAllResDTO;
-import com.dart.product.dto_model.product_comments_model.ProductCommentOneResDTO;
+import com.dart.product.dto_model.product_comments_model.AllProductCommentAllResDTO;
+import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
 import com.dart.product.service.product_comments.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +35,7 @@ public class ProductCommentController {
 
 
     @PostMapping("/{product_id}/comments")
-    public ResponseEntity<ProductCommentOneResDTO> createProductComment(
+    public ResponseEntity<ProductCommentResDTO> createProductComment(
             @RequestHeader("Authorization") String authToken,
             @RequestBody AddProductCommentReqlDTO reqModel,
             @PathVariable("product_id") Integer productId
@@ -44,7 +44,7 @@ public class ProductCommentController {
     }
 
     @PutMapping("/{product_id}/comments/{id}")
-    public ResponseEntity<ProductCommentOneResDTO> updateProductComment(
+    public ResponseEntity<ProductCommentResDTO> updateProductComment(
             @RequestHeader("Authorization") String authToken,
             @RequestBody AddProductCommentReqlDTO reqModel,
             @PathVariable("product_id") Integer productId,
@@ -54,7 +54,7 @@ public class ProductCommentController {
     }
 
     @DeleteMapping("/{product_id}/comments/{id}")
-    public ResponseEntity<ProductCommentOneResDTO> deleteProductComment(
+    public ResponseEntity<ProductCommentResDTO> deleteProductComment(
             @RequestHeader("Authorization") String authToken,
             @PathVariable("product_id") Integer productId,
             @PathVariable Integer id
@@ -63,7 +63,7 @@ public class ProductCommentController {
     }
 
     @GetMapping("/{product_id}/comments/{id}")
-    public ResponseEntity<ProductCommentOneResDTO> getProductComment(
+    public ResponseEntity<ProductCommentResDTO> getProductComment(
             @RequestHeader("Authorization") String authToken,
             @PathVariable("product_id") Integer productId,
             @PathVariable Integer id
@@ -73,11 +73,13 @@ public class ProductCommentController {
 
 
     @GetMapping("/{product_id}/comments")
-    public ResponseEntity<ProductCommentAllResDTO> getAllProductComment(
+    public ResponseEntity<AllProductCommentAllResDTO> getAllProductComment(
             @RequestHeader("Authorization") String authToken,
-            @PathVariable("product_id") Integer productId
+            @PathVariable("product_id") Integer productId,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit
     ) {
-        return getAllProductCommentsService.getAllProductComment(authToken, productId);
+        return getAllProductCommentsService.getAllProductComment(authToken, productId,  offset, limit);
     }
 
 

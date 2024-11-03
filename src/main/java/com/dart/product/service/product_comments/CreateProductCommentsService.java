@@ -1,8 +1,8 @@
 package com.dart.product.service.product_comments;
 
 import com.dart.product.dto_model.product_comments_model.AddProductCommentReqlDTO;
-import com.dart.product.entity.product_comment_entity.ProductCommentDbModel;
-import com.dart.product.dto_model.product_comments_model.ProductCommentOneResDTO;
+import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
+import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
 import com.dart.product.dto_model.product_comments_model.SaveAndUpdateProductCommentResponse;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductCommentRepo;
@@ -12,7 +12,6 @@ import com.dart.product.utilities.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -42,7 +41,7 @@ public class CreateProductCommentsService {
         this.validationUtils = validationUtils;
     }
 
-    public ResponseEntity<ProductCommentOneResDTO> createProductComment(String authToken, AddProductCommentReqlDTO reqBody, Integer productId) {
+    public ResponseEntity<ProductCommentResDTO> createProductComment(String authToken, AddProductCommentReqlDTO reqBody, Integer productId) {
 
         validateRequestToken(authToken);
         validProductId(productId);
@@ -72,7 +71,7 @@ public class CreateProductCommentsService {
         checkIfRecordCached(cacheRecord);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(productMappers.productCommentResponseBuilder(persistRecord.getProductComments(), "product comment successfully created"), HttpStatus.CREATED);
+        return new ResponseEntity<>(productMappers.productCommentResponseBuilder(persistRecord.getProductComments(), AppConfig.PRODUCT_COMMENT_SUCCESSFULLY_CREATED), HttpStatus.CREATED);
 
     }
 
@@ -112,11 +111,11 @@ public class CreateProductCommentsService {
         validationUtils.bruteForceProtection(AppConfig.CREATE_PRODUCT_COMMENT_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbModel regDetails) {
+    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductCommentResponse(true, "", productCommentRepo.save(regDetails)) ;
         } catch (Exception e) {
-            return new SaveAndUpdateProductCommentResponse(false, e.getMessage(), ProductCommentDbModel.builder().build());
+            return new SaveAndUpdateProductCommentResponse(false, e.getMessage(), ProductCommentDbEntity.builder().build());
         }
     }
 

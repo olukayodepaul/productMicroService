@@ -2,9 +2,9 @@ package com.dart.product.service.product_comments;
 
 
 import com.dart.product.dto_model.product_comments_model.AddProductCommentReqlDTO;
-import com.dart.product.dto_model.product_comments_model.ProductCommentOneResDTO;
+import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
 import com.dart.product.dto_model.product_comments_model.SaveAndUpdateProductCommentResponse;
-import com.dart.product.entity.product_comment_entity.ProductCommentDbModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductCommentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
 
 @Service
 public class UpdateProductCommentsService {
@@ -42,7 +43,7 @@ public class UpdateProductCommentsService {
         this.validationUtils = validationUtils;
     }
 
-    public ResponseEntity<ProductCommentOneResDTO> updateProductComment(
+    public ResponseEntity<ProductCommentResDTO> updateProductComment(
             String authToken, AddProductCommentReqlDTO reqBody, Integer productId, Integer id) {
 
         validateRequestToken(authToken);
@@ -58,24 +59,25 @@ public class UpdateProductCommentsService {
         validationUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
-        ProductCommentDbModel isProductCommentExistingInDb = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+        ProductCommentDbEntity existingProductComment = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
 
-        reqBody.setOrganisation_id(isProductCommentExistingInDb.getOrganisationId());
-        reqBody.setCreated_at(isProductCommentExistingInDb.getCreatedAt());
+        reqBody.setOrganisation_id(existingProductComment.getOrganisationId());
+        reqBody.setCreated_at(existingProductComment.getCreatedAt());
         reqBody.setUpdated_at(LocalDateTime.now());
-        reqBody.set_active(isProductCommentExistingInDb.isActive());
-        reqBody.setUser_id(isProductCommentExistingInDb.getUserId().toString());
-        reqBody.setProduct_id(isProductCommentExistingInDb.getProductId());
-        reqBody.setId(isProductCommentExistingInDb.getId());
-        SaveAndUpdateProductCommentResponse updateRecordInDb = saveProductComment(productMappers.mapAddProductCommentModelToDbModel(reqBody));
+        reqBody.set_active(existingProductComment.isActive());
+        reqBody.setUser_id(existingProductComment.getUserId().toString());
+        reqBody.setProduct_id(existingProductComment.getProductId());
+        reqBody.setId(existingProductComment.getId());
+        SaveAndUpdateProductCommentResponse persistRecord = saveProductComment(productMappers.mapAddProductCommentModelToDbModel(reqBody));
 
-        checkIfRecordPersisted(updateRecordInDb);
-        boolean cacheRecordInMemory = redisProductCacheRepo.saveUpdateProductComment(productMappers.mapProductCommentDbModelToDbModel(updateRecordInDb.getProductComments()));
+        checkIfRecordPersisted(persistRecord);
+
+        boolean cacheRecordInMemory = redisProductCacheRepo.saveUpdateProductComment(productMappers.mapProductCommentDbModelToDbModel(persistRecord.getProductComments()));
 
         isRecordSaveInTheCache(cacheRecordInMemory);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(productMappers.productCommentResponseBuilder(updateRecordInDb.getProductComments(), "product comment successfully updated"), HttpStatus.OK);
+        return new ResponseEntity<>(productMappers.productCommentResponseBuilder(persistRecord.getProductComments(), "product comment successfully updated"), HttpStatus.OK);
 
     }
 
@@ -119,7 +121,7 @@ public class UpdateProductCommentsService {
         }
     }
 
-    private ProductCommentDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+    private ProductCommentDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
         return productCommentRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_COMMENT_ERROR_RESPONSE),
@@ -127,11 +129,11 @@ public class UpdateProductCommentsService {
                 ));
     }
 
-    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbModel regDetails) {
+    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductCommentResponse(true, "", productCommentRepo.save(regDetails)) ;
         } catch (Exception e) {
-            return new SaveAndUpdateProductCommentResponse(false, e.getMessage(), ProductCommentDbModel.builder().build());
+            return new SaveAndUpdateProductCommentResponse(false, e.getMessage(), ProductCommentDbEntity.builder().build());
         }
     }
 

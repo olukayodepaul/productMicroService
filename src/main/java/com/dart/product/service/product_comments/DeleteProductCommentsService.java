@@ -1,8 +1,8 @@
 package com.dart.product.service.product_comments;
 
-import com.dart.product.dto_model.product_comments_model.ProductCommentOneResDTO;
+import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
 import com.dart.product.dto_model.product_comments_model.SaveAndUpdateProductCommentResponse;
-import com.dart.product.entity.product_comment_entity.ProductCommentDbModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductCommentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
@@ -40,7 +40,7 @@ public class DeleteProductCommentsService {
         this.validationUtils = validationUtils;
     }
 
-    public ResponseEntity<ProductCommentOneResDTO> deleteProductComment(
+    public ResponseEntity<ProductCommentResDTO> deleteProductComment(
             String authToken,  Integer productId, Integer id) {
 
         validateRequestToken(authToken);
@@ -55,7 +55,7 @@ public class DeleteProductCommentsService {
         validationUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
-        ProductCommentDbModel existingProductComment = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+        ProductCommentDbEntity existingProductComment = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
 
         existingProductComment.setUpdatedAt(LocalDateTime.now());
         existingProductComment.setActive(false);
@@ -67,7 +67,7 @@ public class DeleteProductCommentsService {
         isCacheRecordDeleted(deleteCacheRecord);
 
         //todo: send newly created product policies to searchMicroService through (grpc) if fail then, kafka using same proto buffer
-        return new ResponseEntity<>(productMappers.productCommentResponseBuilder(persistRecord.getProductComments(), "product comment successfully deleted"), HttpStatus.OK);
+        return new ResponseEntity<>(productMappers.productCommentResponseBuilder(persistRecord.getProductComments(), AppConfig.PRODUCT_COMMENT_SUCCESSFULLY_DELETED), HttpStatus.OK);
 
     }
 
@@ -106,7 +106,7 @@ public class DeleteProductCommentsService {
         }
     }
 
-    private ProductCommentDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+    private ProductCommentDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
         return productCommentRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_COMMENT_ERROR_RESPONSE),
@@ -114,11 +114,11 @@ public class DeleteProductCommentsService {
                 ));
     }
 
-    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbModel regDetails) {
+    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductCommentResponse(true, "", productCommentRepo.save(regDetails)) ;
         } catch (Exception e) {
-            return new SaveAndUpdateProductCommentResponse(false, e.getMessage(), ProductCommentDbModel.builder().build());
+            return new SaveAndUpdateProductCommentResponse(false, e.getMessage(), ProductCommentDbEntity.builder().build());
         }
     }
 

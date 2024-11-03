@@ -16,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "product_comments")
-public class ProductCommentDbModel {
+public class ProductCommentDbEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

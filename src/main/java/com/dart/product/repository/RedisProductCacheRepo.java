@@ -1,7 +1,7 @@
 package com.dart.product.repository;
 
 import com.dart.product.dto_model.product_comments_model.FetchAllProductCommentModel;
-import com.dart.product.dto_model.product_comments_model.FetchOneProductCommentModel;
+import com.dart.product.dto_model.product_comments_model.FetchProductCommentModel;
 import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
 import com.dart.product.dto_model.product_feedback.FetchAllProductFeedBackModel;
 import com.dart.product.dto_model.product_feedback.FetchOneProductFeedBackModel;
@@ -33,13 +33,10 @@ import com.dart.product.dto_model.shipping_details_model.ShippingDetailsCacheMod
 import com.dart.product.dto_model.special_offers_model.FetchAllSpecialOfferModel;
 import com.dart.product.dto_model.special_offers_model.FetchOneSpecialOfferModel;
 import com.dart.product.dto_model.special_offers_model.SpecialOffersCacheModel;
-import com.dart.product.entity.product_entity.ProductDbEntity;
 import com.dart.product.security.FilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -826,7 +823,7 @@ public class RedisProductCacheRepo {
         }
     }
 
-    public FetchOneProductCommentModel findOneProductComment(String organisationId, Integer productId, Integer productSpecId) {
+    public FetchProductCommentModel findOneProductComment(String organisationId, Integer productId, Integer productSpecId) {
         try {
 
             String subKey = productSpecId.toString();
@@ -834,14 +831,14 @@ public class RedisProductCacheRepo {
             Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
 
             if (cachedObject == null) {
-                return new FetchOneProductCommentModel(false,  "No user found in redis", null);
+                return new FetchProductCommentModel(false,  "No user found in redis", null);
             }
             ProductCommentCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductCommentCacheModel.class);
-            return new FetchOneProductCommentModel(true, "", cacheModel);
+            return new FetchProductCommentModel(true, "", cacheModel);
 
         } catch (Exception e) {
             logger.error("RedisCacheService::findOneProductComment {}: {}", "", e.getMessage());
-            return new FetchOneProductCommentModel(false, e.getMessage(), new ProductCommentCacheModel());
+            return new FetchProductCommentModel(false, e.getMessage(), new ProductCommentCacheModel());
         }
     }
 

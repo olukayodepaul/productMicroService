@@ -1,9 +1,9 @@
 package com.dart.product.service.product_comments;
 
 
-import com.dart.product.dto_model.product_comments_model.FetchOneProductCommentModel;
-import com.dart.product.dto_model.product_comments_model.ProductCommentOneResDTO;
-import com.dart.product.entity.product_comment_entity.ProductCommentDbModel;
+import com.dart.product.dto_model.product_comments_model.FetchProductCommentModel;
+import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
+import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductCommentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
@@ -41,7 +41,7 @@ public class GetProductCommentsService {
         this.validationUtils = validationUtils;
     }
 
-    public ResponseEntity<ProductCommentOneResDTO> getProductComment(String authToken,  Integer productId, Integer id) {
+    public ResponseEntity<ProductCommentResDTO> getProductComment(String authToken, Integer productId, Integer id) {
 
         validateRequestToken(authToken);
         validProductId(productId);
@@ -55,14 +55,14 @@ public class GetProductCommentsService {
         validationUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
-        FetchOneProductCommentModel getCacheRecord = redisProductCacheRepo.findOneProductComment(organisationId.toString(), productId, id);
+        FetchProductCommentModel getCacheRecord = redisProductCacheRepo.findOneProductComment(organisationId.toString(), productId, id);
 
         if(getCacheRecord.getStatus()){
-            ProductCommentDbModel mapCacheToPersistence = productMappers.mapDbModelToProductCommentDbModel(getCacheRecord.getProductComment());
+            ProductCommentDbEntity mapCacheToPersistence = productMappers.mapDbModelToProductCommentDbModel(getCacheRecord.getProductComment());
             return new ResponseEntity<>(productMappers.productCommentResponseBuilder(mapCacheToPersistence, AppConfig.VALID_GET_PRODUCT_COMMENT_RESPONSE), HttpStatus.OK);
         }
 
-        ProductCommentDbModel getPersistedRecord = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
+        ProductCommentDbEntity getPersistedRecord = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
         return new ResponseEntity<>(productMappers.productCommentResponseBuilder(getPersistedRecord, AppConfig.VALID_GET_PRODUCT_COMMENT_RESPONSE), HttpStatus.OK);
 
     }
@@ -87,7 +87,7 @@ public class GetProductCommentsService {
         validationUtils.bruteForceProtection(AppConfig.GET_PRODUCT_COMMENT_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    private ProductCommentDbModel findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
+    private ProductCommentDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
         return productCommentRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),

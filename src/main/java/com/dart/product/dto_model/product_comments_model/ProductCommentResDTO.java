@@ -14,7 +14,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductCommentOneResDTO {
+public class ProductCommentResDTO {
 
     private boolean status;
     private String message;

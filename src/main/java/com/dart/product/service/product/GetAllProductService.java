@@ -33,43 +33,46 @@ public class GetAllProductService {
     private final RedisProductCacheRepo redisProductCacheRepo;
 
     public ResponseEntity<AllProductResDto> getAllProduct(String authToken, int offset, int limit) {
+
         validateRequestToken(authToken);
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
+        String roles = jwtService.extractRole(jwtToken);
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
+        validationUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
         limit = getValidLimit(limit);
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));
-        FetchAllProductsResModel getAllCacheProduct = redisProductCacheRepo.getAllProducts(organisationId.toString());
+        FetchAllProductsResModel getAllCacheRecord = redisProductCacheRepo.getAllProducts(organisationId.toString());
 
-        List<ProductDbEntity> products;
+        List<ProductDbEntity> itemFilter;
         AllProductResDto.PaginationMetadata pagination;
 
-        if (getAllCacheProduct.getStatus()) {
-            // Cache exists, apply pagination
-            int totalProducts = getAllCacheProduct.getProduct().size();
-            int start = Math.min(offset, totalProducts); // Correctly limit the start index
-            int end = Math.min(start + limit, totalProducts); // Correctly limit the end index
+        if (getAllCacheRecord.getStatus()) {
 
-            // Handle empty sublist case
+            int totalProducts = getAllCacheRecord.getProduct().size();
+            int start = Math.min(offset, totalProducts);
+            int end = Math.min(start + limit, totalProducts);
+
             if (start >= totalProducts) {
-                products = List.of(); // Return an empty list if the offset is out of bounds
+                itemFilter = List.of();
             } else {
-                List<ProductCacheEntity> paginatedProducts = getAllCacheProduct.getProduct().subList(start, end);
-                products = productMappers.toCacheFromProduct(paginatedProducts, pageable).getContent();
+                List<ProductCacheEntity> paginatedProducts = getAllCacheRecord.getProduct().subList(start, end);
+                itemFilter = productMappers.toCacheFromProduct(paginatedProducts, pageable).getContent();
             }
 
             pagination = buildPaginationMetadataFromCache(totalProducts, limit, offset);
 
         } else {
-            // Fallback to fetching from the database if no cache exists
+
             Page<ProductDbEntity> productPage = findByOrganisationIdAndIsActive(organisationId, pageable);
-            products = productPage.getContent();
+            itemFilter = productPage.getContent();
             pagination = buildPaginationMetadataFromRepo(productPage);
+
         }
 
-        List<AllProductResDto.Product> productList = products.stream()
+        List<AllProductResDto.Product> productList = itemFilter.stream()
                 .map(productMappers::toProductDto)
                 .collect(Collectors.toList());
 
@@ -84,7 +87,7 @@ public class GetAllProductService {
     }
 
     private AllProductResDto.PaginationMetadata buildPaginationMetadataFromCache(int totalProducts, int limit, int offset) {
-        int totalPages = (int) Math.ceil((double) totalProducts / limit); // Total pages calculation
+        int totalPages = (int) Math.ceil((double) totalProducts / limit);
         int currentPage = offset / limit; // 0-based current page
 
         Integer previousOffset = currentPage > 0 ? (currentPage - 1) * limit : null;
@@ -104,7 +107,7 @@ public class GetAllProductService {
 
     private AllProductResDto.PaginationMetadata buildPaginationMetadataFromRepo(Page<ProductDbEntity> productPage) {
         int pageSize = productPage.getSize();
-        int currentPage = productPage.getNumber(); // 0-based
+        int currentPage = productPage.getNumber();
 
         Integer previousOffset = currentPage > 0 ? (currentPage - 1) * pageSize : null;
         Integer nextOffset = productPage.hasNext() ? (currentPage + 1) * pageSize : null;
@@ -121,6 +124,10 @@ public class GetAllProductService {
                 .build();
     }
 
+    private void validationUserRole(String role) {
+        validationUtils.adminRoleValidation(role);
+    }
+
     private void validateRequestToken(String token) {
         validationUtils.accessTokenValidation(token);
     }
@@ -130,8 +137,7 @@ public class GetAllProductService {
     }
 
     private int getValidLimit(Integer limit) {
-        // Cap the limit at a maximum of 20
-        return limit == null ? 10 : Math.max(1, Math.min(limit, 20));
+        return limit == null ? 10 : Math.max(1, Math.min(limit, AppConfig.PAGINATION_LIMIT));
     }
 
     private Page<ProductDbEntity> findByOrganisationIdAndIsActive(UUID organisationId, Pageable pageable) {

@@ -1,7 +1,7 @@
 package com.dart.product.mapper;
 
 import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
-import com.dart.product.entity.product_comment_entity.ProductCommentDbModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
 import com.dart.product.entity.product_entity.ProductDbEntity;
 import com.dart.product.dto_model.product_comments_model.*;
@@ -125,7 +125,6 @@ public class ProductMappers {
 
 
     public Page<ProductDbEntity> toCacheFromProduct(List<ProductCacheEntity> products, Pageable pageable) {
-        // Map to ProductDbEntity
         List<ProductDbEntity> productDbEntities = products.stream()
                 .map(product -> ProductDbEntity.builder()
                         .id(product.getId())
@@ -141,10 +140,125 @@ public class ProductMappers {
                         .created_at(product.getCreated_at())
                         .build())
                 .collect(Collectors.toList());
-
-        // Create a PageImpl object to wrap the list of ProductDbEntity
         return new PageImpl<>(productDbEntities, pageable, products.size());
     }
+
+
+    //Product Comment
+    public ProductCommentDbEntity mapAddProductCommentModelToDbModel(AddProductCommentReqlDTO reqModel) {
+        return ProductCommentDbEntity.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .userId(utilitiesManager.convertStringToUUID(reqModel.getUser_id()))
+                .commentText(reqModel.getComment_text())
+                .isActive(reqModel.is_active())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
+
+    public ProductCommentCacheModel mapProductCommentDbModelToDbModel(ProductCommentDbEntity reqModel) {
+        return ProductCommentCacheModel.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProductId())
+                .organisationId(reqModel.getOrganisationId())
+                .userId(reqModel.getUserId())
+                .commentText(reqModel.getCommentText())
+                .isActive(reqModel.isActive())
+                .updatedAt(reqModel.getUpdatedAt())
+                .createdAt(reqModel.getCreatedAt())
+                .build();
+    }
+
+    public ProductCommentResDTO productCommentResponseBuilder(ProductCommentDbEntity reqModel, String message) {
+        return ProductCommentResDTO.builder()
+                .status(true)
+                .message(message)
+                .product_comments(
+                        ProductCommentResDTO.ProductComment
+                                .builder()
+                                .id(reqModel.getId())
+                                .product_id(reqModel.getProductId())
+                                .organisation_id(reqModel.getOrganisationId())
+                                .user_id(reqModel.getUserId())
+                                .comment_text(reqModel.getCommentText())
+                                .is_active(reqModel.isActive())
+                                .updated_at(reqModel.getUpdatedAt())
+                                .created_at(reqModel.getCreatedAt())
+                                .build()
+                )
+                .build();
+    }
+
+    public ProductCommentDbEntity mapDbModelToProductCommentDbModel(ProductCommentCacheModel reqModel) {
+        return ProductCommentDbEntity.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProductId())
+                .organisationId(reqModel.getOrganisationId())
+                .userId(reqModel.getUserId())
+                .commentText(reqModel.getCommentText())
+                .isActive(reqModel.isActive())
+                .updatedAt(reqModel.getUpdatedAt())
+                .createdAt(reqModel.getCreatedAt())
+                .build();
+    }
+
+    public AllProductCommentAllResDTO.ProductComment mapToAllProductComment(ProductCommentDbEntity reqModel) {
+        return AllProductCommentAllResDTO.ProductComment.builder()
+                .id(reqModel.getId())
+                .product_id(reqModel.getProductId())
+                .organisation_id(reqModel.getOrganisationId())
+                .user_id(reqModel.getUserId())
+                .comment_text(reqModel.getCommentText())
+                .is_active(reqModel.isActive())
+                .updated_at(reqModel.getUpdatedAt())
+                .created_at(reqModel.getCreatedAt())
+                .build();
+    }
+
+    public Page<ProductCommentDbEntity> allProductComment(List<ProductCommentCacheModel> reqModel, Pageable pageable) {
+        List<ProductCommentDbEntity> productDbEntities = reqModel.stream()
+                .map(productComment -> ProductCommentDbEntity.builder()
+                        .id(productComment.getId())
+                        .productId(productComment.getProductId())
+                        .organisationId(productComment.getOrganisationId())
+                        .userId(productComment.getUserId())
+                        .commentText(productComment.getCommentText())
+                        .isActive(productComment.isActive())
+                        .updatedAt(productComment.getUpdatedAt())
+                        .createdAt(productComment.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+        return new PageImpl<>(productDbEntities, pageable, reqModel.size());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     //here is for media mapper.
@@ -1122,100 +1236,6 @@ public class ProductMappers {
 //    }
 
 
-    //Product Comment
-    public ProductCommentDbModel mapAddProductCommentModelToDbModel(AddProductCommentReqlDTO reqModel) {
-        return ProductCommentDbModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProduct_id())
-                .organisationId(reqModel.getOrganisation_id())
-                .userId(utilitiesManager.convertStringToUUID(reqModel.getUser_id()))
-                .commentText(reqModel.getComment_text())
-                .isActive(reqModel.is_active())
-                .updatedAt(reqModel.getUpdated_at())
-                .createdAt(reqModel.getCreated_at())
-                .build();
-    }
-
-    public ProductCommentCacheModel mapProductCommentDbModelToDbModel(ProductCommentDbModel reqModel) {
-        return ProductCommentCacheModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProductId())
-                .organisationId(reqModel.getOrganisationId())
-                .userId(reqModel.getUserId())
-                .commentText(reqModel.getCommentText())
-                .isActive(reqModel.isActive())
-                .updatedAt(reqModel.getUpdatedAt())
-                .createdAt(reqModel.getCreatedAt())
-                .build();
-    }
-
-    public ProductCommentOneResDTO productCommentResponseBuilder(ProductCommentDbModel reqModel, String message) {
-        return ProductCommentOneResDTO.builder()
-                .status(true)
-                .message(message)
-                .product_comments(
-                        ProductCommentOneResDTO.ProductComment
-                                .builder()
-                                .id(reqModel.getId())
-                                .product_id(reqModel.getProductId())
-                                .organisation_id(reqModel.getOrganisationId())
-                                .user_id(reqModel.getUserId())
-                                .comment_text(reqModel.getCommentText())
-                                .is_active(reqModel.isActive())
-                                .updated_at(reqModel.getUpdatedAt())
-                                .created_at(reqModel.getCreatedAt())
-                                .build()
-                )
-                .build();
-    }
-
-    public ProductCommentDbModel mapDbModelToProductCommentDbModel(ProductCommentCacheModel reqModel) {
-        return ProductCommentDbModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProductId())
-                .organisationId(reqModel.getOrganisationId())
-                .userId(reqModel.getUserId())
-                .commentText(reqModel.getCommentText())
-                .isActive(reqModel.isActive())
-                .updatedAt(reqModel.getUpdatedAt())
-                .createdAt(reqModel.getCreatedAt())
-                .build();
-    }
-
-    public List<ProductCommentDbModel> mapToAllProductComment(List<ProductCommentCacheModel> spec) {
-        return spec.stream().map(reqModel -> ProductCommentDbModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProductId())
-                .organisationId(reqModel.getOrganisationId())
-                .userId(reqModel.getUserId())
-                .commentText(reqModel.getCommentText())
-                .isActive(reqModel.isActive())
-                .updatedAt(reqModel.getUpdatedAt())
-                .createdAt(reqModel.getCreatedAt())
-                .build()
-        ).collect(Collectors.toList());
-    }
-
-    public ProductCommentAllResDTO allProductCommentResponseBuilder(List<ProductCommentDbModel> reqBody, String message) {
-        return ProductCommentAllResDTO.builder()
-                .status(true)
-                .message(message)
-                .product_comments(
-                        reqBody.stream().map(review -> ProductCommentAllResDTO.ProductComment
-                                .builder()
-                                .id(review.getId())
-                                .product_id(review.getProductId())
-                                .organisation_id(review.getOrganisationId())
-                                .user_id(review.getUserId())
-                                .comment_text(review.getCommentText())
-                                .is_active(review.isActive())
-                                .updated_at(review.getUpdatedAt())
-                                .created_at(review.getCreatedAt())
-                                .build()
-                        ).collect(Collectors.toList())
-                )
-                .build();
-    }
 
 
     //Product Feedback

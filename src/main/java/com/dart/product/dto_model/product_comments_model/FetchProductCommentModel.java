@@ -11,7 +11,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FetchOneProductCommentModel {
+public class FetchProductCommentModel {
 
     private Boolean status;
     private String message;

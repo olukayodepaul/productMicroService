@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AppConfig {
 
+    public static final int PAGINATION_LIMIT  = 20;
+
     /**
      * Here is the new refactor code for the application
      */
@@ -60,6 +62,8 @@ public class AppConfig {
     public static final String INVALID_COMMENT_ERROR_RESPONSE = "product ID and comment Id not found";
     public static final String VALID_GET_PRODUCT_COMMENT_RESPONSE = "product comment successfully fetch";
     public static final String INVALID_PRODUCT_COMMENT_ERROR_RESPONSE = "resource you are about to delete does not exist";
+    public static final String PRODUCT_COMMENT_SUCCESSFULLY_CREATED = "product comment created successfully";
+    public static final String PRODUCT_COMMENT_SUCCESSFULLY_DELETED = "product comment successfully deleted";
 
 
 
