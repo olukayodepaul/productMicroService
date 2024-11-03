@@ -10,6 +10,7 @@ import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class GetAllProductService {
+
+    @Value("${pagination.maxOffset}")
+    private int maxOffset;
 
     private final ProductsRepo productsRepo;
     private final FilterService jwtService;
@@ -137,7 +141,7 @@ public class GetAllProductService {
     }
 
     private int getValidLimit(Integer limit) {
-        return limit == null ? 10 : Math.max(1, Math.min(limit, AppConfig.PAGINATION_LIMIT));
+        return limit == null ? 10 : Math.max(1, Math.min(limit, maxOffset));
     }
 
     private Page<ProductDbEntity> findByOrganisationIdAndIsActive(UUID organisationId, Pageable pageable) {
