@@ -1,7 +1,7 @@
 package com.dart.product.service.product_comments;
 
 import com.dart.product.dto_model.product_comments_model.*;
-import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductCommentRepo;
@@ -76,7 +76,7 @@ public class GetAllProductCommentsService {
                 itemFilter = List.of();
             } else {
 
-                List<ProductCommentCacheModel> paginatedProductsComment = getAllCacheRecord.getProductComment().subList(start, end);
+                List<ProductCommentCacheEntity> paginatedProductsComment = getAllCacheRecord.getProductComment().subList(start, end);
                 itemFilter = productMappers.allProductComment(paginatedProductsComment, pageable).getContent();
             }
 
@@ -146,7 +146,6 @@ public class GetAllProductCommentsService {
         validationUtils.validProductId(productId);
     }
 
-
     private void validateRequestToken(String token) {
         validationUtils.jwtValidateRequest(token);
     }
@@ -166,7 +165,7 @@ public class GetAllProductCommentsService {
     private Page<ProductCommentDbEntity> findByIdAndOrganisationIdAndIsActive(Integer productId, UUID organisationId, Pageable pageable) {
         return productCommentRepo.findByProductIdAndOrganisationIdAndIsActive( productId, organisationId, true, pageable)
                 .orElseThrow(() -> new CustomRuntimeException(
-                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_PRODUCT_COMMENT_ERROR_RESPONSE),
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }

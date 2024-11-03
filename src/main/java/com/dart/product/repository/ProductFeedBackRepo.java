@@ -1,16 +1,17 @@
 package com.dart.product.repository;
 
 
-import com.dart.product.dto_model.product_feedback.ProductFeedBackDbModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackDbEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ProductFeedBackRepo extends JpaRepository<ProductFeedBackDbModel,Long> {
-    Optional<ProductFeedBackDbModel> findByIdAndProductIdAndOrganisationIdAndIsActive(Integer id, Integer product_id, UUID organisation_id, boolean is_active);
-    Optional<List<ProductFeedBackDbModel>> findByProductIdAndOrganisationIdAndIsActive(Integer product_id, UUID organisation_id, boolean is_active);
+public interface ProductFeedBackRepo extends JpaRepository<ProductFeedBackDbEntity,Long> {
+    Optional<ProductFeedBackDbEntity> findByProductIdAndOrganisationIdAndUserId(Integer product_id, UUID organisation_id, UUID user_id);
+    Optional<Page<ProductFeedBackDbEntity>> findByOrganisationId(UUID organisation_id, Pageable pageable);
 }

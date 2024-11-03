@@ -1,6 +1,6 @@
 package com.dart.product.controller;
 
-import com.dart.product.dto_model.product_dto_model.AllProductResDto;
+import com.dart.product.dto_model.product_dto_model.AllProductResDTO;
 import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
 import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
 import com.dart.product.service.product.*;
@@ -81,7 +81,7 @@ public class ProductController {
      * @return ResponseEntity containing a list of all products.
      */
     @GetMapping()
-    public ResponseEntity<AllProductResDto> getAllProducts(
+    public ResponseEntity<AllProductResDTO> getAllProducts(
             @RequestHeader("Authorization") String authToken,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit

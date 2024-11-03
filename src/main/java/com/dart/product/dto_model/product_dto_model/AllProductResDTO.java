@@ -9,7 +9,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AllProductResDto {
+public class AllProductResDTO {
 
     private boolean status;
     private String message;
@@ -47,4 +47,5 @@ public class AllProductResDto {
         private boolean hasPreviousPage; // Indicates if there is a previous page
         private boolean hasNextPage;     // Indicates if there is a next page
     }
+
 }

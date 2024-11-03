@@ -95,7 +95,7 @@ public class DeleteProductService {
     private ProductDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, UUID organisationId) {
         return productsRepo.findByIdAndOrganisationIdAndIsActive(id, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
-                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.PRODUCT_NOT_FOUND_ERROR_RESPONSE),
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETE_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }

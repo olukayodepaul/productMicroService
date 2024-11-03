@@ -1,11 +1,11 @@
-package com.dart.product.service.product_comments;
+package com.dart.product.service.product_feedback;
 
 
-import com.dart.product.dto_model.product_comments_model.FetchProductCommentModel;
-import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
-import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
+import com.dart.product.dto_model.product_feedback.FetchProductFeedBackModel;
+import com.dart.product.dto_model.product_feedback.ProductFeedBackResDTO;
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackDbEntity;
 import com.dart.product.mapper.ProductMappers;
-import com.dart.product.repository.ProductCommentRepo;
+import com.dart.product.repository.ProductFeedBackRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -16,24 +16,24 @@ import java.util.UUID;
 
 
 @Service
-public class GetProductCommentsService {
+public class GetProductFeedBackService {
 
-    private final ProductCommentRepo productCommentRepo;
+    private final ProductFeedBackRepo productFeedBackRepo;
     private final FilterService jwtService;
     private final UtilitiesManager utilitiesManager;
     private final ProductMappers productMappers;
     private final RedisProductCacheRepo redisProductCacheRepo;
     private final ValidationUtils validationUtils;
 
-    public GetProductCommentsService(
-            ProductCommentRepo productCommentRepo,
+    public GetProductFeedBackService(
+            ProductFeedBackRepo productFeedBackRepo,
             FilterService jwtService,
             UtilitiesManager utilitiesManager,
             ProductMappers productMappers,
             RedisProductCacheRepo redisProductCacheRepo,
             ValidationUtils validationUtils
     ) {
-        this.productCommentRepo = productCommentRepo;
+        this.productFeedBackRepo = productFeedBackRepo;
         this.jwtService = jwtService;
         this.utilitiesManager = utilitiesManager;
         this.productMappers = productMappers;
@@ -41,11 +41,10 @@ public class GetProductCommentsService {
         this.validationUtils = validationUtils;
     }
 
-    public ResponseEntity<ProductCommentResDTO> getProductComment(String authToken, Integer productId, Integer id) {
+    public ResponseEntity<ProductFeedBackResDTO> getProductFeedBack(String authToken, Integer productId) {
 
         validateRequestToken(authToken);
         validProductId(productId);
-        validCommentId(id);
 
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
@@ -55,23 +54,16 @@ public class GetProductCommentsService {
         validationUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
-        FetchProductCommentModel getCacheRecord = redisProductCacheRepo.findOneProductComment(organisationId.toString(), productId, id);
+        FetchProductFeedBackModel getCacheRecord = redisProductCacheRepo.findOneProductFeedBack(organisationId.toString(), productId);
 
         if(getCacheRecord.getStatus()) {
-            ProductCommentDbEntity mapCacheToPersistence = productMappers.mapDbModelToProductCommentDbModel(getCacheRecord.getProductComment());
-            return new ResponseEntity<>(productMappers.productCommentResponseBuilder(mapCacheToPersistence, AppConfig.VALID_GET_PRODUCT_COMMENT_RESPONSE), HttpStatus.OK);
+            ProductFeedBackDbEntity mapCacheToPersistence = productMappers.mapDbModelToProductFeedBackDbModel(getCacheRecord.getProductFeedBack());
+            return new ResponseEntity<>(productMappers.productFeedBackResponseBuilder(mapCacheToPersistence, AppConfig.VALID_GET_PRODUCT_FEED_BACK_RESPONSE), HttpStatus.OK);
         }
 
-        ProductCommentDbEntity getPersistedRecord = findByIdAndOrganisationIdAndIsActive(id,  productId, organisationId);
-        return new ResponseEntity<>(productMappers.productCommentResponseBuilder(getPersistedRecord, AppConfig.VALID_GET_PRODUCT_COMMENT_RESPONSE), HttpStatus.OK);
-    }
+        ProductFeedBackDbEntity getPersistedRecord = findByIdAndOrganisationIdAndIsActive(userId,  productId, organisationId);
+        return new ResponseEntity<>(productMappers.productFeedBackResponseBuilder(getPersistedRecord, AppConfig.VALID_GET_PRODUCT_FEED_BACK_RESPONSE), HttpStatus.OK);
 
-    private void validProductId(Integer productId) {
-        validationUtils.validProductId(productId);
-    }
-
-    private void validCommentId(Integer id) {
-        validationUtils.validCommentId(id);
     }
 
     private void validateRequestToken(String token) {
@@ -82,17 +74,21 @@ public class GetProductCommentsService {
         validationUtils.userRoleValidation(role);
     }
 
-    private void validateBruteForceProtection(String userId) {
-        validationUtils.bruteForceProtection(AppConfig.GET_PRODUCT_COMMENT_BRUTE_FORCE_PROTECTION + userId);
+    private void validateBruteForceProtection(String uuid) {
+        validationUtils.bruteForceProtection(AppConfig.GET_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION + uuid);
     }
 
-    private ProductCommentDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
-        return productCommentRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
+    private void validProductId(Integer productId) {
+        validationUtils.validProductId(productId);
+    }
+
+    private ProductFeedBackDbEntity findByIdAndOrganisationIdAndIsActive(UUID userId, Integer productId, UUID organisationId) {
+        return productFeedBackRepo.findByProductIdAndOrganisationIdAndUserId(productId, organisationId, userId)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }
 
-}
 
+}

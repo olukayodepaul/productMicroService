@@ -1,6 +1,6 @@
 package com.dart.product.mapper;
 
-import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
 import com.dart.product.entity.product_entity.ProductDbEntity;
@@ -15,6 +15,8 @@ import com.dart.product.dto_model.product_tags_model.*;
 import com.dart.product.dto_model.related_products_model.*;
 import com.dart.product.dto_model.shipping_details_model.*;
 import com.dart.product.dto_model.special_offers_model.*;
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackDbEntity;
 import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -37,8 +39,8 @@ public class ProductMappers {
 
 
     //product
-    public AllProductResDto.Product toProductDto(ProductDbEntity productDbEntity) {
-        return AllProductResDto.Product.builder()
+    public AllProductResDTO.Product toProductDto(ProductDbEntity productDbEntity) {
+        return AllProductResDTO.Product.builder()
                 .id(productDbEntity.getId())
                 .name(productDbEntity.getName())
                 .description(productDbEntity.getDescription())
@@ -158,8 +160,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductCommentCacheModel mapProductCommentDbModelToDbModel(ProductCommentDbEntity reqModel) {
-        return ProductCommentCacheModel.builder()
+    public ProductCommentCacheEntity mapProductCommentDbModelToDbModel(ProductCommentDbEntity reqModel) {
+        return ProductCommentCacheEntity.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProductId())
                 .organisationId(reqModel.getOrganisationId())
@@ -191,7 +193,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductCommentDbEntity mapDbModelToProductCommentDbModel(ProductCommentCacheModel reqModel) {
+    public ProductCommentDbEntity mapDbModelToProductCommentDbModel(ProductCommentCacheEntity reqModel) {
         return ProductCommentDbEntity.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProductId())
@@ -217,7 +219,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public Page<ProductCommentDbEntity> allProductComment(List<ProductCommentCacheModel> reqModel, Pageable pageable) {
+    public Page<ProductCommentDbEntity> allProductComment(List<ProductCommentCacheEntity> reqModel, Pageable pageable) {
         List<ProductCommentDbEntity> productDbEntities = reqModel.stream()
                 .map(productComment -> ProductCommentDbEntity.builder()
                         .id(productComment.getId())
@@ -234,13 +236,88 @@ public class ProductMappers {
     }
 
 
+    //Product Feedback
+    public ProductFeedBackDbEntity mapAddProductFeedBackModelToDbModel(AddProductFeedBackReqDTO reqModel) {
+        return ProductFeedBackDbEntity.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProduct_id())
+                .organisationId(reqModel.getOrganisation_id())
+                .userId(utilitiesManager.convertStringToUUID(reqModel.getUser_id()))
+                .feedbackType(reqModel.getFeedback_type())
+                .updatedAt(reqModel.getUpdated_at())
+                .createdAt(reqModel.getCreated_at())
+                .build();
+    }
 
+    public ProductFeedBackCacheEntity mapProductFeedBackDbModelToDbModel(ProductFeedBackDbEntity reqModel) {
+        return ProductFeedBackCacheEntity.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProductId())
+                .organisationId(reqModel.getOrganisationId())
+                .userId(reqModel.getUserId())
+                .feedbackType(reqModel.getFeedbackType())
+                .updatedAt(reqModel.getUpdatedAt())
+                .createdAt(reqModel.getCreatedAt())
+                .build();
+    }
 
+    public ProductFeedBackResDTO productFeedBackResponseBuilder(ProductFeedBackDbEntity reqModel, String message) {
+        return ProductFeedBackResDTO.builder()
+                .status(true)
+                .message(message)
+                .product_feedback(
+                        ProductFeedBackResDTO.ProductFeedBack
+                                .builder()
+                                .id(reqModel.getId())
+                                .product_id(reqModel.getProductId())
+                                .organisation_id(reqModel.getOrganisationId())
+                                .user_id(reqModel.getUserId())
+                                .feedback_type(reqModel.getFeedbackType())
+                                .updated_at(reqModel.getUpdatedAt())
+                                .created_at(reqModel.getCreatedAt())
+                                .build()
+                )
+                .build();
+    }
 
+    public ProductFeedBackDbEntity mapDbModelToProductFeedBackDbModel(ProductFeedBackCacheEntity reqModel) {
+        return ProductFeedBackDbEntity.builder()
+                .id(reqModel.getId())
+                .productId(reqModel.getProductId())
+                .organisationId(reqModel.getOrganisationId())
+                .userId(reqModel.getUserId())
+                .feedbackType(reqModel.getFeedbackType())
+                .updatedAt(reqModel.getUpdatedAt())
+                .createdAt(reqModel.getCreatedAt())
+                .build();
+    }
 
+    public Page<ProductFeedBackDbEntity> mapToAllProductFeedBack(List<ProductFeedBackCacheEntity> reqModel, Pageable pageable) {
+        List<ProductFeedBackDbEntity> productDbEntities = reqModel.stream()
+                .map(productComment -> ProductFeedBackDbEntity.builder()
+                        .id(productComment.getId())
+                        .productId(productComment.getProductId())
+                        .organisationId(productComment.getOrganisationId())
+                        .userId(productComment.getUserId())
+                        .feedbackType(productComment.getFeedbackType())
+                        .updatedAt(productComment.getUpdatedAt())
+                        .createdAt(productComment.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+        return new PageImpl<>(productDbEntities, pageable, reqModel.size());
+    }
 
-
-
+    public ProductFeedBackAllResDTO.ProductFeedBack mapToAllProductFeedBack(ProductFeedBackDbEntity reqModel) {
+        return ProductFeedBackAllResDTO.ProductFeedBack.builder()
+                .id(reqModel.getId())
+                .product_id(reqModel.getProductId())
+                .organisation_id(reqModel.getOrganisationId())
+                .user_id(reqModel.getUserId())
+                .feedback_type(reqModel.getFeedbackType())
+                .updated_at(reqModel.getUpdatedAt())
+                .created_at(reqModel.getCreatedAt())
+                .build();
+    }
 
 
 
@@ -1215,121 +1292,7 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
-//    public ProductTagAllResModel allProductTagResponseBuilder(List<ProductTagDbModel> reqBody, String message) {
-//        return ProductTagAllResModel.builder()
-//                .status(true)
-//                .message(message)
-//                .product_tags(
-//                        reqBody.stream().map(review -> ProductTagAllResModel.ProductTag
-//                                .builder()
-//                                .id(review.getId())
-//                                .product_id(review.getProductId())
-//                                .organisation_id(review.getOrganisationId())
-//                                .tag(review.getTag())
-//                                .is_active(review.isActive())
-//                                .updated_at(review.getUpdatedAt())
-//                                .created_at(review.getCreatedAt())
-//                                .build()
-//                        ).collect(Collectors.toList())
-//                )
-//                .build();
-//    }
 
 
-
-
-    //Product Feedback
-    public ProductFeedBackDbModel mapAddProductFeedBackModelToDbModel(AddProductFeedBackReqModel reqModel) {
-        return ProductFeedBackDbModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProduct_id())
-                .organisationId(reqModel.getOrganisation_id())
-                .userId(utilitiesManager.convertStringToUUID(reqModel.getUser_id()))
-                .feedbackType(reqModel.getFeedback_type())
-                .isActive(reqModel.is_active())
-                .updatedAt(reqModel.getUpdated_at())
-                .createdAt(reqModel.getCreated_at())
-                .build();
-    }
-
-    public ProductFeedBackCacheModel mapProductFeedBackDbModelToDbModel(ProductFeedBackDbModel reqModel) {
-        return ProductFeedBackCacheModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProductId())
-                .organisationId(reqModel.getOrganisationId())
-                .userId(reqModel.getUserId())
-                .feedbackType(reqModel.getFeedbackType())
-                .isActive(reqModel.isActive())
-                .updatedAt(reqModel.getUpdatedAt())
-                .createdAt(reqModel.getCreatedAt())
-                .build();
-    }
-
-    public ProductFeedBackOneResModel productFeedBackResponseBuilder(ProductFeedBackDbModel reqModel, String message) {
-        return ProductFeedBackOneResModel.builder()
-                .status(true)
-                .message(message)
-                .product_feedback(
-                        ProductFeedBackOneResModel.ProductFeedBack
-                                .builder()
-                                .product_id(reqModel.getProductId())
-                                .organisation_id(reqModel.getOrganisationId())
-                                .user_id(reqModel.getUserId())
-                                .feedback_type(reqModel.getFeedbackType())
-                                .is_active(reqModel.isActive())
-                                .updated_at(reqModel.getUpdatedAt())
-                                .created_at(reqModel.getCreatedAt())
-                                .build()
-                )
-                .build();
-    }
-
-    public ProductFeedBackDbModel mapDbModelToProductFeedBackDbModel(ProductFeedBackCacheModel reqModel) {
-        return ProductFeedBackDbModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProductId())
-                .organisationId(reqModel.getOrganisationId())
-                .userId(reqModel.getUserId())
-                .feedbackType(reqModel.getFeedbackType())
-                .isActive(reqModel.isActive())
-                .updatedAt(reqModel.getUpdatedAt())
-                .createdAt(reqModel.getCreatedAt())
-                .build();
-    }
-
-    public List<ProductFeedBackDbModel> mapToAllProductFeedBack(List<ProductFeedBackCacheModel> spec) {
-        return spec.stream().map(reqModel -> ProductFeedBackDbModel.builder()
-                .id(reqModel.getId())
-                .productId(reqModel.getProductId())
-                .organisationId(reqModel.getOrganisationId())
-                .userId(reqModel.getUserId())
-                .feedbackType(reqModel.getFeedbackType())
-                .isActive(reqModel.isActive())
-                .updatedAt(reqModel.getUpdatedAt())
-                .createdAt(reqModel.getCreatedAt())
-                .build()
-        ).collect(Collectors.toList());
-    }
-
-    public ProductFeedBackAllResModel allProductFeedBackResponseBuilder(List<ProductFeedBackDbModel> reqBody, String message) {
-        return ProductFeedBackAllResModel.builder()
-                .status(true)
-                .message(message)
-                .product_feedback(
-                        reqBody.stream().map(review -> ProductFeedBackAllResModel.ProductFeedBack
-                                .builder()
-                                .id(review.getId())
-                                .product_id(review.getProductId())
-                                .organisation_id(review.getOrganisationId())
-                                .user_id(review.getUserId())
-                                .feedback_type(review.getFeedbackType())
-                                .is_active(review.isActive())
-                                .updated_at(review.getUpdatedAt())
-                                .created_at(review.getCreatedAt())
-                                .build()
-                        ).collect(Collectors.toList())
-                )
-                .build();
-    }
 
 }

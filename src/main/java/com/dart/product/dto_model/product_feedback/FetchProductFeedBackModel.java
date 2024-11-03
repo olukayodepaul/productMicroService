@@ -2,6 +2,7 @@ package com.dart.product.dto_model.product_feedback;
 
 
 
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
 import lombok.*;
 
 @Data
@@ -10,10 +11,10 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FetchOneProductFeedBackModel {
+public class FetchProductFeedBackModel {
 
   private Boolean status;
   private String message;
-  private ProductFeedBackCacheModel productFeedBack;
+  private ProductFeedBackCacheEntity productFeedBack;
 
 }

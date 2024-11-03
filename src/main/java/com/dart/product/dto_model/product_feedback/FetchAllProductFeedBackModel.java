@@ -2,6 +2,7 @@ package com.dart.product.dto_model.product_feedback;
 
 
 
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
 import lombok.*;
 
 import java.util.List;
@@ -16,6 +17,6 @@ public class FetchAllProductFeedBackModel {
 
   private Boolean status;
   private String message;
-  private List<ProductFeedBackCacheModel> productFeedBack;
+  private List<ProductFeedBackCacheEntity> productFeedBack;
 
 }

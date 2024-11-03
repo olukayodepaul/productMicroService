@@ -2,10 +2,10 @@ package com.dart.product.repository;
 
 import com.dart.product.dto_model.product_comments_model.FetchAllProductCommentModel;
 import com.dart.product.dto_model.product_comments_model.FetchProductCommentModel;
-import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import com.dart.product.dto_model.product_feedback.FetchAllProductFeedBackModel;
-import com.dart.product.dto_model.product_feedback.FetchOneProductFeedBackModel;
-import com.dart.product.dto_model.product_feedback.ProductFeedBackCacheModel;
+import com.dart.product.dto_model.product_feedback.FetchProductFeedBackModel;
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
 import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.dto_model.product_media_model.FetchOneProductMediaModel;
 import com.dart.product.dto_model.product_media_model.ProductMediaCacheModel;
@@ -179,25 +179,146 @@ public class RedisProductCacheRepo {
     }
 
 
-
-    /**
-     *
-     * @param productModels
-     * @param organisationId
-     * @return
-     */
-    public Boolean saveAllProducts(List<ProductCacheEntity> productModels, String organisationId) {
+    //save record for product comment
+    public Boolean saveUpdateProductComment(ProductCommentCacheEntity productComment) {
         try {
-            for (ProductCacheEntity products : productModels) {
-                String subKey = String.valueOf(products.getId());
-                redisTemplate.opsForHash().put(PRODUCT_KEY+"_"+organisationId, subKey, products);
-            }
+            // Sub-key for identifying the user by their email
+            String subKey = productComment.getId().toString();
+            String primaryKey =  PRODUCT_COMMENT_KEY +"_"+ productComment.getOrganisationId() +"_"+ productComment.getProductId();
+            // Save or update user details in Redis hash
+            redisTemplate.opsForHash().put(primaryKey, subKey, productComment);
+
+            // Return success
             return SAVE_UPDATE_SUCCESS;
-        }catch (Exception e){
-            logger.error("RedisCacheRepo::saveAllProducts - Error occurred while saving/updating user with email {}: {}",organisationId, e.getMessage());
+        } catch (Exception e) {
+            // Log the error and return failure response
+            logger.error("RedisCacheRepo::saveUpdateProductComment  {}", e.getMessage());
             return SAVE_UPDATE_FAILED;
         }
     }
+
+    public boolean deleteProductComment(ProductCommentCacheEntity productComment) {
+        try {
+
+            String subKey = productComment.getId().toString();
+            String primaryKey =  PRODUCT_COMMENT_KEY +"_"+ productComment.getOrganisationId() +"_"+ productComment.getProductId();
+
+            Long result = redisTemplate.opsForHash().delete(primaryKey, subKey);
+
+            return result > 0;
+        } catch (Exception e) {
+            logger.error("RedisCacheRepo::deleteProductComment {}: {}", productComment.getOrganisationId(), e.getMessage());
+            return false;
+        }
+    }
+
+    public FetchProductCommentModel findOneProductComment(String organisationId, Integer productId, Integer productSpecId) {
+        try {
+
+            String subKey = productSpecId.toString();
+            String primaryKey =  PRODUCT_COMMENT_KEY +"_"+ organisationId +"_"+ productId;
+            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
+
+            if (cachedObject == null) {
+                return new FetchProductCommentModel(false,  "No user found in redis", null);
+            }
+            ProductCommentCacheEntity cacheModel = objectMapper.convertValue(cachedObject, ProductCommentCacheEntity.class);
+            return new FetchProductCommentModel(true, "", cacheModel);
+
+        } catch (Exception e) {
+            logger.error("RedisCacheService::findOneProductComment {}: {}", "", e.getMessage());
+            return new FetchProductCommentModel(false, e.getMessage(), new ProductCommentCacheEntity());
+        }
+    }
+
+    public FetchAllProductCommentModel findAllProductComment(String organisationId, Integer productId) {
+        try {
+            String key = PRODUCT_COMMENT_KEY + "_" + organisationId + "_" + productId;
+            Map<Object, Object> productCommentMap = redisTemplate.opsForHash().entries(key);
+
+            if (!productCommentMap.isEmpty()) {
+                List<ProductCommentCacheEntity> productComment = productCommentMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductCommentCacheEntity.class))
+                        .sorted(Comparator.comparing(ProductCommentCacheEntity::getId))
+                        .collect(Collectors.toList());
+                return new FetchAllProductCommentModel(true, "Product Tage fetched successfully", productComment);
+            }
+            return new FetchAllProductCommentModel(false, "No media found", Collections.emptyList());
+
+        } catch (Exception e) {
+            logger.error("Error fetching media for findAllProductComment {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductCommentModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+    //save record for product feedback
+    public Boolean saveUpdateProductFeedBack(ProductFeedBackCacheEntity productFeedBack) {
+        try {
+            String subKey = productFeedBack.getProductId().toString();
+            String primaryKey =  PRODUCT_FEEDBACK_KEY +"_"+ productFeedBack.getOrganisationId();
+            redisTemplate.opsForHash().put(primaryKey, subKey, productFeedBack);
+            return SAVE_UPDATE_SUCCESS;
+        } catch (Exception e) {
+            logger.error("RedisCacheRepo::saveUpdateProductFeedBack  {}", e.getMessage());
+            return SAVE_UPDATE_FAILED;
+        }
+    }
+
+    public FetchProductFeedBackModel findOneProductFeedBack(String organisationId, Integer productId) {
+        try {
+
+            String subKey = productId.toString();
+            String primaryKey =  PRODUCT_FEEDBACK_KEY +"_"+ organisationId;
+            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
+
+            if (cachedObject == null) {
+                return new FetchProductFeedBackModel(false,  "No user found in redis", null);
+            }
+            ProductFeedBackCacheEntity cacheModel = objectMapper.convertValue(cachedObject, ProductFeedBackCacheEntity.class);
+            return new FetchProductFeedBackModel(true, "", cacheModel);
+
+        } catch (Exception e) {
+            logger.error("RedisCacheService::findOneProductFeedBack {}: {}", "", e.getMessage());
+            return new FetchProductFeedBackModel(false, e.getMessage(), new ProductFeedBackCacheEntity());
+        }
+    }
+
+    public FetchAllProductFeedBackModel findAllProductFeedBack(String organisationId) {
+        try {
+            String key = PRODUCT_FEEDBACK_KEY + "_" + organisationId;
+            Map<Object, Object> productFeedBackMap = redisTemplate.opsForHash().entries(key);
+
+            if (!productFeedBackMap.isEmpty()) {
+                List<ProductFeedBackCacheEntity> productFeedBack = productFeedBackMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductFeedBackCacheEntity.class))
+                        .sorted(Comparator.comparing(ProductFeedBackCacheEntity::getId))
+                        .collect(Collectors.toList());
+                return new FetchAllProductFeedBackModel(true, "Product Tage fetched successfully", productFeedBack);
+            }
+            return new FetchAllProductFeedBackModel(false, "No media found", Collections.emptyList());
+
+        } catch (Exception e) {
+            logger.error("Error fetching media for findAllProductFeedBack {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductFeedBackModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -790,149 +911,6 @@ public class RedisProductCacheRepo {
 
 
 
-    //save record for product comment
-    public Boolean saveUpdateProductComment(ProductCommentCacheModel productComment) {
-        try {
-            // Sub-key for identifying the user by their email
-            String subKey = productComment.getId().toString();
-            String primaryKey =  PRODUCT_COMMENT_KEY +"_"+ productComment.getOrganisationId() +"_"+ productComment.getProductId();
-            // Save or update user details in Redis hash
-            redisTemplate.opsForHash().put(primaryKey, subKey, productComment);
-
-            // Return success
-            return SAVE_UPDATE_SUCCESS;
-        } catch (Exception e) {
-            // Log the error and return failure response
-            logger.error("RedisCacheRepo::saveUpdateProductComment  {}", e.getMessage());
-            return SAVE_UPDATE_FAILED;
-        }
-    }
-
-    public boolean deleteProductComment(ProductCommentCacheModel productComment) {
-        try {
-
-            String subKey = productComment.getId().toString();
-            String primaryKey =  PRODUCT_COMMENT_KEY +"_"+ productComment.getOrganisationId() +"_"+ productComment.getProductId();
-
-            Long result = redisTemplate.opsForHash().delete(primaryKey, subKey);
-
-            return result > 0;
-        } catch (Exception e) {
-            logger.error("RedisCacheRepo::deleteProductComment {}: {}", productComment.getOrganisationId(), e.getMessage());
-            return false;
-        }
-    }
-
-    public FetchProductCommentModel findOneProductComment(String organisationId, Integer productId, Integer productSpecId) {
-        try {
-
-            String subKey = productSpecId.toString();
-            String primaryKey =  PRODUCT_COMMENT_KEY +"_"+ organisationId +"_"+ productId;
-            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
-
-            if (cachedObject == null) {
-                return new FetchProductCommentModel(false,  "No user found in redis", null);
-            }
-            ProductCommentCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductCommentCacheModel.class);
-            return new FetchProductCommentModel(true, "", cacheModel);
-
-        } catch (Exception e) {
-            logger.error("RedisCacheService::findOneProductComment {}: {}", "", e.getMessage());
-            return new FetchProductCommentModel(false, e.getMessage(), new ProductCommentCacheModel());
-        }
-    }
-
-    public FetchAllProductCommentModel findAllProductComment(String organisationId, Integer productId) {
-        try {
-            String key = PRODUCT_COMMENT_KEY + "_" + organisationId + "_" + productId;
-            Map<Object, Object> productCommentMap = redisTemplate.opsForHash().entries(key);
-
-            if (!productCommentMap.isEmpty()) {
-                List<ProductCommentCacheModel> productComment = productCommentMap.values().stream()
-                        .map(value -> objectMapper.convertValue(value, ProductCommentCacheModel.class))
-                        .sorted(Comparator.comparing(ProductCommentCacheModel::getId))
-                        .collect(Collectors.toList());
-                return new FetchAllProductCommentModel(true, "Product Tage fetched successfully", productComment);
-            }
-            return new FetchAllProductCommentModel(false, "No media found", Collections.emptyList());
-
-        } catch (Exception e) {
-            logger.error("Error fetching media for findAllProductComment {}: {}", organisationId, e.getMessage());
-            return new FetchAllProductCommentModel(false, e.getMessage(), Collections.emptyList());
-        }
-    }
-
-
-    //save record for product feedback
-    public Boolean saveUpdateProductFeedBack(ProductFeedBackCacheModel productFeedBack) {
-        try {
-            // Sub-key for identifying the user by their email
-            String subKey = productFeedBack.getId().toString();
-            String primaryKey =  PRODUCT_FEEDBACK_KEY +"_"+ productFeedBack.getOrganisationId() +"_"+ productFeedBack.getProductId();
-            // Save or update user details in Redis hash
-            redisTemplate.opsForHash().put(primaryKey, subKey, productFeedBack);
-
-            // Return success
-            return SAVE_UPDATE_SUCCESS;
-        } catch (Exception e) {
-            // Log the error and return failure response
-            logger.error("RedisCacheRepo::saveUpdateProductFeedBack  {}", e.getMessage());
-            return SAVE_UPDATE_FAILED;
-        }
-    }
-
-    public boolean deleteProductFeedBack(ProductFeedBackCacheModel productFeedBack) {
-        try {
-
-            String subKey = productFeedBack.getId().toString();
-            String primaryKey =  PRODUCT_FEEDBACK_KEY +"_"+ productFeedBack.getOrganisationId() +"_"+ productFeedBack.getProductId();
-
-            Long result = redisTemplate.opsForHash().delete(primaryKey, subKey);
-
-            return result > 0;
-        } catch (Exception e) {
-            logger.error("RedisCacheRepo::deleteProductFeedBack {}: {}", productFeedBack.getOrganisationId(), e.getMessage());
-            return false;
-        }
-    }
-
-    public FetchOneProductFeedBackModel findOneProductFeedBack(String organisationId, Integer productId, Integer productSpecId) {
-        try {
-
-            String subKey = productSpecId.toString();
-            String primaryKey =  PRODUCT_FEEDBACK_KEY +"_"+ organisationId +"_"+ productId;
-            Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
-
-            if (cachedObject == null) {
-                return new FetchOneProductFeedBackModel(false,  "No user found in redis", null);
-            }
-            ProductFeedBackCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductFeedBackCacheModel.class);
-            return new FetchOneProductFeedBackModel(true, "", cacheModel);
-
-        } catch (Exception e) {
-            logger.error("RedisCacheService::findOneProductFeedBack {}: {}", "", e.getMessage());
-            return new FetchOneProductFeedBackModel(false, e.getMessage(), new ProductFeedBackCacheModel());
-        }
-    }
-
-    public FetchAllProductFeedBackModel findAllProductFeedBack(String organisationId, Integer productId) {
-        try {
-            String key = PRODUCT_COMMENT_KEY + "_" + organisationId + "_" + productId;
-            Map<Object, Object> productFeedBackMap = redisTemplate.opsForHash().entries(key);
-
-            if (!productFeedBackMap.isEmpty()) {
-                List<ProductFeedBackCacheModel> productFeedBack = productFeedBackMap.values().stream()
-                        .map(value -> objectMapper.convertValue(value, ProductFeedBackCacheModel.class))
-                        .collect(Collectors.toList());
-                return new FetchAllProductFeedBackModel(true, "Product Tage fetched successfully", productFeedBack);
-            }
-            return new FetchAllProductFeedBackModel(false, "No media found", Collections.emptyList());
-
-        } catch (Exception e) {
-            logger.error("Error fetching media for findAllProductFeedBack {}: {}", organisationId, e.getMessage());
-            return new FetchAllProductFeedBackModel(false, e.getMessage(), Collections.emptyList());
-        }
-    }
 
 
 

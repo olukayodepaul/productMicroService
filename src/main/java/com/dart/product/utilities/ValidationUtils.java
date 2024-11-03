@@ -2,6 +2,7 @@ package com.dart.product.utilities;
 
 import com.dart.product.dto_model.product_comments_model.AddProductCommentReqlDTO;
 import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
+import com.dart.product.dto_model.product_feedback.AddProductFeedBackReqDTO;
 import com.dart.product.dto_model.product_specification_model.AddProductSpecReqModel;
 import com.dart.product.dto_model.shipping_details_model.AddShippingDetailsReqModel;
 import com.dart.product.rate_limit.BruteForceRateLimitService;
@@ -58,14 +59,26 @@ public class ValidationUtils {
         }
     }
 
+
     public void productCommentValidateRequest(AddProductCommentReqlDTO request) {
         validateField(request.getComment_text(), AppConfig.PRODUCT_COMMENT_VALIDATION );
-    }
-
-    public void validateProductCommentRecord(AddProductCommentReqlDTO request) {
         if(request.getComment_text().isEmpty()){
             throw new CustomRuntimeException(
                     new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.EMPTY_PRODUCT_COMMENT_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    public void productFeedBackValidateRequest(AddProductFeedBackReqDTO request) {
+        validateField(request.getFeedback_type(), AppConfig.PRODUCT_FEEDBACK_TYPE_VALIDATION );
+        if(request.getFeedback_type().isEmpty() ||
+                (!request.getFeedback_type().equalsIgnoreCase("like")
+                && !request.getFeedback_type().equalsIgnoreCase("dislike")
+                && !request.getFeedback_type().equalsIgnoreCase("neutral")))
+        {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.PRODUCT_COMMENT_LIKE_DISLIKE_VALIDATION),
                     HttpStatus.BAD_REQUEST
             );
         }

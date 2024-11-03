@@ -96,7 +96,6 @@ public class CreateProductCommentsService {
 
     private void validateRequestBody(AddProductCommentReqlDTO reqBody) {
         validationUtils.productCommentValidateRequest(reqBody);
-        validationUtils.validateProductCommentRecord(reqBody);
     }
 
     private void validateRequestToken(String token) {

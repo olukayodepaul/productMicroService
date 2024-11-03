@@ -1,6 +1,6 @@
 package com.dart.product.service.product;
 
-import com.dart.product.dto_model.product_dto_model.AllProductResDto;
+import com.dart.product.dto_model.product_dto_model.AllProductResDTO;
 import com.dart.product.dto_model.product_dto_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
 import com.dart.product.entity.product_entity.ProductDbEntity;
@@ -32,7 +32,7 @@ public class GetAllProductService {
     private final ValidationUtils validationUtils;
     private final RedisProductCacheRepo redisProductCacheRepo;
 
-    public ResponseEntity<AllProductResDto> getAllProduct(String authToken, int offset, int limit) {
+    public ResponseEntity<AllProductResDTO> getAllProduct(String authToken, int offset, int limit) {
 
         validateRequestToken(authToken);
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
@@ -47,7 +47,7 @@ public class GetAllProductService {
         FetchAllProductsResModel getAllCacheRecord = redisProductCacheRepo.getAllProducts(organisationId.toString());
 
         List<ProductDbEntity> itemFilter;
-        AllProductResDto.PaginationMetadata pagination;
+        AllProductResDTO.PaginationMetadata pagination;
 
         if (getAllCacheRecord.getStatus()) {
 
@@ -72,11 +72,11 @@ public class GetAllProductService {
 
         }
 
-        List<AllProductResDto.Product> productList = itemFilter.stream()
+        List<AllProductResDTO.Product> productList = itemFilter.stream()
                 .map(productMappers::toProductDto)
                 .collect(Collectors.toList());
 
-        AllProductResDto response = AllProductResDto.builder()
+        AllProductResDTO response = AllProductResDTO.builder()
                 .status(true)
                 .message(AppConfig.GET_PRODUCT_RESPONSE)
                 .products(productList)
@@ -86,14 +86,14 @@ public class GetAllProductService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private AllProductResDto.PaginationMetadata buildPaginationMetadataFromCache(int totalProducts, int limit, int offset) {
+    private AllProductResDTO.PaginationMetadata buildPaginationMetadataFromCache(int totalProducts, int limit, int offset) {
         int totalPages = (int) Math.ceil((double) totalProducts / limit);
         int currentPage = offset / limit; // 0-based current page
 
         Integer previousOffset = currentPage > 0 ? (currentPage - 1) * limit : null;
         Integer nextOffset = currentPage < totalPages - 1 ? (currentPage + 1) * limit : null;
 
-        return AllProductResDto.PaginationMetadata.builder()
+        return AllProductResDTO.PaginationMetadata.builder()
                 .currentPage(currentPage + 1) // Convert to 1-based index
                 .pageSize(limit)
                 .totalElements(totalProducts)
@@ -105,14 +105,14 @@ public class GetAllProductService {
                 .build();
     }
 
-    private AllProductResDto.PaginationMetadata buildPaginationMetadataFromRepo(Page<ProductDbEntity> productPage) {
+    private AllProductResDTO.PaginationMetadata buildPaginationMetadataFromRepo(Page<ProductDbEntity> productPage) {
         int pageSize = productPage.getSize();
         int currentPage = productPage.getNumber();
 
         Integer previousOffset = currentPage > 0 ? (currentPage - 1) * pageSize : null;
         Integer nextOffset = productPage.hasNext() ? (currentPage + 1) * pageSize : null;
 
-        return AllProductResDto.PaginationMetadata.builder()
+        return AllProductResDTO.PaginationMetadata.builder()
                 .currentPage(currentPage + 1)
                 .pageSize(pageSize)
                 .totalElements(productPage.getTotalElements())
@@ -143,7 +143,7 @@ public class GetAllProductService {
     private Page<ProductDbEntity> findByOrganisationIdAndIsActive(UUID organisationId, Pageable pageable) {
         return productsRepo.findByOrganisationIdAndIsActive(organisationId, true, pageable)
                 .orElseThrow(() -> new CustomRuntimeException(
-                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.PRODUCT_NOT_FOUND_ERROR_RESPONSE),
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }

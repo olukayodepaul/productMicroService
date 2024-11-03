@@ -89,7 +89,6 @@ public class UpdateProductCommentsService {
 
     private void validateRequestBody(AddProductCommentReqlDTO reqBody) {
         validationUtils.productCommentValidateRequest(reqBody);
-        validationUtils.validateProductCommentRecord(reqBody);
     }
 
     private void validProductId(Integer productId) {
@@ -124,7 +123,7 @@ public class UpdateProductCommentsService {
     private ProductCommentDbEntity findByIdAndOrganisationIdAndIsActive(Integer id, Integer productId, UUID organisationId) {
         return productCommentRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(id,  productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
-                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_COMMENT_ERROR_RESPONSE),
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.UPDATE_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }

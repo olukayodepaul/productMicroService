@@ -19,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @RedisHash("product_comments")
-public class ProductCommentCacheModel implements Serializable {
+public class ProductCommentCacheEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

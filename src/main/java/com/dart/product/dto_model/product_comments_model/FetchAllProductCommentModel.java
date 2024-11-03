@@ -2,7 +2,7 @@ package com.dart.product.dto_model.product_comments_model;
 
 
 
-import com.dart.product.entity.product_comment_entity.ProductCommentCacheModel;
+import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import lombok.*;
 
 import java.util.List;
@@ -17,6 +17,6 @@ public class FetchAllProductCommentModel {
 
     private Boolean status;
     private String message;
-    private List<ProductCommentCacheModel> productComment;
+    private List<ProductCommentCacheEntity> productComment;
 
 }

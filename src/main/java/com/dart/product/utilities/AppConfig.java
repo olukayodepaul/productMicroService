@@ -6,10 +6,6 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
 
     public static final int PAGINATION_LIMIT  = 20;
-
-    /**
-     * Here is the new refactor code for the application
-     */
     public static final String NULL_VALIDATION = "cannot be null";
     public static final String ACCESS_TOKEN_VALIDATION = "Access Token";
     public static final String PRODUCT_NAME_VALIDATION = "Product Name";
@@ -42,28 +38,36 @@ public class AppConfig {
     public static final String DELETE_PRODUCT_COMMENT_BRUTE_FORCE_PROTECTION = "delete_product_comment_brute_force_protection";
     public static final String GET_PRODUCT_COMMENT_BRUTE_FORCE_PROTECTION = "get_product_comment_brute_force_protection";
     public static final String GET_ALL_PRODUCT_COMMENT_BRUTE_FORCE_PROTECTION = "get_all_product_comment_brute_force_protection";
+    public static final String CREATE_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "create_product_feedback_brute_force_protection";
+    public static final String GET_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "get_product_feed_back_brute_force_protection";
+    public static final String GET_ALL_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "get_all_product_feed_back_brute_force_protection";
 
     //product
     public static final String CREATE_PRODUCT_RESPONSE = "product successfully created";
     public static final String UPDATE_PRODUCT_RESPONSE = "product successfully updated";
     public static final String DELETE_PRODUCT_RESPONSE = "product successfully deleted";
-    public static final String PRODUCT_NOT_FOUND_ERROR_RESPONSE = "product not found.";
     public static final String GET_PRODUCT_RESPONSE = "Products fetched successfully";
 
     //share
-    public static final String EMPTY_PRODUCT_USER_ID = "User id cant be empty";
-    public static final String USER_ID_VALIDATION = "User id";
+    public static final String INVALID_RESOURCES_RESPONSE = "resource you are about to fetch does not exist";
+    public static final String DELETE_RESOURCES_RESPONSE = "resource you are about to delete does not exist";
+    public static final String UPDATE_RESOURCES_RESPONSE = "resource you are about to update does not exist";
 
     //product comment
     public static final String EMPTY_PRODUCT_COMMENT_VALIDATION = "Product comment cant be empty";
     public static final String PRODUCT_COMMENT_VALIDATION = "Comment text";
     public static final String PRODUCT_COMMENT_ID_VALIDATION = "Comment Id";
     public static final String INVALID_COMMENT_ID_VALIDATION = "Invalid comment id";
-    public static final String INVALID_COMMENT_ERROR_RESPONSE = "product ID and comment Id not found";
     public static final String VALID_GET_PRODUCT_COMMENT_RESPONSE = "product comment successfully fetch";
-    public static final String INVALID_PRODUCT_COMMENT_ERROR_RESPONSE = "resource you are about to delete does not exist";
     public static final String PRODUCT_COMMENT_SUCCESSFULLY_CREATED = "product comment created successfully";
     public static final String PRODUCT_COMMENT_SUCCESSFULLY_DELETED = "product comment successfully deleted";
+
+    //product feedback
+    public static final String PRODUCT_FEEDBACK_TYPE_VALIDATION = "Feed back type";
+    public static final String PRODUCT_FEEDBACK_SUCCESSFULLY_CREATED = "product feedback created successfully";
+    public static final String PRODUCT_COMMENT_LIKE_DISLIKE_VALIDATION  = "Product comment cant be empty, can either be like, dislike or neutral";
+    public static final String VALID_GET_PRODUCT_FEED_BACK_RESPONSE = "product feed back successfully fetched";
+
 
 
 
@@ -93,33 +97,7 @@ public class AppConfig {
 
 
     public static final String FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION ="";
-    //bruce force protection
-    public static final String ADD_PRODUCT_BRUTE_FORCE_PROTECTION = "add_product_brute_force_protection";
-//    public static final String DELETE_PRODUCT_BRUTE_FORCE_PROTECTION = "delete_product_brute_force_protection";
-
-    public static final String FETCH_ALL_PRODUCT_MEDIA = "No media found for the given product ID.";
-
-
-    //TAG
-    public static final String UPDATE_PRODUCT_ERROR_TAG = "Validation error";
-    public static final String GET_ALL_PRODUCT_ERROR_TAG = "Validation error";
-    public static final String DELETE_PRODUCT_ERROR_TAG = "Validation error";
-
-
-    //ROUTE RESPONSE
-    public static final String UPDATE_PRODUCT_ERROR_RESPONSE = "";
-//    public static final String UPDATE_PRODUCT_RESPONSE = "Product successful updated";
-    public static final String DELETE_PRODUCT_SUCCESS_RESPONSE = "Product successful deleted";
-    public static final String FETCH_ALL_PRODUCT_RESPONSE = "No product found";
-//    public static final String DELETE_PRODUCT_RESPONSE = "Product can not be update";
-
-    public static final String DELETE_PRIMARY_MEDIA_ERROR_RESPONSE = "primary media cant be deleted";
     public static final String DELETED_MEDIA_ERROR_RESPONSE = "resource you are about to delete does not exist";
-
-
-    //Product Media
-    public static final String ADD_PRODUCT_MEDIA = "Product media successfully created";
-    public static final String UPDATED_PRODUCT_MEDIA = "Update successful";
 
 
     //uploaded size

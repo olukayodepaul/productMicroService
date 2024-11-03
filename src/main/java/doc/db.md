@@ -30,6 +30,60 @@ is_active BOOLEAN DEFAULT TRUE         -- Status of the product (active or inact
 );
 -- Relationship: One-to-Many with product_media, product_specifications, product_policies, product_reviews, product_comments, product_feedback, related_products, special_offers, product_tags, product_wishlists
 
+
+
+-- 2. Product Comments Table
+-- Stores customer comments for products separately from ratings.
+-- Customers: Leave comments regarding their experiences.
+CREATE TABLE product_comments (
+id SERIAL PRIMARY KEY,                                  -- Unique identifier for each comment entry
+product_id INTEGER NOT NULL,                            -- ID of the product being commented on
+user_id UUID NOT NULL,                                  -- ID of the user who wrote the comment
+organisation_id UUID NOT NULL,                          -- ID of the organisation that owns the product
+comment_text TEXT NOT NULL,                             -- Text of the comment
+is_active BOOLEAN DEFAULT TRUE,                         -- Status of the comment (active or inactive)
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,         -- Timestamp when the comment was created
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,         -- Timestamp when the comment was last updated
+FOREIGN KEY (product_id) REFERENCES products(id),       -- Relationship: One-to-Many (a product can have multiple comments)
+
+    -- Unique constraint for one comment per user per product (if desired)
+    UNIQUE (user_id, product_id)
+);
+
+-- Optional indexes to improve query performance on product_id and user_id
+CREATE INDEX idx_product_comments_product_id ON product_comments(product_id);
+CREATE INDEX idx_product_comments_user_id ON product_comments(user_id);
+
+
+-- 3. Product Feedback Table
+-- Ensure one feedback per user per product
+-- Stores user feedback (like or dislike) for products.
+-- Customers: Provide feedback on products.
+CREATE TABLE product_feedback (
+id SERIAL PRIMARY KEY,                    -- Unique identifier for each feedback entry
+organisation_id UUID NOT NULL,            -- ID of the organisation that owns the product
+product_id INTEGER NOT NULL,              -- ID of the product receiving feedback
+user_id UUID NOT NULL,                    -- ID of the user giving the feedback
+feedback_type VARCHAR(10) CHECK (feedback_type IN ('like', 'dislike', 'neutral')), -- Type of feedback
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp when the feedback was last updated
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp when the feedback was given
+FOREIGN KEY (product_id) REFERENCES products(id) -- Relationship: One-to-Many (a product can have multiple feedback entries)
+);
+
+-- Optional index to improve query performance on product_id
+CREATE INDEX idx_product_feedback_product_id ON product_feedback(product_id);
+
+
+
+
+
+
+
+
+
+
+
+
 -- 2. Product Media Table
 -- Stores media (images, videos) associated with products.
 -- Admin: Uploads and manages media for products.
@@ -162,33 +216,9 @@ FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-Many (
 FOREIGN KEY (organisation_id) REFERENCES organisations(id) -- Relationship to organisations
 );
 
--- 10. Product Comments Table
--- Stores customer comments for products separately from ratings.
--- Customers: Leave comments regarding their experiences.
-CREATE TABLE product_comments (
-    id SERIAL PRIMARY KEY,                   			-- Unique identifier for each comment entry
-    product_id INTEGER NOT NULL,             			-- ID of the product being commented on
-    user_id UUID NOT NULL,                			-- ID of the user who wrote the comment
-    organisation_id UUID NOT NULL,                      -- ID of the organisation that owns the product
-    comment_text TEXT NOT NULL,              			-- Text of the comment
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 	-- Timestamp when the comment was created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp when the product was last updated
-    is_active BOOLEAN DEFAULT TRUE ,        			-- Status of the product (active or inactive)
-    FOREIGN KEY (product_id) REFERENCES products(id) 	-- Relationship: One-to-Many (a product can have multiple comments)
-);
 
--- 11. Product Feedback Table
--- Stores user feedback (like or dislike) for products.
--- Customers: Provide feedback on products.
-CREATE TABLE product_feedback (
-id SERIAL PRIMARY KEY,                   -- Unique identifier for each feedback entry
-product_id INTEGER NOT NULL,             -- ID of the product being liked or disliked
-user_id INTEGER NOT NULL,                -- ID of the user giving the feedback
-feedback_type VARCHAR(10) CHECK (feedback_type IN ('like', 'dislike')), -- Type of feedback (like or dislike)
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the feedback was given
-FOREIGN KEY (product_id) REFERENCES products(id), -- Relationship: One-to-Many (a product can have multiple feedback entries)
-FOREIGN KEY (user_id) REFERENCES users(id) -- Relationship to users
-);
+
+
 
 //implement the wishlist
 -- 12. Product Wishlists Table

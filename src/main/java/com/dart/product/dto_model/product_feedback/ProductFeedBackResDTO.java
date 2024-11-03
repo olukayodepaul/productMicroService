@@ -14,7 +14,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductFeedBackOneResModel {
+public class ProductFeedBackResDTO {
 
     private boolean status;
     private String message;
@@ -33,7 +33,6 @@ public class ProductFeedBackOneResModel {
         private UUID user_id;
         private String feedback_type;
 
-        private boolean is_active;
         private LocalDateTime updated_at;
         private LocalDateTime created_at;
 

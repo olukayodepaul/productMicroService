@@ -1,6 +1,7 @@
 package com.dart.product.dto_model.product_feedback;
 
 
+import com.dart.product.entity.product_feedback_entity.ProductFeedBackDbEntity;
 import lombok.*;
 
 @Data
@@ -12,5 +13,5 @@ import lombok.*;
 public class SaveAndUpdateProductFeedBackResponse {
     private Boolean status;
     private String error;
-    private ProductFeedBackDbModel productFeedback;
+    private ProductFeedBackDbEntity productFeedback;
 }

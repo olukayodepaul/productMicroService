@@ -1,42 +1,44 @@
-package com.dart.product.dto_model.product_feedback;
+package com.dart.product.entity.product_feedback_entity;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.redis.core.RedisHash;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@RedisHash("product_feedback")
-public class ProductFeedBackCacheModel implements Serializable {
+@Table(name = "product_feedback")
+public class ProductFeedBackDbEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "product_id")
     private Integer productId;
+
+    @Column(name = "organisation_id")
     private UUID organisationId;
 
-    //add items here.....
+    //add here
+    @Column(name = "user_id")
     private UUID userId;
+
+    @Column(name = "feedback_type")
     private String feedbackType;
-    
-    private boolean isActive;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
 }
