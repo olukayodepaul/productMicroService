@@ -48,13 +48,12 @@ public class CreateProductService {
         validateRequestToken(authToken);
         validateRequestBody(reqBody);
 
-
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
-//        validateUserRole(roles);
+        validateUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
         reqBody.setOrganisation_id(organisationId);

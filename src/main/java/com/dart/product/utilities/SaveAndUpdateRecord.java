@@ -1,8 +1,6 @@
 package com.dart.product.utilities;
 
 
-import com.dart.product.dto_model.product_media_model.MediaDbModel;
-import com.dart.product.dto_model.product_media_model.SaveAndUpdateMediaResponse;
 import com.dart.product.dto_model.product_policy_model.ProductPolicyDbModel;
 import com.dart.product.dto_model.product_policy_model.SaveAndUpdateProductPolicyResponse;
 import com.dart.product.dto_model.product_reviews_model.ProductReviewDbModel;
@@ -53,13 +51,7 @@ public class SaveAndUpdateRecord {
     //product
 
 
-    public SaveAndUpdateMediaResponse saveProductMedia(MediaDbModel regDetails) {
-        try {
-            return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails)) ;
-        } catch (Exception e) {
-            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaDbModel.builder().build());
-        }
-    }
+
 
     public SaveAndUpdateProductSpecResponse saveProductSpecification(ProductSpecificationDbModel regDetails) {
         try {

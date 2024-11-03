@@ -69,23 +69,13 @@ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp when the feedback 
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp when the feedback was given
 FOREIGN KEY (product_id) REFERENCES products(id) -- Relationship: One-to-Many (a product can have multiple feedback entries)
 );
-
 -- Optional index to improve query performance on product_id
 CREATE INDEX idx_product_feedback_product_id ON product_feedback(product_id);
 
 
-
-
-
-
-
-
-
-
-
-
--- 2. Product Media Table
+-- 4. Product Media Table
 -- Stores media (images, videos) associated with products.
+-- Relationship: One-to-Many (a product can have multiple media type entries)
 -- Admin: Uploads and manages media for products.
 CREATE TABLE product_media (
 id SERIAL PRIMARY KEY,                   -- Unique identifier for each media entry
@@ -98,6 +88,21 @@ is_active BOOLEAN DEFAULT TRUE,          -- Status of the product (active or ina
 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the product was last updated
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp when media was added
 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- 3. Product Specifications Table
 -- Stores detailed specifications of products.

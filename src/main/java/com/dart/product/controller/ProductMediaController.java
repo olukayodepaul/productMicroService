@@ -10,48 +10,48 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/v1/api/products")
 public class ProductMediaController {
 
-//    private final AddProductMediaService addProductMediaService;
+    private final CreateProductMediaService createProductMediaService;
 //    private final UpdateProductMediaService updateProductMediaService;
 //    private final UpdatePrimaryProductService updatePrimaryProductService;
 //    private final DeleteProductMediaService deleteProductMediaService;
 //    private final FetchProductMediaService fetchProductMediaService;
 //    private final GetSpecificProductMediaService getSpecificProductMediaService;
 //    private final GetOneProductMediaService getIndividualProductMediaService;
-//
-//
-//    public ProductMediaController(
-//            AddProductMediaService addProductMediaService,
+
+
+    public ProductMediaController(
+            CreateProductMediaService createProductMediaService
 //            UpdateProductMediaService updateProductMediaService,
 //            UpdatePrimaryProductService updatePrimaryProductService,
 //            DeleteProductMediaService deleteProductMediaService,
 //            FetchProductMediaService fetchProductMediaService,
 //            GetSpecificProductMediaService getSpecificProductMediaService,
 //            GetOneProductMediaService getIndividualProductMediaService
-//
-//    )
-//    {
-//        this.addProductMediaService = addProductMediaService;
+
+    )
+    {
+        this.createProductMediaService = createProductMediaService;
 //        this.updateProductMediaService = updateProductMediaService;
 //        this.updatePrimaryProductService = updatePrimaryProductService;
 //        this.deleteProductMediaService = deleteProductMediaService;
 //        this.fetchProductMediaService = fetchProductMediaService;
 //        this.getSpecificProductMediaService = getSpecificProductMediaService;
 //        this.getIndividualProductMediaService = getIndividualProductMediaService;
-//
-//    }
-//
-//    @PostMapping("/product-media")
-//    public ResponseEntity<ProductMediaResModel> uploadProductMedia(
-//            @RequestParam("file") MultipartFile file,
-//            @RequestParam("data") String data,
-//            @RequestHeader("Authorization") String token
-//    ) {
-//        return addProductMediaService.addProductMedia(file, data, token);
-//    }
-//
+
+    }
+
+    @PostMapping("/{product_id}/media")
+    public ResponseEntity<ProductMediaResDTO> createProductMedia(
+            @RequestHeader("Authorization") String authToken,
+            @RequestParam("file") MultipartFile file,
+            @PathVariable("product_id") Integer productId
+    ) throws IOException {
+        return createProductMediaService.createProductMedia(authToken, file, productId);
+    }
+
 //    //first uploaded image should be primary image. also to video
 //    @PutMapping("/product_media/media_id/{id}/media_url")
 //    public ResponseEntity<ProductMediaResModel> updateProductMedia(
@@ -103,7 +103,7 @@ public class ProductMediaController {
 //    ){
 //        return getIndividualProductMediaService.getProductMediaByMediaId(token, productId, mediaId);
 //    }
-//
+
 //
 ////    private final String IMAGE_DIR = "/Users/upload/";
 //

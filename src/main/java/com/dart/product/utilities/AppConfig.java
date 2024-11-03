@@ -41,6 +41,7 @@ public class AppConfig {
     public static final String CREATE_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "create_product_feedback_brute_force_protection";
     public static final String GET_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "get_product_feed_back_brute_force_protection";
     public static final String GET_ALL_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "get_all_product_feed_back_brute_force_protection";
+    public static final String CREATE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "create_product_media_brute_force_protection";
 
     //product
     public static final String CREATE_PRODUCT_RESPONSE = "product successfully created";
@@ -67,6 +68,12 @@ public class AppConfig {
     public static final String PRODUCT_FEEDBACK_SUCCESSFULLY_CREATED = "product feedback created successfully";
     public static final String PRODUCT_COMMENT_LIKE_DISLIKE_VALIDATION  = "Product comment cant be empty, can either be like, dislike or neutral";
     public static final String VALID_GET_PRODUCT_FEED_BACK_RESPONSE = "product feed back successfully fetched";
+    public static final String VALIDATE_PRIMARY_MEDIA  = "Product media can either be true or false";
+
+    //product media
+    public static final String PRODUCT_MEDIA_RESPONSE = "Product media created successfully";
+    public static final String PRODUCT_MEDIA_MAX_IMAGE = "Maximum image upload limit reached";
+    public static final String PRODUCT_MEDIA_MAX_VIDEO = "Maximum video upload limit reached";
 
 
 

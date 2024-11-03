@@ -13,5 +13,5 @@ import lombok.*;
 public class SaveAndUpdateMediaResponse {
     private Boolean status;
     private String error;
-    private MediaDbModel productMedia;
+    private MediaDbDTO productMedia;
 }

@@ -129,6 +129,15 @@ public class ValidationUtils {
         }
     }
 
+    public void validatePrimaryMedia(String primaryMedia) {
+        if(!primaryMedia.equalsIgnoreCase("true") && !primaryMedia.equalsIgnoreCase("false")) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.VALIDATE_PRIMARY_MEDIA),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
     public void userRoleValidation(String role) {
         if(!role.equalsIgnoreCase("USER")){
             throw new CustomRuntimeException(new ErrorHandler(false, String.valueOf(HttpStatus.FORBIDDEN), AppConfig.PERMISSION_VALIDATION), HttpStatus.FORBIDDEN);

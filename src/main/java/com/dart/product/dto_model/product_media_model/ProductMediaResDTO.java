@@ -3,6 +3,7 @@ package com.dart.product.dto_model.product_media_model;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Data
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductMediaResModel {
+public class ProductMediaResDTO {
 
     private boolean status;
     private String message;
@@ -25,9 +26,10 @@ public class ProductMediaResModel {
         private Integer id;
 
         private Integer product_id;
+        private UUID organisation_id;
         private String media_type;
         private Boolean is_primary;
-        private Boolean isActive;
+        private Boolean is_active;
         private String media_url;
         private LocalDateTime updated_at;
         private LocalDateTime created_at;

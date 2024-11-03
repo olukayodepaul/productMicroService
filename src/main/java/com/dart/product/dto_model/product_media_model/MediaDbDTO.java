@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "product_media")
-public class MediaDbModel {
+public class MediaDbDTO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
