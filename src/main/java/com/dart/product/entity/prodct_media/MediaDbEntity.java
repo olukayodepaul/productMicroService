@@ -1,4 +1,4 @@
-package com.dart.product.dto_model.product_media_model;
+package com.dart.product.entity.prodct_media;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "product_media")
-public class MediaDbDTO {
+public class MediaDbEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

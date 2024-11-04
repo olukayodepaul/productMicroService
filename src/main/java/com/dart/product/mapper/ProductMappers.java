@@ -1,5 +1,7 @@
 package com.dart.product.mapper;
 
+import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
 import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
@@ -319,11 +321,11 @@ public class ProductMappers {
     }
 
     //product media
-    public ProductMediaResDTO toProductMediaResponse(MediaDbDTO productMedia, String message) {
+    public ProductMediaResDTO toProductMediaResponse(MediaDbEntity productMedia, String message) {
         return ProductMediaResDTO.builder()
                 .status(true)
                 .message(message)
-                .Product_media(ProductMediaResDTO.ProductMedia
+                .data(ProductMediaResDTO.ProductMedia
                         .builder()
                         .id(productMedia.getId())
                         .product_id(productMedia.getProductId())
@@ -338,8 +340,9 @@ public class ProductMappers {
                 .build();
     }
 
-    public MediaDbDTO toProductMedia(MediaUploadReqModel mediaData) {
-        return MediaDbDTO.builder()
+    public MediaDbEntity toProductMedia(MediaUploadReqModel mediaData) {
+        return MediaDbEntity.builder()
+                .id(mediaData.getId())
                 .productId(mediaData.getProduct_id())
                 .organisationId(mediaData.getOrganisation_id())
                 .mediaType(mediaData.getMedia_type())
@@ -370,14 +373,15 @@ public class ProductMappers {
 
 
 
+
     //here is for media mapper.
 
-    public MediaDbDTO toUpdateProductMedia(
-            MediaDbDTO mediaData,
+    public MediaDbEntity toUpdateProductMedia(
+            MediaDbEntity mediaData,
             MediaUploadResponse mediaUploadResponse,
             boolean isPrimary
     ) {
-        return MediaDbDTO.builder()
+        return MediaDbEntity.builder()
                 .id(mediaData.getId())
                 .productId(mediaData.getProductId())
                 .organisationId(mediaData.getOrganisationId())
@@ -390,8 +394,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public MediaDbDTO productMediaBuilder(MediaDbDTO productMedia, String media) {
-        return MediaDbDTO.builder()
+    public MediaDbEntity productMediaBuilder(MediaDbEntity productMedia, String media) {
+        return MediaDbEntity.builder()
                 .id(productMedia.getId())
                 .productId(productMedia.getProductId())
                 .organisationId(productMedia.getOrganisationId())
@@ -404,8 +408,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public MediaDbDTO primaryProductBuilder(MediaDbDTO productMedia, boolean primary) {
-        return MediaDbDTO.builder()
+    public MediaDbEntity primaryProductBuilder(MediaDbEntity productMedia, boolean primary) {
+        return MediaDbEntity.builder()
                 .id(productMedia.getId())
                 .productId(productMedia.getProductId())
                 .organisationId(productMedia.getOrganisationId())
@@ -418,8 +422,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductMediaCacheModel toCacheProductMedia(MediaDbDTO productMedia) {
-        return ProductMediaCacheModel.builder()
+    public ProductMediaCacheEntity toCacheProductMedia(MediaDbEntity productMedia) {
+        return ProductMediaCacheEntity.builder()
                 .id(productMedia.getId())
                 .product_id(productMedia.getProductId())
                 .organisation_id(productMedia.getOrganisationId())
@@ -434,7 +438,7 @@ public class ProductMappers {
 
 
 
-    public List<GetAllMediaModel.ImageMedia> filterAndMapMediaImage(List<MediaDbDTO> mediaList, String mediaType) {
+    public List<GetAllMediaModel.ImageMedia> filterAndMapMediaImage(List<MediaDbEntity> mediaList, String mediaType) {
         return mediaList.stream()
                 .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
                 .map(media -> GetAllMediaModel.ImageMedia.builder()
@@ -447,7 +451,7 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<GetAllMediaModel.VideoMedia> filterAndMapMediaVideo(List<MediaDbDTO> mediaList, String mediaType) {
+    public List<GetAllMediaModel.VideoMedia> filterAndMapMediaVideo(List<MediaDbEntity> mediaList, String mediaType) {
         return mediaList.stream()
                 .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
                 .map(media -> GetAllMediaModel.VideoMedia.builder()
@@ -460,7 +464,7 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<GetAllMediaModel.ImageMedia> filterAndMapCacheMediaImage(List<ProductMediaCacheModel> mediaList, String mediaType) {
+    public List<GetAllMediaModel.ImageMedia> filterAndMapCacheMediaImage(List<ProductMediaCacheEntity> mediaList, String mediaType) {
         return mediaList.stream()
                 .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
                 .map(media -> GetAllMediaModel.ImageMedia.builder()
@@ -473,7 +477,7 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<GetAllMediaModel.VideoMedia> filterAndMapCacheMediaVideo(List<ProductMediaCacheModel> mediaList, String mediaType) {
+    public List<GetAllMediaModel.VideoMedia> filterAndMapCacheMediaVideo(List<ProductMediaCacheEntity> mediaList, String mediaType) {
         return mediaList.stream()
                 .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
                 .map(media -> GetAllMediaModel.VideoMedia.builder()
@@ -486,9 +490,9 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<ProductMediaCacheModel> mapCacheProductMedia(List<MediaDbDTO> productMedia) {
+    public List<ProductMediaCacheEntity> mapCacheProductMedia(List<MediaDbEntity> productMedia) {
         return productMedia.stream()
-                .map(media -> ProductMediaCacheModel.builder()
+                .map(media -> ProductMediaCacheEntity.builder()
                         .id(media.getId())
                         .product_id(media.getProductId())
                         .organisation_id(media.getOrganisationId())
@@ -502,7 +506,7 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<GetSpecMediaModel.Media> filterAndMapMedia(List<MediaDbDTO> mediaList, String mediaType) {
+    public List<GetSpecMediaModel.Media> filterAndMapMedia(List<MediaDbEntity> mediaList, String mediaType) {
         return mediaList.stream()
                 .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
                 .map(media -> GetSpecMediaModel.Media.builder()
@@ -515,8 +519,8 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<MediaDbDTO> mapProductMedia(List<ProductMediaCacheModel> productMedia) {
-        return productMedia.stream().map(media -> MediaDbDTO
+    public List<MediaDbEntity> mapProductMedia(List<ProductMediaCacheEntity> productMedia) {
+        return productMedia.stream().map(media -> MediaDbEntity
                 .builder()
                 .id(media.getId())
                 .isPrimary(media.getIs_primary())
@@ -531,8 +535,8 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
-    public MediaDbDTO mapSingleProductMediaToCache(ProductMediaCacheModel media) {
-        return MediaDbDTO.builder()
+    public MediaDbEntity mapSingleProductMediaToCache(ProductMediaCacheEntity media) {
+        return MediaDbEntity.builder()
                 .id(media.getId())
                 .isPrimary(media.getIs_primary())
                 .productId(media.getProduct_id())
@@ -545,7 +549,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public GetIndividualProductMediaModel.ProductMedia filterAndMapSingleProductMedia(MediaDbDTO mediaList) {
+    public GetIndividualProductMediaModel.ProductMedia filterAndMapSingleProductMedia(MediaDbEntity mediaList) {
         return GetIndividualProductMediaModel.ProductMedia
                 .builder()
                 .id(mediaList.getId())

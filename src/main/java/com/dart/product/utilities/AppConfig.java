@@ -42,6 +42,7 @@ public class AppConfig {
     public static final String GET_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "get_product_feed_back_brute_force_protection";
     public static final String GET_ALL_PRODUCT_FEEDBACK_BRUTE_FORCE_PROTECTION = "get_all_product_feed_back_brute_force_protection";
     public static final String CREATE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "create_product_media_brute_force_protection";
+    public static final String UPDATE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "update_product_media_brute_force_protection";
 
     //product
     public static final String CREATE_PRODUCT_RESPONSE = "product successfully created";
@@ -53,6 +54,7 @@ public class AppConfig {
     public static final String INVALID_RESOURCES_RESPONSE = "resource you are about to fetch does not exist";
     public static final String DELETE_RESOURCES_RESPONSE = "resource you are about to delete does not exist";
     public static final String UPDATE_RESOURCES_RESPONSE = "resource you are about to update does not exist";
+    public static final String UPLOAD_FILE_RESPONSE = "upload file is required";
 
     //product comment
     public static final String EMPTY_PRODUCT_COMMENT_VALIDATION = "Product comment cant be empty";
@@ -74,6 +76,9 @@ public class AppConfig {
     public static final String PRODUCT_MEDIA_RESPONSE = "Product media created successfully";
     public static final String PRODUCT_MEDIA_MAX_IMAGE = "Maximum image upload limit reached";
     public static final String PRODUCT_MEDIA_MAX_VIDEO = "Maximum video upload limit reached";
+    public static final String PRODUCT_MEDIA_MAX_IMAGE_REPLACEMENT = "You cannot replace video media with image media.";
+    public static final String PRODUCT_MEDIA_MAX_VIDEO_REPLACEMENT = "You cannot replace image media with video media.";
+    public static final String PRODUCT_MEDIA_UPDATED_RESPONSE = "Product media updated successfully";
 
 
 

@@ -139,7 +139,7 @@ public class MediaService {
 
 
     // Method to delete an image from the file system
-    public boolean deleteImage(String fileName) {
+    public boolean deleteMedia(String fileName) {
         // Define the full path of the file
         Path filePath = Paths.get(storageDirectory, fileName);
         System.out.println("images deleted "+fileName);

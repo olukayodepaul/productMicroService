@@ -1,5 +1,6 @@
 package com.dart.product.dto_model.product_media_model;
 
+import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
 import lombok.*;
 
 
@@ -12,5 +13,5 @@ import lombok.*;
 public class FetchOneProductMediaModel {
     private Boolean status;
     private String message;
-    private ProductMediaCacheModel productMedia;
+    private ProductMediaCacheEntity productMedia;
 }

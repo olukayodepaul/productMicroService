@@ -3,6 +3,10 @@ package com.dart.product.controller;
 
 import com.dart.product.dto_model.product_media_model.*;
 import com.dart.product.service.product_media.*;
+import com.dart.product.utilities.AppConfig;
+import com.dart.product.utilities.CustomRuntimeException;
+import com.dart.product.utilities.ErrorHandler;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,7 +18,7 @@ import java.io.IOException;
 public class ProductMediaController {
 
     private final CreateProductMediaService createProductMediaService;
-//    private final UpdateProductMediaService updateProductMediaService;
+    private final UpdateProductMediaService updateProductMediaService;
 //    private final UpdatePrimaryProductService updatePrimaryProductService;
 //    private final DeleteProductMediaService deleteProductMediaService;
 //    private final FetchProductMediaService fetchProductMediaService;
@@ -23,8 +27,8 @@ public class ProductMediaController {
 
 
     public ProductMediaController(
-            CreateProductMediaService createProductMediaService
-//            UpdateProductMediaService updateProductMediaService,
+            CreateProductMediaService createProductMediaService,
+            UpdateProductMediaService updateProductMediaService
 //            UpdatePrimaryProductService updatePrimaryProductService,
 //            DeleteProductMediaService deleteProductMediaService,
 //            FetchProductMediaService fetchProductMediaService,
@@ -34,7 +38,7 @@ public class ProductMediaController {
     )
     {
         this.createProductMediaService = createProductMediaService;
-//        this.updateProductMediaService = updateProductMediaService;
+        this.updateProductMediaService = updateProductMediaService;
 //        this.updatePrimaryProductService = updatePrimaryProductService;
 //        this.deleteProductMediaService = deleteProductMediaService;
 //        this.fetchProductMediaService = fetchProductMediaService;
@@ -46,21 +50,36 @@ public class ProductMediaController {
     @PostMapping("/{product_id}/media")
     public ResponseEntity<ProductMediaResDTO> createProductMedia(
             @RequestHeader("Authorization") String authToken,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             @PathVariable("product_id") Integer productId
     ) throws IOException {
+        // File validation
+        if (file == null || file.isEmpty()) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), AppConfig.UPLOAD_FILE_RESPONSE),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
         return createProductMediaService.createProductMedia(authToken, file, productId);
     }
 
-//    //first uploaded image should be primary image. also to video
-//    @PutMapping("/product_media/media_id/{id}/media_url")
-//    public ResponseEntity<ProductMediaResModel> updateProductMedia(
-//            @RequestParam("file") MultipartFile file,
-//            @RequestHeader("Authorization") String token,
-//            @PathVariable("id") Integer id
-//    ) throws IOException {
-//        return updateProductMediaService.updateProductMedia(file, token, id);
-//    }
+    @PostMapping("/{product_id}/media/{id}")
+    public ResponseEntity<ProductMediaResDTO> updateProductMedia(
+            @RequestHeader("Authorization") String authToken,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @PathVariable("product_id") Integer productId,
+            @PathVariable("id") Integer id
+    ) throws IOException {
+
+        if (file == null || file.isEmpty()) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),  AppConfig.UPLOAD_FILE_RESPONSE),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+        return updateProductMediaService.updateProductMedia(authToken, file, productId, id);
+    }
+
 //
 //    @PutMapping("/product_media/media_id/{id}/primary/listing")
 //    public ResponseEntity<PrimaryProductResModel> updateProductMedia(

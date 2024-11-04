@@ -1,5 +1,6 @@
 package com.dart.product.dto_model.product_media_model;
 
+import com.dart.product.entity.prodct_media.MediaDbEntity;
 import lombok.*;
 
 
@@ -13,5 +14,5 @@ import lombok.*;
 public class SaveAndUpdateMediaResponse {
     private Boolean status;
     private String error;
-    private MediaDbDTO productMedia;
+    private MediaDbEntity productMedia;
 }

@@ -1,4 +1,4 @@
-package com.dart.product.dto_model.product_media_model;
+package com.dart.product.entity.prodct_media;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @RedisHash("product_media")
-public class ProductMediaCacheModel implements Serializable {
+public class ProductMediaCacheEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

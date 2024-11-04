@@ -16,7 +16,7 @@ public class ProductMediaResDTO {
 
     private boolean status;
     private String message;
-    private ProductMedia Product_media;
+    private ProductMedia data;
 
     @Builder
     @Data
