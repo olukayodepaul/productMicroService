@@ -57,8 +57,6 @@ public class CreateProductMediaService {
 
     public ResponseEntity<ProductMediaResDTO> createProductMedia(String authToken, MultipartFile file, Integer productId) throws IOException {
 
-
-
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
         validateBruteForceProtection(userId.toString()); //reduce number of process before brute force protection
@@ -73,7 +71,7 @@ public class CreateProductMediaService {
         MediaUploadReqModel mediaData = new MediaUploadReqModel();
         MediaUploadResponse uploadMedia = mediaService.uploadFile(file);
 
-        boolean mediaState = findByOrganisationId(productId, organisationId, uploadMedia.getMediaType()).isPresent();
+        boolean mediaState = findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, uploadMedia.getMediaType()).isPresent();
 
         mediaData.setCreated_at(LocalDateTime.now());
         mediaData.setUpdated_at(LocalDateTime.now());
@@ -120,8 +118,8 @@ public class CreateProductMediaService {
         validationUtils.bruteForceProtection(AppConfig.CREATE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    private Optional<MediaDbEntity> findByOrganisationId(Integer productId, UUID organisationId, String mediaType) {
-        return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimary(productId, organisationId, mediaType, true);
+    private Optional<MediaDbEntity> findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(Integer productId, UUID organisationId, String mediaType) {
+        return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, mediaType, true, true);
     }
 
     private void checkIfRecordPersisted(SaveAndUpdateMediaResponse isSave) {

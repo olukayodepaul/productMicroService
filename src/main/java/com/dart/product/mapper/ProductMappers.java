@@ -23,6 +23,7 @@ import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -354,24 +355,35 @@ public class ProductMappers {
                 .build();
     }
 
+    public PrimaryProductResDTO productMediaBuilder(MediaDbEntity newMedia, MediaDbEntity oldMedia, String message) {
+        return PrimaryProductResDTO.builder()
+                .status(true)
+                .message(message)
+                .product_id(newMedia.getProductId())
+                .media_type(newMedia.getMediaType())
+                .isActive(newMedia.getIsActive())
+                .organisation_id(newMedia.getOrganisationId())
+                .current_primary_media(PrimaryProductResDTO.CurrentPrimaryMedia
+                        .builder()
+                        .id(newMedia.getId())
+                        .is_primary(newMedia.getIsPrimary())
+                        .media_url(newMedia.getMediaUrl())
+                        .updated_at(newMedia.getUpdatedAt())
+                        .created_at(newMedia.getCreatedAt())
+                        .build()
+                )
+                .previous_primary_media(PrimaryProductResDTO.PreviousPrimaryMedia
+                        .builder()
+                        .id(oldMedia.getId())
+                        .is_primary(oldMedia.getIsPrimary())
+                        .media_url(oldMedia.getMediaUrl())
+                        .updated_at(oldMedia.getUpdatedAt())
+                        .created_at(oldMedia.getCreatedAt())
+                        .build()
+                )
+                .build();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    }
 
 
     //here is for media mapper.
@@ -435,7 +447,6 @@ public class ProductMappers {
                 .created_at(productMedia.getCreatedAt())
                 .build();
     }
-
 
 
     public List<GetAllMediaModel.ImageMedia> filterAndMapMediaImage(List<MediaDbEntity> mediaList, String mediaType) {
@@ -1298,8 +1309,6 @@ public class ProductMappers {
                 .build()
         ).collect(Collectors.toList());
     }
-
-
 
 
 }

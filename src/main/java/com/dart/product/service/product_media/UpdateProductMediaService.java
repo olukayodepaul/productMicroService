@@ -88,7 +88,7 @@ public class UpdateProductMediaService {
         boolean cacheResult = redisProductCacheRepo.saveUpdateProductMedia(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
         checkIfRecordCache(cacheResult);
 
-        return new ResponseEntity<>(productMappers.toProductMediaResponse(persistRecord.getProductMedia(), AppConfig.PRODUCT_MEDIA_UPDATED_RESPONSE), HttpStatus.CREATED);
+        return new ResponseEntity<>(productMappers.toProductMediaResponse(persistRecord.getProductMedia(), AppConfig.PRODUCT_MEDIA_UPDATED_RESPONSE), HttpStatus.OK);
     }
 
     private void checkIfRecordCache(boolean isRecord) {

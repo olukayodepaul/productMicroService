@@ -19,7 +19,8 @@ public class ProductMediaController {
 
     private final CreateProductMediaService createProductMediaService;
     private final UpdateProductMediaService updateProductMediaService;
-//    private final UpdatePrimaryProductService updatePrimaryProductService;
+    private final UpdatePrimaryProductService updatePrimaryProductService;
+
 //    private final DeleteProductMediaService deleteProductMediaService;
 //    private final FetchProductMediaService fetchProductMediaService;
 //    private final GetSpecificProductMediaService getSpecificProductMediaService;
@@ -28,8 +29,8 @@ public class ProductMediaController {
 
     public ProductMediaController(
             CreateProductMediaService createProductMediaService,
-            UpdateProductMediaService updateProductMediaService
-//            UpdatePrimaryProductService updatePrimaryProductService,
+            UpdateProductMediaService updateProductMediaService,
+            UpdatePrimaryProductService updatePrimaryProductService
 //            DeleteProductMediaService deleteProductMediaService,
 //            FetchProductMediaService fetchProductMediaService,
 //            GetSpecificProductMediaService getSpecificProductMediaService,
@@ -39,7 +40,7 @@ public class ProductMediaController {
     {
         this.createProductMediaService = createProductMediaService;
         this.updateProductMediaService = updateProductMediaService;
-//        this.updatePrimaryProductService = updatePrimaryProductService;
+        this.updatePrimaryProductService = updatePrimaryProductService;
 //        this.deleteProductMediaService = deleteProductMediaService;
 //        this.fetchProductMediaService = fetchProductMediaService;
 //        this.getSpecificProductMediaService = getSpecificProductMediaService;
@@ -63,7 +64,7 @@ public class ProductMediaController {
         return createProductMediaService.createProductMedia(authToken, file, productId);
     }
 
-    @PostMapping("/{product_id}/media/{id}")
+    @PutMapping("/{product_id}/media/{id}")
     public ResponseEntity<ProductMediaResDTO> updateProductMedia(
             @RequestHeader("Authorization") String authToken,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -80,15 +81,16 @@ public class ProductMediaController {
         return updateProductMediaService.updateProductMedia(authToken, file, productId, id);
     }
 
-//
-//    @PutMapping("/product_media/media_id/{id}/primary/listing")
-//    public ResponseEntity<PrimaryProductResModel> updateProductMedia(
-//            @RequestHeader("Authorization") String token,
-//            @PathVariable("id") Integer id
-//    ){
-//        return updatePrimaryProductService.updateProductPrimaryListing(token, id);
-//    }
-//
+    @PutMapping("/{product_id}/primary/media/{id}")
+    public ResponseEntity<PrimaryProductResDTO> updateProductMedia(
+            @RequestHeader("Authorization") String authToken,
+            @PathVariable("product_id") Integer productId,
+            @PathVariable("id") Integer id
+    ){
+        return updatePrimaryProductService.updatePrimaryMedia(authToken,  productId, id);
+    }
+
+
 //    @DeleteMapping("/product_media/media_id/{id}")
 //    public ResponseEntity<ProductMediaResModel> deleteProductMedia(
 //            @RequestHeader("Authorization") String token,
