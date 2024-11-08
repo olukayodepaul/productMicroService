@@ -44,6 +44,8 @@ public class AppConfig {
     public static final String CREATE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "create_product_media_brute_force_protection";
     public static final String UPDATE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "update_product_media_brute_force_protection";
     public static final String UPDATE_PRIMARY_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "update_primary_product_media_brute_force_protection";
+    public static final String FETCH_ONE_PRIMARY_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "fetch_one_primary_product_media_brute_force_protection";
+    public static final String FETCH_SPECIFIC_PRIMARY_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "fetch_specific_primary_product_media_brute_force_protection";
 
     //product
     public static final String CREATE_PRODUCT_RESPONSE = "product successfully created";
@@ -82,7 +84,8 @@ public class AppConfig {
     public static final String PRODUCT_MEDIA_UPDATED_RESPONSE = "Product media updated successfully";
     public static final String PRODUCT_PRIMARY_MEDIA_UPDATED_RESPONSE = "Product primary media updated successfully";
     public static final String PRODUCT_PRIMARY_UPDATE = "Media selected is a primary media";
-
+    public static final String PRODUCT_MEDIA_FETCH_RESPONSE = "Product media fetch successfully";
+    public static final String PRODUCT_MEDIA_FETCH = "Media Type can only be image or video";
 
 
 

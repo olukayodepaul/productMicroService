@@ -147,7 +147,7 @@ public class ValidationUtils {
     public void bruteForceProtection(String uuid) {
         if (rateLimitService.isRateLimited(uuid)) {
             throw new CustomRuntimeException(
-                    new ErrorHandler(false, AppConfig.BRUTE_FORCE_PROTECTION_RATE_LIMIT,AppConfig.BRUTE_FORCE_PROTECTION_RESPONSE),
+                    new ErrorHandler(false, String.valueOf(HttpStatus.TOO_MANY_REQUESTS),AppConfig.BRUTE_FORCE_PROTECTION_RESPONSE),
                     HttpStatus.TOO_MANY_REQUESTS
             );
         }
@@ -155,6 +155,16 @@ public class ValidationUtils {
 
     public void validateProductId(Integer id) {
         validateField(id, AppConfig.PRODUCT_ID_VALIDATION);
+    }
+
+    public void mediaTypeValidation(String mediaType) {
+        validateField(mediaType, "Media Type");
+        if(!mediaType.equalsIgnoreCase("video") && !mediaType.equalsIgnoreCase("image")){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.PRODUCT_MEDIA_FETCH),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
     }
 
 
@@ -197,9 +207,6 @@ public class ValidationUtils {
         validateField(token, "Access Token");
     }
 
-    public void mediaTypeValidation(String mediaType) {
-        validateField(mediaType, "Media Type");
-    }
 
     public void mediaIdValidation(Integer mediaId) {
         validateField(mediaId, "Media Id");

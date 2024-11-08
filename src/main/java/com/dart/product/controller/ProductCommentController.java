@@ -71,7 +71,6 @@ public class ProductCommentController {
         return getProductCommentsService.getProductComment(authToken, productId, id);
     }
 
-
     @GetMapping("/{product_id}/comments")
     public ResponseEntity<AllProductCommentAllResDTO> getAllProductComment(
             @RequestHeader("Authorization") String authToken,
@@ -81,6 +80,5 @@ public class ProductCommentController {
     ) {
         return getAllProductCommentsService.getAllProductComment(authToken, productId,  offset, limit);
     }
-
 
 }

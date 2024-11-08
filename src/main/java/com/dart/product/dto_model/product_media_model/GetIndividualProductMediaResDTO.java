@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetIndividualProductMediaModel {
+public class GetIndividualProductMediaResDTO {
 
     private boolean status;
     private String message;

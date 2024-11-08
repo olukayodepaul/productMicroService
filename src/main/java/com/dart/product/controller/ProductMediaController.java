@@ -20,32 +20,21 @@ public class ProductMediaController {
     private final CreateProductMediaService createProductMediaService;
     private final UpdateProductMediaService updateProductMediaService;
     private final UpdatePrimaryProductService updatePrimaryProductService;
-
-//    private final DeleteProductMediaService deleteProductMediaService;
-//    private final FetchProductMediaService fetchProductMediaService;
-//    private final GetSpecificProductMediaService getSpecificProductMediaService;
-//    private final GetOneProductMediaService getIndividualProductMediaService;
-
+    private final GetProductMediaService getProductMediaService;
+    private final GetSpecificProductMediaService getSpecificProductMediaService;
 
     public ProductMediaController(
             CreateProductMediaService createProductMediaService,
             UpdateProductMediaService updateProductMediaService,
-            UpdatePrimaryProductService updatePrimaryProductService
-//            DeleteProductMediaService deleteProductMediaService,
-//            FetchProductMediaService fetchProductMediaService,
-//            GetSpecificProductMediaService getSpecificProductMediaService,
-//            GetOneProductMediaService getIndividualProductMediaService
-
-    )
-    {
+            UpdatePrimaryProductService updatePrimaryProductService,
+            GetProductMediaService getProductMediaService,
+            GetSpecificProductMediaService getSpecificProductMediaService
+    ) {
         this.createProductMediaService = createProductMediaService;
         this.updateProductMediaService = updateProductMediaService;
         this.updatePrimaryProductService = updatePrimaryProductService;
-//        this.deleteProductMediaService = deleteProductMediaService;
-//        this.fetchProductMediaService = fetchProductMediaService;
-//        this.getSpecificProductMediaService = getSpecificProductMediaService;
-//        this.getIndividualProductMediaService = getIndividualProductMediaService;
-
+        this.getProductMediaService = getProductMediaService;
+        this.getSpecificProductMediaService = getSpecificProductMediaService;
     }
 
     @PostMapping("/{product_id}/media")
@@ -74,7 +63,7 @@ public class ProductMediaController {
 
         if (file == null || file.isEmpty()) {
             throw new CustomRuntimeException(
-                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),  AppConfig.UPLOAD_FILE_RESPONSE),
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), AppConfig.UPLOAD_FILE_RESPONSE),
                     HttpStatus.BAD_REQUEST
             );
         }
@@ -86,26 +75,31 @@ public class ProductMediaController {
             @RequestHeader("Authorization") String authToken,
             @PathVariable("product_id") Integer productId,
             @PathVariable("id") Integer id
+    ) {
+        return updatePrimaryProductService.updatePrimaryMedia(authToken, productId, id);
+    }
+
+    @GetMapping("/{product_id}/media/{id}")
+    public ResponseEntity<ProductMediaResDTO> getProductMedia(
+            @RequestHeader("Authorization") String authToken,
+            @PathVariable("product_id") Integer productId,
+            @PathVariable("id") Integer id
+    ) {
+        return getProductMediaService.getProductMediaByMediaId(authToken, productId, id);
+    }
+
+    @GetMapping("/{product_id}/specific/media/{media_type}")
+    public ResponseEntity<GetSpecMediaDTO> getSpecificProductMedia(
+            @RequestHeader("Authorization") String authToken,
+            @PathVariable("product_id") Integer productId,
+            @PathVariable("media_type") String mediaType
     ){
-        return updatePrimaryProductService.updatePrimaryMedia(authToken,  productId, id);
+        return getSpecificProductMediaService.getSpecificProductMediaMediaType(authToken, productId, mediaType);
     }
 
 
-//    @DeleteMapping("/product_media/media_id/{id}")
-//    public ResponseEntity<ProductMediaResModel> deleteProductMedia(
-//            @RequestHeader("Authorization") String token,
-//            @PathVariable("id") Integer id
-//    ){
-//        return deleteProductMediaService.deleteProductMedia(token, id);
-//    }
-//
-//    @GetMapping("/product_media/product_id/{product_id}")
-//    public ResponseEntity<GetAllMediaModel> getProductMedia(
-//            @RequestHeader("Authorization") String token,
-//            @PathVariable("product_id") Integer productId
-//    ){
-//        return fetchProductMediaService.getProductMedia(token, productId);
-//    }
+
+
 //
 //    @GetMapping("/product_media/product_id/{product_id}/media_type/{media_type}")
 //    public ResponseEntity<GetSpecMediaModel> getProductMediaByMediaType(
@@ -144,4 +138,17 @@ public class ProductMediaController {
 
 
 
+    //    private final DeleteProductMediaService deleteProductMediaService;
+//    private final FetchProductMediaService fetchProductMediaService;
+//
+//    private final GetOneProductMediaService getIndividualProductMediaService;
+
+    //            DeleteProductMediaService deleteProductMediaService,
+//            FetchProductMediaService fetchProductMediaService,
+//            GetSpecificProductMediaService getSpecificProductMediaService,
+
+    //        this.deleteProductMediaService = deleteProductMediaService;
+//        this.fetchProductMediaService = fetchProductMediaService;
+//        this.getSpecificProductMediaService = getSpecificProductMediaService;
+//        this.getIndividualProductMediaService = getIndividualProductMediaService;
 }

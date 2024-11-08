@@ -134,15 +134,6 @@ public class UpdateProductMediaService {
         validationUtils.mediaIdValidation(mediaId);
     }
 
-    private MediaDbEntity getPersistedProductMedia(Integer mediaId, Integer productId, UUID organisationId) {
-        return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
-                .orElseThrow(() -> new CustomRuntimeException(
-
-                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
-                        HttpStatus.NOT_FOUND
-                ));
-    }
-
     private boolean validateMediaType(String mediaExtension, String oldFileMediaType, MultipartFile file) {
 
         if (oldFileMediaType.equalsIgnoreCase("image")) {
@@ -188,6 +179,15 @@ public class UpdateProductMediaService {
                     HttpStatus.BAD_REQUEST
             );
         }
+    }
+
+    private MediaDbEntity getPersistedProductMedia(Integer mediaId, Integer productId, UUID organisationId) {
+        return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
+                .orElseThrow(() -> new CustomRuntimeException(
+
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
+                        HttpStatus.NOT_FOUND
+                ));
     }
 
 }

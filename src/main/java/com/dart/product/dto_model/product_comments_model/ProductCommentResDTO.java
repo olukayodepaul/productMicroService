@@ -33,7 +33,7 @@ public class ProductCommentResDTO {
         private String comment_text;
         private UUID user_id;
 
-        private boolean is_active;
+        private Boolean is_active;
         private LocalDateTime updated_at;
         private LocalDateTime created_at;
 

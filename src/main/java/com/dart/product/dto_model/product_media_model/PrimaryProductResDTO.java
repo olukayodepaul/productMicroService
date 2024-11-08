@@ -17,7 +17,7 @@ public class PrimaryProductResDTO {
     private String message;
     private Integer product_id;
     private String media_type;
-    private Boolean isActive;
+    private Boolean is_active;
     private UUID organisation_id;
     private CurrentPrimaryMedia current_primary_media;
     private PreviousPrimaryMedia previous_primary_media;

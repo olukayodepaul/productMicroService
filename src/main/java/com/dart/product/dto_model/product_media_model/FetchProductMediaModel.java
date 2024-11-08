@@ -10,7 +10,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FetchOneProductMediaModel {
+public class FetchProductMediaModel {
     private Boolean status;
     private String message;
     private ProductMediaCacheEntity productMedia;

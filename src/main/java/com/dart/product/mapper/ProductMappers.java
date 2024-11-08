@@ -23,7 +23,6 @@ import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -341,6 +340,25 @@ public class ProductMappers {
                 .build();
     }
 
+    public ProductMediaResDTO toProductMediaToResDTO(ProductMediaCacheEntity productMedia, String message) {
+        return ProductMediaResDTO.builder()
+                .status(true)
+                .message(message)
+                .data(ProductMediaResDTO.ProductMedia
+                        .builder()
+                        .id(productMedia.getId())
+                        .product_id(productMedia.getProduct_id())
+                        .organisation_id(productMedia.getOrganisation_id())
+                        .media_type(productMedia.getMedia_type())
+                        .is_primary(productMedia.getIs_primary())
+                        .is_active(productMedia.getIsActive())
+                        .media_url(productMedia.getMedia_url())
+                        .updated_at(productMedia.getUpdated_at())
+                        .created_at(productMedia.getCreated_at())
+                        .build())
+                .build();
+    }
+
     public MediaDbEntity toProductMedia(MediaUploadReqModel mediaData) {
         return MediaDbEntity.builder()
                 .id(mediaData.getId())
@@ -361,7 +379,7 @@ public class ProductMappers {
                 .message(message)
                 .product_id(newMedia.getProductId())
                 .media_type(newMedia.getMediaType())
-                .isActive(newMedia.getIsActive())
+                .is_active(newMedia.getIsActive())
                 .organisation_id(newMedia.getOrganisationId())
                 .current_primary_media(PrimaryProductResDTO.CurrentPrimaryMedia
                         .builder()
@@ -382,12 +400,60 @@ public class ProductMappers {
                         .build()
                 )
                 .build();
+    }
 
+    public GetSpecMediaDTO getAllSpecificMedia(List<ProductMediaCacheEntity> reqBody, String message) {
+        return GetSpecMediaDTO.builder()
+                .status(true)
+                .message(message)
+                .product_id(reqBody.get(0).getProduct_id())
+                .media_type(reqBody.get(0).getMedia_type())
+                .is_active(reqBody.get(0).getIsActive())
+                .product_media(reqBody.stream().map(spec -> GetSpecMediaDTO.Media
+                        .builder()
+                        .id(spec.getId())
+                        .media_url(spec.getMedia_url())
+                        .is_primary(spec.getIs_primary())
+                        .updated_at(spec.getUpdated_at())
+                        .created_at(spec.getCreated_at())
+                        .build()).collect(Collectors.toList())
+                )
+                .build();
+    }
+
+    public ProductMediaCacheEntity toCacheProductMedia(MediaDbEntity productMedia) {
+        return ProductMediaCacheEntity.builder()
+                .id(productMedia.getId())
+                .product_id(productMedia.getProductId())
+                .organisation_id(productMedia.getOrganisationId())
+                .media_type(productMedia.getMediaType())
+                .media_url(productMedia.getMediaUrl())
+                .is_primary(productMedia.getIsPrimary())
+                .isActive(productMedia.getIsActive())
+                .updated_at(productMedia.getUpdatedAt())
+                .created_at(productMedia.getCreatedAt())
+                .build();
+    }
+
+    public List<ProductMediaCacheEntity> mapProductMedia(List<MediaDbEntity> productMedia) {
+        return productMedia.stream().map(media -> ProductMediaCacheEntity
+                .builder()
+                .id(media.getId())
+                .product_id(media.getProductId())
+                .organisation_id(media.getOrganisationId())
+                .media_type(media.getMediaType())
+                .media_url(media.getMediaUrl())
+                .is_primary(media.getIsPrimary())
+                .isActive(media.getIsActive())
+                .updated_at(media.getUpdatedAt())
+                .created_at(media.getCreatedAt())
+                .build()
+        ).collect(Collectors.toList());
     }
 
 
-    //here is for media mapper.
 
+    //here is for media mapper.
     public MediaDbEntity toUpdateProductMedia(
             MediaDbEntity mediaData,
             MediaUploadResponse mediaUploadResponse,
@@ -434,19 +500,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductMediaCacheEntity toCacheProductMedia(MediaDbEntity productMedia) {
-        return ProductMediaCacheEntity.builder()
-                .id(productMedia.getId())
-                .product_id(productMedia.getProductId())
-                .organisation_id(productMedia.getOrganisationId())
-                .media_type(productMedia.getMediaType())
-                .media_url(productMedia.getMediaUrl())
-                .is_primary(productMedia.getIsPrimary())
-                .isActive(productMedia.getIsActive())
-                .updated_at(productMedia.getUpdatedAt())
-                .created_at(productMedia.getCreatedAt())
-                .build();
-    }
+
 
 
     public List<GetAllMediaModel.ImageMedia> filterAndMapMediaImage(List<MediaDbEntity> mediaList, String mediaType) {
@@ -517,10 +571,10 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<GetSpecMediaModel.Media> filterAndMapMedia(List<MediaDbEntity> mediaList, String mediaType) {
+    public List<GetSpecMediaDTO.Media> filterAndMapMedia(List<MediaDbEntity> mediaList, String mediaType) {
         return mediaList.stream()
                 .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
-                .map(media -> GetSpecMediaModel.Media.builder()
+                .map(media -> GetSpecMediaDTO.Media.builder()
                         .id(media.getId())
                         .is_primary(media.getIsPrimary())
                         .media_url(media.getMediaUrl())
@@ -530,21 +584,7 @@ public class ProductMappers {
                 ).collect(Collectors.toList());
     }
 
-    public List<MediaDbEntity> mapProductMedia(List<ProductMediaCacheEntity> productMedia) {
-        return productMedia.stream().map(media -> MediaDbEntity
-                .builder()
-                .id(media.getId())
-                .isPrimary(media.getIs_primary())
-                .productId(media.getProduct_id())
-                .mediaType(media.getMedia_type())
-                .isActive(media.getIsActive())
-                .organisationId(media.getOrganisation_id())
-                .mediaUrl(media.getMedia_url())
-                .updatedAt(media.getUpdated_at())
-                .createdAt(media.getCreated_at())
-                .build()
-        ).collect(Collectors.toList());
-    }
+
 
     public MediaDbEntity mapSingleProductMediaToCache(ProductMediaCacheEntity media) {
         return MediaDbEntity.builder()
@@ -560,8 +600,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public GetIndividualProductMediaModel.ProductMedia filterAndMapSingleProductMedia(MediaDbEntity mediaList) {
-        return GetIndividualProductMediaModel.ProductMedia
+    public GetIndividualProductMediaResDTO.ProductMedia filterAndMapSingleProductMedia(MediaDbEntity mediaList) {
+        return GetIndividualProductMediaResDTO.ProductMedia
                 .builder()
                 .id(mediaList.getId())
                 .product_id(mediaList.getProductId())

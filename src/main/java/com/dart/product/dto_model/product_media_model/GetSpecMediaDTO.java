@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetSpecMediaModel {
+public class GetSpecMediaDTO {
 
     private boolean status;
     private String message;

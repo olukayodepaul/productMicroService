@@ -43,24 +43,23 @@ public class UpdatePrimaryProductService {
         this.redisProductCacheRepo = redisProductCacheRepo;
     }
 
-
     @Transactional
     public ResponseEntity<PrimaryProductResDTO> updatePrimaryMedia(String authToken, Integer productId, Integer mediaId) {
 
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
+        validateBruteForceProtection(userId.toString());
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
-        validateBruteForceProtection(userId.toString());
         validateRequestToken(authToken);
         validProductId(productId);
         validMediaId(mediaId);
         validateUserRole(roles);
 
-        MediaDbEntity setToCurrentMedia = findPreviousMedia(mediaId, productId, organisationId);
+        MediaDbEntity setToCurrentMedia = findPreviousPrimaryMedia(mediaId, productId, organisationId);
         validateIfRecordIfPrimaryMedia(setToCurrentMedia.getIsPrimary());
-        MediaDbEntity setToPreviousMedia = findCurrentMedia(productId, organisationId, setToCurrentMedia.getMediaType());
+        MediaDbEntity setToPreviousMedia = findCurrentPrimaryMedia(productId, organisationId, setToCurrentMedia.getMediaType());
 
         setToCurrentMedia.setUpdatedAt(LocalDateTime.now());
         setToCurrentMedia.setIsPrimary(true);
@@ -118,7 +117,7 @@ public class UpdatePrimaryProductService {
         validationUtils.mediaIdValidation(mediaId);
     }
 
-    private MediaDbEntity findPreviousMedia(Integer mediaId, Integer productId, UUID organisationId) {
+    private MediaDbEntity findPreviousPrimaryMedia(Integer mediaId, Integer productId, UUID organisationId) {
         return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 
@@ -127,7 +126,7 @@ public class UpdatePrimaryProductService {
                 ));
     }
 
-    private MediaDbEntity findCurrentMedia(Integer productId, UUID organisationId, String mediaType) {
+    private MediaDbEntity findCurrentPrimaryMedia(Integer productId, UUID organisationId, String mediaType) {
         return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, mediaType, true, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.UPDATE_RESOURCES_RESPONSE),
