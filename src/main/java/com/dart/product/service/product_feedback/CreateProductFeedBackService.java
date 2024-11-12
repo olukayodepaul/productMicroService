@@ -127,7 +127,7 @@ public class CreateProductFeedBackService {
         }
     }
 
-    public SaveAndUpdateProductFeedBackResponse saveProductFeedBack(ProductFeedBackDbEntity regDetails) {
+    private SaveAndUpdateProductFeedBackResponse saveProductFeedBack(ProductFeedBackDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductFeedBackResponse(true, "", productFeedBackRepo.save(regDetails));
         } catch (Exception e) {

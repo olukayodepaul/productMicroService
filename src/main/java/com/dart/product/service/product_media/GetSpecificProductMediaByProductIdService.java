@@ -4,6 +4,7 @@ package com.dart.product.service.product_media;
 import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.dto_model.product_media_model.GetSpecMediaDTO;
 import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
@@ -12,12 +13,14 @@ import com.dart.product.utilities.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
 
 @Service
-public class GetSpecificProductMediaService {
+public class GetSpecificProductMediaByProductIdService {
 
     private final ProductMappers productMappers;
     private final UtilitiesManager utilitiesManager;
@@ -26,7 +29,7 @@ public class GetSpecificProductMediaService {
     private final ProductMediaRepo productMediaRepo;
     private final RedisProductCacheRepo redisProductCacheRepo;
 
-    public GetSpecificProductMediaService(
+    public GetSpecificProductMediaByProductIdService(
             UtilitiesManager utilitiesManager,
             ValidationUtils validationUtils,
             FilterService jwtService,
@@ -42,7 +45,7 @@ public class GetSpecificProductMediaService {
         this.redisProductCacheRepo = redisProductCacheRepo;
     }
 
-    public ResponseEntity<GetSpecMediaDTO> getSpecificProductMediaMediaType(String authToken, Integer productId, String mediaType){
+    public ResponseEntity<GetSpecMediaDTO> getSpecificProductMediaMediaType(String authToken, Integer productId, String mediaType) {
 
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
@@ -58,11 +61,17 @@ public class GetSpecificProductMediaService {
         FetchAllProductMediaModel cachedProductMedia = redisProductCacheRepo.findAllProductMedia(organisationId.toString(), productId.toString());
 
         if (cachedProductMedia.getStatus()) {
-            return new ResponseEntity<>(productMappers.getAllSpecificMedia(cachedProductMedia.getProductMedia(), AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
-        } else {
-            List<MediaDbEntity> getPersistedProduct = getPersistedProductMedia(mediaType, productId, organisationId);
-            return new ResponseEntity<>(productMappers.getAllSpecificMedia(productMappers.mapProductMedia(getPersistedProduct), AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
+            List<ProductMediaCacheEntity> filter = cachedProductMedia.getProductMedia().stream().filter(
+                            filters -> filters.getMedia_type().equalsIgnoreCase(mediaType)
+                    )
+                    .sorted(Comparator.comparing(ProductMediaCacheEntity::getId))
+                    .toList();
+            return new ResponseEntity<>(productMappers.getAllSpecificMedia(filter, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
         }
+
+        List<MediaDbEntity> getPersistedProduct = getPersistedProductMedia(mediaType, productId, organisationId);
+        return new ResponseEntity<>(productMappers.getAllSpecificMedia(productMappers.mapProductMedia(getPersistedProduct), AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
+
     }
 
     private void validateRequestToken(String token) {
@@ -86,7 +95,7 @@ public class GetSpecificProductMediaService {
     }
 
     private List<MediaDbEntity> getPersistedProductMedia(String mediaType, Integer productId, UUID organisationId) {
-        return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsActive( productId, organisationId, mediaType, true)
+        return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsActiveOrderByIdAsc(productId, organisationId, mediaType, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND

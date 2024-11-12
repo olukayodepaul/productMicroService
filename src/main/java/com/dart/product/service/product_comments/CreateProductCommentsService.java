@@ -110,7 +110,7 @@ public class CreateProductCommentsService {
         validationUtils.bruteForceProtection(AppConfig.CREATE_PRODUCT_COMMENT_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbEntity regDetails) {
+    private SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductCommentResponse(true, "", productCommentRepo.save(regDetails)) ;
         } catch (Exception e) {

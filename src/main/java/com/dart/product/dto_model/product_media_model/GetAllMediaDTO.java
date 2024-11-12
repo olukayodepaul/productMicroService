@@ -13,7 +13,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetAllMediaModel {
+public class GetAllMediaDTO {
 
     private boolean status;
     private String message;
@@ -28,7 +28,6 @@ public class GetAllMediaModel {
     @NoArgsConstructor
     public static class VideoMedia {
         private Integer id;
-
         private Boolean is_primary;
         private String media_url;
         private LocalDateTime updated_at;
@@ -41,7 +40,6 @@ public class GetAllMediaModel {
     @NoArgsConstructor
     public static class ImageMedia {
         private Integer id;
-
         private Boolean is_primary;
         private String media_url;
         private LocalDateTime updated_at;

@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -406,9 +407,9 @@ public class ProductMappers {
         return GetSpecMediaDTO.builder()
                 .status(true)
                 .message(message)
-                .product_id(reqBody.get(0).getProduct_id())
-                .media_type(reqBody.get(0).getMedia_type())
-                .is_active(reqBody.get(0).getIsActive())
+                .product_id(reqBody.getFirst().getProduct_id())
+                .media_type(reqBody.getFirst().getMedia_type())
+                .is_active(reqBody.getFirst().getIsActive())
                 .product_media(reqBody.stream().map(spec -> GetSpecMediaDTO.Media
                         .builder()
                         .id(spec.getId())
@@ -451,168 +452,361 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
+    public List<MediaDbEntity> mapProductMediaCacheToProductDTO(List<ProductMediaCacheEntity> productMedia) {
+        return productMedia.stream().map(media -> MediaDbEntity
+                .builder()
+                .id(media.getId())
+                .productId(media.getProduct_id())
+                .organisationId(media.getOrganisation_id())
+                .mediaType(media.getMedia_type())
+                .mediaUrl(media.getMedia_url())
+                .isPrimary(media.getIs_primary())
+                .isActive(media.getIsActive())
+                .updatedAt(media.getUpdated_at())
+                .createdAt(media.getCreated_at())
+                .build()
+        ).collect(Collectors.toList());
+    }
+
+    public Page<MediaDbEntity> mapToAllProductMediaToPage(List<ProductMediaCacheEntity> reqModel, Pageable pageable) {
+        List<MediaDbEntity> productDbEntities = reqModel.stream()
+                .map(media -> MediaDbEntity.builder()
+                        .id(media.getId())
+                        .productId(media.getProduct_id())
+                        .organisationId(media.getOrganisation_id())
+                        .mediaType(media.getMedia_type())
+                        .mediaUrl(media.getMedia_url())
+                        .isPrimary(media.getIs_primary())
+                        .isActive(media.getIsActive())
+                        .updatedAt(media.getUpdated_at())
+                        .createdAt(media.getCreated_at())
+                        .build())
+                .collect(Collectors.toList());
+        return new PageImpl<>(productDbEntities, pageable, reqModel.size());
+    }
+
+    public GetAllMediaDTO mapProductMediaEntityProductDTO(List<MediaDbEntity> productMedia, String message) {
+        List<MediaDbEntity> image = productMedia.stream()
+                .filter(filter -> filter.getMediaType().equalsIgnoreCase("image"))
+                .sorted(Comparator.comparing(MediaDbEntity::getId))
+                .toList();
+        List<MediaDbEntity> video = productMedia.stream()
+                .filter(filter -> filter.getMediaType().equalsIgnoreCase("video"))
+                .sorted(Comparator.comparing((MediaDbEntity::getId)))
+                .toList();
+        return GetAllMediaDTO.builder()
+                .status(true)
+                .message(message)
+                .product_id(productMedia.getFirst().getProductId())
+                .is_active(productMedia.getFirst().getIsActive())
+                .image_media_type(
+                        image.stream().map(image_spec -> GetAllMediaDTO.ImageMedia.builder()
+                                        .id(image_spec.getId())
+                                        .media_url(image_spec.getMediaUrl())
+                                        .is_primary(image_spec.getIsPrimary())
+                                        .updated_at(image_spec.getUpdatedAt())
+                                        .created_at(image_spec.getCreatedAt())
+                                        .build())
+                                .collect(Collectors.toList())
+                )
+                .video_media_type(
+                        video.stream().map(video_spec -> GetAllMediaDTO.VideoMedia.builder()
+                                .id(video_spec.getId())
+                                .media_url(video_spec.getMediaUrl())
+                                .is_primary(video_spec.getIsPrimary())
+                                .updated_at(video_spec.getUpdatedAt())
+                                .created_at(video_spec.getCreatedAt())
+                                .build()).collect(Collectors.toList())
+                )
+                .build();
+    }
+
+    public GetProductMediaByOrganisationResDTO mapProductMediaByOrganisation(
+            List<MediaDbEntity> productMedia,
+            GetProductMediaByOrganisationResDTO.PaginationMetadata pagination,
+            String message) {
+
+        // Apply pagination only to the product_media list
+        int totalProducts = productMedia.size();
+        int start = Math.min(pagination.getPreviousOffset() != null ? pagination.getPreviousOffset() : 0, totalProducts);
+        int end = Math.min(start + pagination.getPageSize(), totalProducts);
+
+        List<MediaDbEntity> paginatedProducts = productMedia.subList(start, end);
+
+        return GetProductMediaByOrganisationResDTO.builder()
+                .status(true)
+                .message(message)
+                .product_media(paginatedProducts.stream()
+                        .sorted(Comparator.comparing(MediaDbEntity::getId))
+                        .collect(Collectors.groupingBy(MediaDbEntity::getProductId))
+                        .entrySet()
+                        .stream()
+                        .map(entry -> {
+                            Integer productId = entry.getKey();
+                            List<MediaDbEntity> mediaList = entry.getValue();
+
+                            return GetProductMediaByOrganisationResDTO.ProductMedia.builder()
+                                    .product_id(productId)
+                                    .is_active(mediaList.getFirst().getIsActive())
+                                    .image_media_type(mediaList.stream()
+                                            .filter(media -> "image".equalsIgnoreCase(media.getMediaType()))
+                                            .map(image -> GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia.builder()
+                                                    .id(image.getId())
+                                                    .is_primary(image.getIsPrimary())
+                                                    .media_type(image.getMediaType())
+                                                    .media_url(image.getMediaUrl())
+                                                    .updated_at(image.getUpdatedAt())
+                                                    .created_at(image.getCreatedAt())
+                                                    .build())
+                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia::getId)))
+                                            .collect(Collectors.toList()))
+                                    .video_media_type(mediaList.stream()
+                                            .filter(media -> "video".equalsIgnoreCase(media.getMediaType()))
+                                            .map(video -> GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia.builder()
+                                                    .id(video.getId())
+                                                    .is_primary(video.getIsPrimary())
+                                                    .media_type(video.getMediaType())
+                                                    .media_url(video.getMediaUrl())
+                                                    .updated_at(video.getUpdatedAt())
+                                                    .created_at(video.getCreatedAt())
+                                                    .build())
+                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia::getId)))
+                                            .collect(Collectors.toList()))
+                                    .build();
+                        })
+                        .collect(Collectors.toList()))
+                .pagination(pagination)
+                .build();
+    }
+
+
+//    public GetProductMediaByOrganisationResDTO mapProductMediaByOrganisation(
+//            List<MediaDbEntity> productMedia, GetProductMediaByOrganisationResDTO.PaginationMetadata pagination,  String message) {
+//        return GetProductMediaByOrganisationResDTO.builder()
+//                .status(true)
+//                .message(message)
+//                .product_media(productMedia.stream()
+//                        .sorted(Comparator.comparing(MediaDbEntity::getId))
+//                        .collect(Collectors.groupingBy(MediaDbEntity::getProductId))
+//                        .entrySet()
+//                        .stream()
+//                        .map(entry -> {
+//                            Integer productId = entry.getKey();
+//                            List<MediaDbEntity> mediaList = entry.getValue();
+//                            return GetProductMediaByOrganisationResDTO.ProductMedia.builder()
+//                                    .product_id(productId)
+//                                    .is_active(mediaList.getFirst().getIsActive())
+//                                    .image_media_type(mediaList.stream()
+//                                            .filter(media -> "image".equalsIgnoreCase(media.getMediaType()))
+//                                            .map(image -> GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia.builder()
+//                                                    .id(image.getId())
+//                                                    .is_primary(image.getIsPrimary())
+//                                                    .media_type(image.getMediaType())
+//                                                    .media_url(image.getMediaUrl())
+//                                                    .updated_at(image.getUpdatedAt())
+//                                                    .created_at(image.getCreatedAt())
+//                                                    .build())
+//                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia::getId)))
+//                                            .collect(Collectors.toList()))
+//                                    .video_media_type(mediaList.stream()
+//                                            .filter(media -> "video".equalsIgnoreCase(media.getMediaType()))
+//                                            .map(video -> GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia.builder()
+//                                                    .id(video.getId())
+//                                                    .is_primary(video.getIsPrimary())
+//                                                    .media_type(video.getMediaType())
+//                                                    .media_url(video.getMediaUrl())
+//                                                    .updated_at(video.getUpdatedAt())
+//                                                    .created_at(video.getCreatedAt())
+//                                                    .build())
+//                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia::getId)))
+//                                            .collect(Collectors.toList()))
+//                                    .build();
+//                        })
+//                        .collect(Collectors.toList()))
+//                .pagination(pagination)
+//                .build();
+//    }
+
+//    public GetSpecMediaDTO getAllSpecificMedia(List<ProductMediaCacheEntity> reqBody, String message) {
+//        return GetSpecMediaDTO.builder()
+//                .status(true)
+//                .message(message)
+//                .product_id(reqBody.get(0).getProduct_id())
+//                .media_type(reqBody.get(0).getMedia_type())
+//                .is_active(reqBody.get(0).getIsActive())
+//                .product_media(reqBody.stream().map(spec -> GetSpecMediaDTO.Media
+//                        .builder()
+//                        .id(spec.getId())
+//                        .media_url(spec.getMedia_url())
+//                        .is_primary(spec.getIs_primary())
+//                        .updated_at(spec.getUpdated_at())
+//                        .created_at(spec.getCreated_at())
+//                        .build()).collect(Collectors.toList())
+//                )
+//                .build();
+//    }
 
 
     //here is for media mapper.
-    public MediaDbEntity toUpdateProductMedia(
-            MediaDbEntity mediaData,
-            MediaUploadResponse mediaUploadResponse,
-            boolean isPrimary
-    ) {
-        return MediaDbEntity.builder()
-                .id(mediaData.getId())
-                .productId(mediaData.getProductId())
-                .organisationId(mediaData.getOrganisationId())
-                .mediaType(mediaUploadResponse.getMediaType())
-                .mediaUrl(mediaUploadResponse.getFileName())
-                .isPrimary(isPrimary)
-                .isActive(mediaData.getIsActive())
-                .updatedAt(LocalDateTime.now())
-                .createdAt(mediaData.getCreatedAt())
-                .build();
-    }
-
-    public MediaDbEntity productMediaBuilder(MediaDbEntity productMedia, String media) {
-        return MediaDbEntity.builder()
-                .id(productMedia.getId())
-                .productId(productMedia.getProductId())
-                .organisationId(productMedia.getOrganisationId())
-                .mediaType(productMedia.getMediaType())
-                .mediaUrl(media)
-                .isPrimary(productMedia.getIsPrimary())
-                .isActive(productMedia.getIsActive())
-                .updatedAt(LocalDateTime.now())
-                .createdAt(productMedia.getCreatedAt())
-                .build();
-    }
-
-    public MediaDbEntity primaryProductBuilder(MediaDbEntity productMedia, boolean primary) {
-        return MediaDbEntity.builder()
-                .id(productMedia.getId())
-                .productId(productMedia.getProductId())
-                .organisationId(productMedia.getOrganisationId())
-                .mediaType(productMedia.getMediaType())
-                .mediaUrl(productMedia.getMediaUrl())
-                .isPrimary(primary)
-                .isActive(productMedia.getIsActive())
-                .updatedAt(LocalDateTime.now())
-                .createdAt(productMedia.getCreatedAt())
-                .build();
-    }
-
-
-
-
-    public List<GetAllMediaModel.ImageMedia> filterAndMapMediaImage(List<MediaDbEntity> mediaList, String mediaType) {
-        return mediaList.stream()
-                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
-                .map(media -> GetAllMediaModel.ImageMedia.builder()
-                        .id(media.getId())
-                        .is_primary(media.getIsPrimary())
-                        .media_url(media.getMediaUrl())
-                        .updated_at(media.getUpdatedAt())
-                        .created_at(media.getCreatedAt())
-                        .build()
-                ).collect(Collectors.toList());
-    }
-
-    public List<GetAllMediaModel.VideoMedia> filterAndMapMediaVideo(List<MediaDbEntity> mediaList, String mediaType) {
-        return mediaList.stream()
-                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
-                .map(media -> GetAllMediaModel.VideoMedia.builder()
-                        .id(media.getId())
-                        .is_primary(media.getIsPrimary())
-                        .media_url(media.getMediaUrl())
-                        .updated_at(media.getUpdatedAt())
-                        .created_at(media.getCreatedAt())
-                        .build()
-                ).collect(Collectors.toList());
-    }
-
-    public List<GetAllMediaModel.ImageMedia> filterAndMapCacheMediaImage(List<ProductMediaCacheEntity> mediaList, String mediaType) {
-        return mediaList.stream()
-                .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
-                .map(media -> GetAllMediaModel.ImageMedia.builder()
-                        .id(media.getId())
-                        .is_primary(media.getIs_primary())
-                        .media_url(media.getMedia_url())
-                        .updated_at(media.getUpdated_at())
-                        .created_at(media.getCreated_at())
-                        .build()
-                ).collect(Collectors.toList());
-    }
-
-    public List<GetAllMediaModel.VideoMedia> filterAndMapCacheMediaVideo(List<ProductMediaCacheEntity> mediaList, String mediaType) {
-        return mediaList.stream()
-                .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
-                .map(media -> GetAllMediaModel.VideoMedia.builder()
-                        .id(media.getId())
-                        .is_primary(media.getIs_primary())
-                        .media_url(media.getMedia_url())
-                        .updated_at(media.getUpdated_at())
-                        .created_at(media.getCreated_at())
-                        .build()
-                ).collect(Collectors.toList());
-    }
-
-    public List<ProductMediaCacheEntity> mapCacheProductMedia(List<MediaDbEntity> productMedia) {
-        return productMedia.stream()
-                .map(media -> ProductMediaCacheEntity.builder()
-                        .id(media.getId())
-                        .product_id(media.getProductId())
-                        .organisation_id(media.getOrganisationId())
-                        .media_type(media.getMediaType())
-                        .media_url(media.getMediaUrl())
-                        .is_primary(media.getIsPrimary())
-                        .isActive(media.getIsActive())
-                        .updated_at(media.getUpdatedAt())
-                        .created_at(media.getCreatedAt())
-                        .build()
-                ).collect(Collectors.toList());
-    }
-
-    public List<GetSpecMediaDTO.Media> filterAndMapMedia(List<MediaDbEntity> mediaList, String mediaType) {
-        return mediaList.stream()
-                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
-                .map(media -> GetSpecMediaDTO.Media.builder()
-                        .id(media.getId())
-                        .is_primary(media.getIsPrimary())
-                        .media_url(media.getMediaUrl())
-                        .updated_at(media.getUpdatedAt())
-                        .created_at(media.getCreatedAt())
-                        .build()
-                ).collect(Collectors.toList());
-    }
-
-
-
-    public MediaDbEntity mapSingleProductMediaToCache(ProductMediaCacheEntity media) {
-        return MediaDbEntity.builder()
-                .id(media.getId())
-                .isPrimary(media.getIs_primary())
-                .productId(media.getProduct_id())
-                .mediaType(media.getMedia_type())
-                .isActive(media.getIsActive())
-                .organisationId(media.getOrganisation_id())
-                .mediaUrl(media.getMedia_url())
-                .updatedAt(media.getUpdated_at())
-                .createdAt(media.getCreated_at())
-                .build();
-    }
-
-    public GetIndividualProductMediaResDTO.ProductMedia filterAndMapSingleProductMedia(MediaDbEntity mediaList) {
-        return GetIndividualProductMediaResDTO.ProductMedia
-                .builder()
-                .id(mediaList.getId())
-                .product_id(mediaList.getProductId())
-                .media_type(mediaList.getMediaType())
-                .is_primary(mediaList.getIsPrimary())
-                .media_url(mediaList.getMediaUrl())
-                .is_active(mediaList.getIsActive())
-                .updated_at(mediaList.getUpdatedAt())
-                .created_at(mediaList.getCreatedAt())
-                .build();
-    }
+//    public MediaDbEntity toUpdateProductMedia(
+//            MediaDbEntity mediaData,
+//            MediaUploadResponse mediaUploadResponse,
+//            boolean isPrimary
+//    ) {
+//        return MediaDbEntity.builder()
+//                .id(mediaData.getId())
+//                .productId(mediaData.getProductId())
+//                .organisationId(mediaData.getOrganisationId())
+//                .mediaType(mediaUploadResponse.getMediaType())
+//                .mediaUrl(mediaUploadResponse.getFileName())
+//                .isPrimary(isPrimary)
+//                .isActive(mediaData.getIsActive())
+//                .updatedAt(LocalDateTime.now())
+//                .createdAt(mediaData.getCreatedAt())
+//                .build();
+//    }
+//
+//    public MediaDbEntity productMediaBuilder(MediaDbEntity productMedia, String media) {
+//        return MediaDbEntity.builder()
+//                .id(productMedia.getId())
+//                .productId(productMedia.getProductId())
+//                .organisationId(productMedia.getOrganisationId())
+//                .mediaType(productMedia.getMediaType())
+//                .mediaUrl(media)
+//                .isPrimary(productMedia.getIsPrimary())
+//                .isActive(productMedia.getIsActive())
+//                .updatedAt(LocalDateTime.now())
+//                .createdAt(productMedia.getCreatedAt())
+//                .build();
+//    }
+//
+//    public MediaDbEntity primaryProductBuilder(MediaDbEntity productMedia, boolean primary) {
+//        return MediaDbEntity.builder()
+//                .id(productMedia.getId())
+//                .productId(productMedia.getProductId())
+//                .organisationId(productMedia.getOrganisationId())
+//                .mediaType(productMedia.getMediaType())
+//                .mediaUrl(productMedia.getMediaUrl())
+//                .isPrimary(primary)
+//                .isActive(productMedia.getIsActive())
+//                .updatedAt(LocalDateTime.now())
+//                .createdAt(productMedia.getCreatedAt())
+//                .build();
+//    }
+//
+//
+//
+//
+//    public List<GetAllMediaModel.ImageMedia> filterAndMapMediaImage(List<MediaDbEntity> mediaList, String mediaType) {
+//        return mediaList.stream()
+//                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
+//                .map(media -> GetAllMediaModel.ImageMedia.builder()
+//                        .id(media.getId())
+//                        .is_primary(media.getIsPrimary())
+//                        .media_url(media.getMediaUrl())
+//                        .updated_at(media.getUpdatedAt())
+//                        .created_at(media.getCreatedAt())
+//                        .build()
+//                ).collect(Collectors.toList());
+//    }
+//
+//    public List<GetAllMediaModel.VideoMedia> filterAndMapMediaVideo(List<MediaDbEntity> mediaList, String mediaType) {
+//        return mediaList.stream()
+//                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
+//                .map(media -> GetAllMediaModel.VideoMedia.builder()
+//                        .id(media.getId())
+//                        .is_primary(media.getIsPrimary())
+//                        .media_url(media.getMediaUrl())
+//                        .updated_at(media.getUpdatedAt())
+//                        .created_at(media.getCreatedAt())
+//                        .build()
+//                ).collect(Collectors.toList());
+//    }
+//
+//    public List<GetAllMediaModel.ImageMedia> filterAndMapCacheMediaImage(List<ProductMediaCacheEntity> mediaList, String mediaType) {
+//        return mediaList.stream()
+//                .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
+//                .map(media -> GetAllMediaModel.ImageMedia.builder()
+//                        .id(media.getId())
+//                        .is_primary(media.getIs_primary())
+//                        .media_url(media.getMedia_url())
+//                        .updated_at(media.getUpdated_at())
+//                        .created_at(media.getCreated_at())
+//                        .build()
+//                ).collect(Collectors.toList());
+//    }
+//
+//    public List<GetAllMediaModel.VideoMedia> filterAndMapCacheMediaVideo(List<ProductMediaCacheEntity> mediaList, String mediaType) {
+//        return mediaList.stream()
+//                .filter(media -> mediaType.equalsIgnoreCase(media.getMedia_type()))
+//                .map(media -> GetAllMediaModel.VideoMedia.builder()
+//                        .id(media.getId())
+//                        .is_primary(media.getIs_primary())
+//                        .media_url(media.getMedia_url())
+//                        .updated_at(media.getUpdated_at())
+//                        .created_at(media.getCreated_at())
+//                        .build()
+//                ).collect(Collectors.toList());
+//    }
+//
+//    public List<ProductMediaCacheEntity> mapCacheProductMedia(List<MediaDbEntity> productMedia) {
+//        return productMedia.stream()
+//                .map(media -> ProductMediaCacheEntity.builder()
+//                        .id(media.getId())
+//                        .product_id(media.getProductId())
+//                        .organisation_id(media.getOrganisationId())
+//                        .media_type(media.getMediaType())
+//                        .media_url(media.getMediaUrl())
+//                        .is_primary(media.getIsPrimary())
+//                        .isActive(media.getIsActive())
+//                        .updated_at(media.getUpdatedAt())
+//                        .created_at(media.getCreatedAt())
+//                        .build()
+//                ).collect(Collectors.toList());
+//    }
+//
+//    public List<GetSpecMediaDTO.Media> filterAndMapMedia(List<MediaDbEntity> mediaList, String mediaType) {
+//        return mediaList.stream()
+//                .filter(media -> mediaType.equalsIgnoreCase(media.getMediaType()))
+//                .map(media -> GetSpecMediaDTO.Media.builder()
+//                        .id(media.getId())
+//                        .is_primary(media.getIsPrimary())
+//                        .media_url(media.getMediaUrl())
+//                        .updated_at(media.getUpdatedAt())
+//                        .created_at(media.getCreatedAt())
+//                        .build()
+//                ).collect(Collectors.toList());
+//    }
+//
+//
+//
+//    public MediaDbEntity mapSingleProductMediaToCache(ProductMediaCacheEntity media) {
+//        return MediaDbEntity.builder()
+//                .id(media.getId())
+//                .isPrimary(media.getIs_primary())
+//                .productId(media.getProduct_id())
+//                .mediaType(media.getMedia_type())
+//                .isActive(media.getIsActive())
+//                .organisationId(media.getOrganisation_id())
+//                .mediaUrl(media.getMedia_url())
+//                .updatedAt(media.getUpdated_at())
+//                .createdAt(media.getCreated_at())
+//                .build();
+//    }
+//
+//    public GetIndividualProductMediaResDTO.ProductMedia filterAndMapSingleProductMedia(MediaDbEntity mediaList) {
+//        return GetIndividualProductMediaResDTO.ProductMedia
+//                .builder()
+//                .id(mediaList.getId())
+//                .product_id(mediaList.getProductId())
+//                .media_type(mediaList.getMediaType())
+//                .is_primary(mediaList.getIsPrimary())
+//                .media_url(mediaList.getMediaUrl())
+//                .is_active(mediaList.getIsActive())
+//                .updated_at(mediaList.getUpdatedAt())
+//                .created_at(mediaList.getCreatedAt())
+//                .build();
+//    }
 
     //product Specification
     public ProductSpecificationDbModel mapProductSpec(AddProductSpecReqModel reqBody) {
@@ -1059,28 +1253,28 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
-    public ProductReviewAllResModel allProductReviewResponseBuilder(List<ProductReviewDbModel> reqBody, String message) {
-        return ProductReviewAllResModel.builder()
-                .status(true)
-                .message(message)
-                .product_reviews(
-                        reqBody.stream().map(review -> ProductReviewAllResModel.ProductReview
-                                .builder()
-                                .id(review.getId())
-                                .id(review.getId())
-                                .product_id(review.getProductId())
-                                .organisation_id(review.getOrganisationId())
-                                .user_id(review.getUserId().toString())
-                                .rating(review.getRating())
-                                .review_text(review.getReviewText())
-                                .is_active(review.isActive())
-                                .updated_at(review.getUpdatedAt())
-                                .created_at(review.getCreatedAt())
-                                .build()
-                        ).collect(Collectors.toList())
-                )
-                .build();
-    }
+//    public ProductReviewAllResModel allProductReviewResponseBuilder(List<ProductReviewDbModel> reqBody, String message) {
+//        return ProductReviewAllResModel.builder()
+//                .status(true)
+//                .message(message)
+//                .product_reviews(
+//                        reqBody.stream().map(review -> ProductReviewAllResModel.ProductReview
+//                                .builder()
+//                                .id(review.getId())
+//                                .id(review.getId())
+//                                .product_id(review.getProductId())
+//                                .organisation_id(review.getOrganisationId())
+//                                .user_id(review.getUserId().toString())
+//                                .rating(review.getRating())
+//                                .review_text(review.getReviewText())
+//                                .is_active(review.isActive())
+//                                .updated_at(review.getUpdatedAt())
+//                                .created_at(review.getCreatedAt())
+//                                .build()
+//                        ).collect(Collectors.toList())
+//                )
+//                .build();
+//    }
 
 
     //Related_Product

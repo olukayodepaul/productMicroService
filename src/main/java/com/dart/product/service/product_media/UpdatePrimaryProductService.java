@@ -13,7 +13,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -134,7 +133,7 @@ public class UpdatePrimaryProductService {
                 ));
     }
 
-    public SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails) {
+    private SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails) {
         try {
             return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
         } catch (Exception e) {

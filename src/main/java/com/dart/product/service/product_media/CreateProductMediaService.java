@@ -131,7 +131,7 @@ public class CreateProductMediaService {
         }
     }
 
-    public SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails, String deleteMedia) {
+    private SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails, String deleteMedia) {
         try {
             return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
         } catch (Exception e) {

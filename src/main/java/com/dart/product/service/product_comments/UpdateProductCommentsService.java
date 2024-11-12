@@ -128,7 +128,7 @@ public class UpdateProductCommentsService {
                 ));
     }
 
-    public SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbEntity regDetails) {
+    private SaveAndUpdateProductCommentResponse saveProductComment(ProductCommentDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductCommentResponse(true, "", productCommentRepo.save(regDetails)) ;
         } catch (Exception e) {

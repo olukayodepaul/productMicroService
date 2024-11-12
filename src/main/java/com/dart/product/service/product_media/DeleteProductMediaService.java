@@ -1,106 +1,132 @@
 package com.dart.product.service.product_media;
 
+import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;
+import com.dart.product.dto_model.product_media_model.SaveAndUpdateMediaResponse;
+import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.mapper.ProductMappers;
+import com.dart.product.repository.ProductMediaRepo;
+import com.dart.product.repository.RedisProductCacheRepo;
+import com.dart.product.security.FilterService;
+import com.dart.product.utilities.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class DeleteProductMediaService {
 
-//    private final ServiceLocator serviceLocator;
-//
-//    public DeleteProductMediaService(ServiceLocator serviceLocator) {
-//        this.serviceLocator = serviceLocator;
-//    }
-//
-//    public ResponseEntity<ProductMediaResModel> deleteProductMedia(String token, Integer id){
-//
-//        String jwtToken = serviceLocator.getJwtService().extractTokenFromHeader(token);
-//        String roles = serviceLocator.getJwtService().extractRole(jwtToken);
-//        String plainUUID = serviceLocator.getJwtService().extractUUID(jwtToken);
-//        UUID organisationId = serviceLocator.getUtilitiesManager().convertStringToUUID(serviceLocator.getJwtService().extractUUID(jwtToken));
-//
-//        validateRequestToken(token);
-//        validateRequestPrimaryListenBruceForce(plainUUID);
-//
-//        MediaDbModel isProductMediaExisting = findByIdAndOrganisationId(id, organisationId);
-//        validIfMediaIsDelete(isProductMediaExisting.getIsActive());
-//        validateIfMediaIsPrimaryListing(isProductMediaExisting.getIsPrimary());
-//
-//        isProductMediaExisting.setIsActive(false);
-//        SaveAndUpdateMediaResponse deleteProductMedia = serviceLocator.getSaveAndUpdateRecord().saveProductMedia(isProductMediaExisting);
-//
-//        validateIfMediaIsDeleted(deleteProductMedia.getStatus(), deleteProductMedia.getError());
-//
-//        boolean deleteCache = serviceLocator.getRedisProductCacheRepo().deleteProduct(deleteProductMedia.getProductMedia().getOrganisationId().toString(), deleteProductMedia.getProductMedia().getId());
-//        handleCacheResult(deleteCache);
-//
-//        MediaDbModel getDeleteRecord =  deleteProductMedia.getProductMedia();
-//
-//        return new ResponseEntity<>(
-//                new ProductMediaResModel(
-//                        true,
-//                        "product media successfully deleted",
-//                        new ProductMediaResModel.ProductMedia(
-//                                getDeleteRecord.getId(),
-//                                getDeleteRecord.getProductId(),
-//                                getDeleteRecord.getMediaType(),
-//                                getDeleteRecord.getIsPrimary(),
-//                                getDeleteRecord.getIsActive(),
-//                                getDeleteRecord.getMediaUrl(),
-//                                getDeleteRecord.getUpdatedAt(),
-//                                getDeleteRecord.getCreatedAt()
-//                        )
-//                ),
-//                HttpStatus.OK);
-//
-//    }
-//
-//    private void handleCacheResult(boolean cacheResult) {
-//        if (!cacheResult) {
-//            System.out.println("dfjwdfjdcdschsw bdcds");
-//        }
-//    }
-//
-//    private void validateRequestToken(String token) {
-//        serviceLocator.getValidationUtils().jwtValidateRequest(token);
-//    }
-//
-//    private void validateRequestPrimaryListenBruceForce(String uuid) {
-//        serviceLocator.getValidationUtils().bruteForceProtection(AppConfig.FETCH_ALL_PRODUCT_BRUTE_FORCE_PROTECTION + uuid);
-//    }
-//
-//    private void validIfMediaIsDelete(boolean isActive){
-//        if(!isActive) {
-//            throw new CustomRuntimeException(
-//                    new ErrorHandler(false, HttpStatus.NOT_FOUND.toString(), AppConfig.UPDATE_PRODUCT_ERROR_RESPONSE),
-//                    HttpStatus.NOT_FOUND
-//            );
-//        }
-//    }
-//
-//    private MediaDbModel findByIdAndOrganisationId(Integer id, UUID organisationId) {
-//        return serviceLocator.getProductMediaRepo().findByIdAndOrganisationIdAndIsActive(id, organisationId, true)
-//                .orElseThrow(() -> new CustomRuntimeException(
-//                        new ErrorHandler(false, HttpStatus.NOT_FOUND.toString(), AppConfig.DELETED_MEDIA_ERROR_RESPONSE),
-//                        HttpStatus.NOT_FOUND
-//                ));
-//    }
-//
-//    private void validateIfMediaIsPrimaryListing(boolean primaryListing){
-//        if(primaryListing) {
-//            throw new CustomRuntimeException(
-//                    new ErrorHandler(false, HttpStatus.NOT_FOUND.toString(), AppConfig.DELETE_PRIMARY_MEDIA_ERROR_RESPONSE),
-//                    HttpStatus.NOT_FOUND
-//            );
-//        }
-//    }
-//
-//    private void validateIfMediaIsDeleted(boolean mediaItems, String message){
-//        if(!mediaItems){
-//            throw new CustomRuntimeException(
-//                    new ErrorHandler(false, HttpStatus.NOT_FOUND.toString(), message),
-//                    HttpStatus.NOT_FOUND
-//            );
-//        }
-//    }
+    private final ProductMappers productMappers;
+    private final UtilitiesManager utilitiesManager;
+    private final ValidationUtils validationUtils;
+    private final FilterService jwtService;
+    private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ProductMediaRepo productMediaRepo;
+
+    public DeleteProductMediaService(
+            UtilitiesManager utilitiesManager,
+            ValidationUtils validationUtils,
+            FilterService jwtService,
+            ProductMappers productMappers,
+            RedisProductCacheRepo redisProductCacheRepo,
+            ProductMediaRepo productMediaRepo
+    ) {
+        this.utilitiesManager = utilitiesManager;
+        this.validationUtils = validationUtils;
+        this.jwtService = jwtService;
+        this.productMappers = productMappers;
+        this.redisProductCacheRepo = redisProductCacheRepo;
+        this.productMediaRepo = productMediaRepo;
+    }
+
+    public ResponseEntity<ProductMediaResDTO> deleteProductMedia(String authToken, Integer mediaId) {
+
+        String jwtToken = jwtService.extractTokenFromHeader(authToken);
+        String roles = jwtService.extractRole(jwtToken);
+        UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
+        validateBruteForceProtection(userId.toString());
+        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
+
+        validateRequestToken(authToken);
+        validMediaId(mediaId);
+        validateUserRole(roles);
+
+        MediaDbEntity getPersistedProduct = getPersistedProductMedia(mediaId, organisationId);
+        validateIfPrimaryMedia(getPersistedProduct.getIsPrimary());
+
+        getPersistedProduct.setUpdatedAt(LocalDateTime.now());
+        getPersistedProduct.setIsActive(false);
+        SaveAndUpdateMediaResponse persistRecord = saveProductMedia(getPersistedProduct);
+        checkIfRecordPersisted(persistRecord);
+
+        boolean cacheResult = redisProductCacheRepo.saveUpdateProductMedia(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
+        checkIfRecordCache(cacheResult);
+
+        return new ResponseEntity<>(productMappers.toProductMediaResponse(persistRecord.getProductMedia(), AppConfig.DELETE_MEDIA_UPDATED_RESPONSE), HttpStatus.OK);
+
+    }
+
+    private void checkIfRecordCache(boolean isRecord) {
+        if (!isRecord) {
+            publishKafkaMessage("ProductFeedbackCacheFailure", "Failed to save feedback in cache for product ID: ");
+        }
+    }
+
+    private void publishKafkaMessage(String topic, String message) {
+        // Logic for publishing a message to Kafka
+    }
+
+    private void validateRequestToken(String token) {
+        validationUtils.accessTokenValidation(token);
+    }
+
+    private void validateUserRole(String role) {
+        validationUtils.adminRoleValidation(role);
+    }
+
+    private void validateBruteForceProtection(String userId) {
+        validationUtils.bruteForceProtection(AppConfig.DELETE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION + userId);
+    }
+
+    private void validMediaId(Integer mediaId) {
+        validationUtils.mediaIdValidation(mediaId);
+    }
+
+    private void validateIfPrimaryMedia(boolean isActive) {
+        if (!isActive) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, HttpStatus.NOT_FOUND.toString(), AppConfig.DELETE_PRIMARY_MEDIA_RESPONSE),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+    }
+
+    private MediaDbEntity getPersistedProductMedia(Integer mediaId, UUID organisationId) {
+        return productMediaRepo.findByIdAndOrganisationIdAndIsActive(mediaId, organisationId, true)
+                .orElseThrow(() -> new CustomRuntimeException(
+
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETE_RESOURCES_RESPONSE),
+                        HttpStatus.NOT_FOUND
+                ));
+    }
+
+    private SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails) {
+        try {
+            return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
+        } catch (Exception e) {
+            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaDbEntity.builder().build());
+        }
+    }
+
+    private void checkIfRecordPersisted(SaveAndUpdateMediaResponse isSave) {
+        if (!isSave.getStatus()) {
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), AppConfig.PRODUCT_MEDIA_DELETED),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
 
 }

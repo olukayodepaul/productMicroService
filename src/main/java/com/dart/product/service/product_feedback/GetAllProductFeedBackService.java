@@ -29,7 +29,6 @@ public class GetAllProductFeedBackService {
     @Value("${pagination.maxOffset}")
     private int maxOffset;
 
-
     private final ProductFeedBackRepo productFeedBackRepo;
     private final FilterService jwtService;
     private final UtilitiesManager utilitiesManager;
@@ -60,10 +59,11 @@ public class GetAllProductFeedBackService {
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
-        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
-        validationUserRole(roles);
         validateBruteForceProtection(userId.toString());
+        validationUserRole(roles);
+
+        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
         limit = getValidLimit(limit);
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));

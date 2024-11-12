@@ -46,6 +46,9 @@ public class AppConfig {
     public static final String UPDATE_PRIMARY_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "update_primary_product_media_brute_force_protection";
     public static final String FETCH_ONE_PRIMARY_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "fetch_one_primary_product_media_brute_force_protection";
     public static final String FETCH_SPECIFIC_PRIMARY_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "fetch_specific_primary_product_media_brute_force_protection";
+    public static final String DELETE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION = "delete_product_media_brute_force_protection";
+    public static final String FETCH_PRIMARY_PRODUCT_MEDIA_BY_PRODUCT_ID_BRUTE_FORCE_PROTECTION = "fetch_product_media_by_product_id_brute_force_protection";
+    public static final String FETCH_PRIMARY_PRODUCT_MEDIA_BY_ORGANISATION_ID_BRUTE_FORCE_PROTECTION = "fetch_product_media_by_organisation_id_brute_force_protection";
 
     //product
     public static final String CREATE_PRODUCT_RESPONSE = "product successfully created";
@@ -86,6 +89,9 @@ public class AppConfig {
     public static final String PRODUCT_PRIMARY_UPDATE = "Media selected is a primary media";
     public static final String PRODUCT_MEDIA_FETCH_RESPONSE = "Product media fetch successfully";
     public static final String PRODUCT_MEDIA_FETCH = "Media Type can only be image or video";
+    public static final String DELETE_PRIMARY_MEDIA_RESPONSE = "You cant delete a primary media. your product will not be visible, you set the media to none primary before you can delete it.";
+    public static final String PRODUCT_MEDIA_DELETED = "Media cant be delete, please try again later";
+    public static final String DELETE_MEDIA_UPDATED_RESPONSE = "Product media deleted successfully";
 
 
 

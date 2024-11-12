@@ -40,10 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -345,12 +342,10 @@ public class RedisProductCacheRepo {
             String key = PRODUCT_MEDIA_KEY + "_" + organisationId + "_" + productId;
             Map<Object, Object> productMediaMap = redisTemplate.opsForHash().entries(key);
 
-            System.out.println(productMediaMap);
-
             if (!productMediaMap.isEmpty()) {
                 List<ProductMediaCacheEntity> productMedia = productMediaMap.values().stream()
                         .map(value -> objectMapper.convertValue(value, ProductMediaCacheEntity.class))
-                        .sorted(Comparator.comparing(ProductMediaCacheEntity::getId))
+                        .sorted(Comparator.comparing(ProductMediaCacheEntity::getMedia_url))
                         .collect(Collectors.toList());
                 return new FetchAllProductMediaModel(true, "Media fetched successfully", productMedia);
             }
@@ -362,23 +357,30 @@ public class RedisProductCacheRepo {
         }
     }
 
+    public FetchAllProductMediaModel findAllProductMediaByOrganisationId(String organisationId) {
+        try {
+            String keyPattern = PRODUCT_MEDIA_KEY + "_" + organisationId + "_*";
+            Set<String> keys = redisTemplate.keys(keyPattern); // Fetch all matching keys
 
-//    public Boolean saveAllProductMedia(List<ProductMediaCacheEntity> productMedia) {
-//        try {
-//            for(ProductMediaCacheEntity mediaProduct: productMedia) {
-//                String subKey = mediaProduct.getId().toString();  // Unique sub-key for each media product
-//                String primaryKey = PRODUCT_MEDIA_KEY + "_" + mediaProduct.getOrganisation_id() + "_" + mediaProduct.getProduct_id();
-//                // Save each ProductMediaCacheModel individually
-//                redisTemplate.opsForHash().put(primaryKey, subKey, mediaProduct);
-//            }
-//            // Return success
-//            return SAVE_UPDATE_SUCCESS;
-//        } catch (Exception e) {
-//            // Log the error and return failure response
-//            logger.error("RedisCacheRepo::saveAllProductMedia  {}", e.getMessage());
-//            return SAVE_UPDATE_FAILED;
-//        }
-//    }
+            if (keys != null && !keys.isEmpty()) {
+                List<ProductMediaCacheEntity> productMediaList = keys.stream()
+                        .flatMap(matchedKey -> redisTemplate.opsForHash().entries(matchedKey).values().stream())
+                        .map(value -> objectMapper.convertValue(value, ProductMediaCacheEntity.class))
+                        .sorted(Comparator.comparing(ProductMediaCacheEntity::getMedia_url))
+                        .collect(Collectors.toList());
+
+                return new FetchAllProductMediaModel(true, "Media fetched successfully", productMediaList);
+            }
+
+            return new FetchAllProductMediaModel(false, "No media found", Collections.emptyList());
+        } catch (Exception e) {
+            logger.error("Error fetching media for organisationId {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+
+
 
 
 

@@ -108,7 +108,7 @@ public class CreateProductService {
         }
     }
 
-    public SaveAndUpdateProductResponse saveProductRecord(ProductDbEntity regDetails) {
+    private SaveAndUpdateProductResponse saveProductRecord(ProductDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductResponse(true, "", productsRepo.save(regDetails)) ;
         } catch (Exception e) {

@@ -1,8 +1,7 @@
 package com.dart.product.service.product_media;
 
-
-import com.dart.product.dto_model.product_media_model.FetchProductMediaModel;
-import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;
+import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
+import com.dart.product.dto_model.product_media_model.GetAllMediaDTO;
 import com.dart.product.entity.prodct_media.MediaDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductMediaRepo;
@@ -12,35 +11,37 @@ import com.dart.product.utilities.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import java.util.List;
 import java.util.UUID;
 
+
 @Service
-public class GetProductMediaService {
+public class GetProductMediaByProductIdService {
 
     private final ProductMappers productMappers;
     private final UtilitiesManager utilitiesManager;
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
-    private final ProductMediaRepo productMediaRepo;
     private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ProductMediaRepo productMediaRepo;
 
-    public GetProductMediaService(
+    public GetProductMediaByProductIdService(
             UtilitiesManager utilitiesManager,
             ValidationUtils validationUtils,
             FilterService jwtService,
             ProductMappers productMappers,
-            ProductMediaRepo productMediaRepo,
-            RedisProductCacheRepo redisProductCacheRepo
+            RedisProductCacheRepo redisProductCacheRepo,
+            ProductMediaRepo productMediaRepo
     ) {
         this.utilitiesManager = utilitiesManager;
         this.validationUtils = validationUtils;
         this.jwtService = jwtService;
         this.productMappers = productMappers;
-        this.productMediaRepo = productMediaRepo;
         this.redisProductCacheRepo = redisProductCacheRepo;
+        this.productMediaRepo = productMediaRepo;
     }
 
-    public ResponseEntity<ProductMediaResDTO> getProductMediaByMediaId(String authToken, Integer productId, Integer mediaId) {
+    public ResponseEntity<GetAllMediaDTO> getProductMediaByProductId(String authToken, Integer productId) {
 
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
@@ -50,17 +51,17 @@ public class GetProductMediaService {
 
         validateRequestToken(authToken);
         validProductId(productId);
-        validMediaId(mediaId);
         validateUserRole(roles);
 
-        FetchProductMediaModel cachedProductMedia = redisProductCacheRepo.findOneProductMedia(organisationId.toString(), productId, mediaId);
+        FetchAllProductMediaModel cachedProductMedia = redisProductCacheRepo.findAllProductMedia(organisationId.toString(), productId.toString());
 
-        if(cachedProductMedia.getStatus()) {
-            return new ResponseEntity<>(productMappers.toProductMediaToResDTO(cachedProductMedia.getProductMedia(), AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
+        if (cachedProductMedia.getStatus()) {
+            List<MediaDbEntity> mapResult = productMappers.mapProductMediaCacheToProductDTO(cachedProductMedia.getProductMedia());
+            return new ResponseEntity<>(productMappers.mapProductMediaEntityProductDTO(mapResult, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
         }
 
-        MediaDbEntity getPersistedProduct = getPersistedProductMedia(mediaId, productId, organisationId);
-        return new ResponseEntity<>(productMappers.toProductMediaResponse(getPersistedProduct, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
+        List<MediaDbEntity> getPersistedProduct = getPersistedProductMedia(productId, organisationId);
+        return new ResponseEntity<>(productMappers.mapProductMediaEntityProductDTO(getPersistedProduct, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
 
     }
 
@@ -77,20 +78,15 @@ public class GetProductMediaService {
     }
 
     private void validateBruteForceProtection(String userId) {
-        validationUtils.bruteForceProtection(AppConfig.FETCH_ONE_PRIMARY_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION + userId);
+        validationUtils.bruteForceProtection(AppConfig.FETCH_PRIMARY_PRODUCT_MEDIA_BY_PRODUCT_ID_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    private void validMediaId(Integer mediaId) {
-        validationUtils.mediaIdValidation(mediaId);
-    }
-
-    private MediaDbEntity getPersistedProductMedia(Integer mediaId, Integer productId, UUID organisationId) {
-        return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
+    private List<MediaDbEntity> getPersistedProductMedia(Integer productId, UUID organisationId) {
+        return productMediaRepo.findByProductIdAndOrganisationIdAndIsActiveOrderByIdAsc(productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }
-
 }
