@@ -3,9 +3,9 @@ package com.dart.product.service.product_media;
 
 import com.dart.product.dto_model.product_media_model.FetchProductMediaModel;
 import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;
-import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.mapper.ProductMappers;
-import com.dart.product.repository.ProductMediaRepo;
+import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -22,7 +22,7 @@ public class GetProductMediaByIdService {
     private final UtilitiesManager utilitiesManager;
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
-    private final ProductMediaRepo productMediaRepo;
+    private final ProductMediaContentRepo productMediaRepo;
     private final RedisProductCacheRepo redisProductCacheRepo;
 
     public GetProductMediaByIdService(
@@ -30,7 +30,7 @@ public class GetProductMediaByIdService {
             ValidationUtils validationUtils,
             FilterService jwtService,
             ProductMappers productMappers,
-            ProductMediaRepo productMediaRepo,
+            ProductMediaContentRepo productMediaRepo,
             RedisProductCacheRepo redisProductCacheRepo
     ) {
         this.utilitiesManager = utilitiesManager;
@@ -60,7 +60,7 @@ public class GetProductMediaByIdService {
             return new ResponseEntity<>(productMappers.toProductMediaToResDTO(cachedProductMedia.getProductMedia(), AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
         }
 
-        MediaDbEntity getPersistedProduct = getPersistedProductMedia(mediaId, productId, organisationId);
+        MediaContentDbEntity getPersistedProduct = getPersistedProductMedia(mediaId, productId, organisationId);
         return new ResponseEntity<>(productMappers.toProductMediaResponse(getPersistedProduct, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
 
     }
@@ -85,7 +85,7 @@ public class GetProductMediaByIdService {
         validationUtils.mediaIdValidation(mediaId);
     }
 
-    private MediaDbEntity getPersistedProductMedia(Integer mediaId, Integer productId, UUID organisationId) {
+    private MediaContentDbEntity getPersistedProductMedia(Integer mediaId, Integer productId, UUID organisationId) {
         return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 

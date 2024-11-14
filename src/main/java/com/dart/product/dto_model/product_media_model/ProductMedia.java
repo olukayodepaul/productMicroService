@@ -1,8 +1,7 @@
 package com.dart.product.dto_model.product_media_model;
 
-import com.dart.product.entity.prodct_media.MediaContentDbEntity;
+import com.dart.product.entity.prodct_media.MediaDbEntity;
 import lombok.*;
-
 
 
 @Data
@@ -11,8 +10,8 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SaveAndUpdateMediaResponse {
+public class ProductMedia {
     private Boolean status;
     private String error;
-    private MediaContentDbEntity productMedia;
+    private MediaDbEntity productMedia;
 }

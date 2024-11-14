@@ -77,18 +77,26 @@ CREATE INDEX idx_product_feedback_product_id ON product_feedback(product_id);
 -- Stores media (images, videos) associated with products.
 -- Relationship: One-to-Many (a product can have multiple media type entries)
 -- Admin: Uploads and manages media for products.
+
 CREATE TABLE product_media (
-id SERIAL PRIMARY KEY,                   -- Unique identifier for each media entry
-product_id INTEGER NOT NULL,             -- ID of the product associated with the media
-organisation_id UUID NOT NULL,        -- ID of the organisation that owns the product media
-media_type VARCHAR(10) CHECK (media_type IN ('image', 'video')), -- Type of media
-media_url VARCHAR(255) NOT NULL,         -- URL of the media
-is_primary BOOLEAN DEFAULT FALSE,        -- Indicates if this media is the primary image/video
-is_active BOOLEAN DEFAULT TRUE,          -- Status of the product (active or inactive)
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the product was last updated
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp when media was added
+id SERIAL PRIMARY KEY,                   		-- Unique identifier for each media entry
+product_id INTEGER NOT NULL,             		-- ID of the product associated with the media
+organisation_id UUID NOT NULL,        			-- ID of the organisation that owns the product media
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 	-- Timestamp when media was added
 );
 
+CREATE TABLE product_media_content (
+id SERIAL PRIMARY KEY,                   							-- Unique identifier for each media entry
+product_media_id INTEGER REFERENCES product_media(id),
+product_id INTEGER NOT NULL,             							-- ID of the product associated with the media
+organisation_id UUID NOT NULL,        								-- ID of the organisation that owns the product media
+media_type VARCHAR(10) CHECK (media_type IN ('image', 'video')), 	-- Type of media
+media_url VARCHAR(255) NOT NULL,         							-- URL of the media
+is_primary BOOLEAN DEFAULT FALSE,        							-- Indicates if this media is the primary image/video
+is_active BOOLEAN DEFAULT TRUE,          							-- Status of the product (active or inactive)
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 					-- Timestamp when the product was last updated
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 						-- Timestamp when media was added
+);
 
 
 

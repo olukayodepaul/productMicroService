@@ -2,13 +2,15 @@ package com.dart.product.repository;
 
 import com.dart.product.dto_model.product_comments_model.FetchAllProductCommentModel;
 import com.dart.product.dto_model.product_comments_model.FetchProductCommentModel;
+import com.dart.product.dto_model.product_media_model.FetchPageProductMediaModel;
+import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
 import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import com.dart.product.dto_model.product_feedback.FetchAllProductFeedBackModel;
 import com.dart.product.dto_model.product_feedback.FetchProductFeedBackModel;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
 import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.dto_model.product_media_model.FetchProductMediaModel;
-import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
+import com.dart.product.entity.prodct_media.ProductContentMediaCacheEntity;
 import com.dart.product.dto_model.product_dto_model.FetchAllProductsResModel;
 import com.dart.product.dto_model.product_dto_model.FetchProductsResModel;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
@@ -52,8 +54,8 @@ public class RedisProductCacheRepo {
     private final RedisTemplate<String, Object> redisTemplate;
     private final FilterService filterService;
     private final ObjectMapper objectMapper;
-
     private static final String PRODUCT_KEY = "product";
+    private static final String PRODUCT_MEDIA_CONTENT_KEY = "product_media_content";
     private static final String PRODUCT_MEDIA_KEY = "product_media";
     private static final String PRODUCT_SPECIFICATION_KEY = "product_specification";
     private static final String SHIPPING_DETAILS_KEY = "shipping_details";
@@ -104,16 +106,11 @@ public class RedisProductCacheRepo {
     //product
     public Boolean saveUpdateProduct(ProductCacheEntity product) {
         try {
-            // Sub-key for identifying the user by their email
             String subKey = product.getId().toString();
             String primaryKey =  PRODUCT_KEY +"_"+ product.getOrganisation_id();
-            // Save or update user details in Redis hash
             redisTemplate.opsForHash().put(primaryKey, subKey, product);
-
-            // Return success
             return SAVE_UPDATE_SUCCESS;
         } catch (Exception e) {
-            // Log the error and return failure response
             logger.error("RedisCacheRepo::saveUpdateProduct  {}", e.getMessage());
             return SAVE_UPDATE_FAILED;
         }
@@ -179,16 +176,11 @@ public class RedisProductCacheRepo {
     //save record for product comment
     public Boolean saveUpdateProductComment(ProductCommentCacheEntity productComment) {
         try {
-            // Sub-key for identifying the user by their email
             String subKey = productComment.getId().toString();
             String primaryKey =  PRODUCT_COMMENT_KEY +"_"+ productComment.getOrganisationId() +"_"+ productComment.getProductId();
-            // Save or update user details in Redis hash
             redisTemplate.opsForHash().put(primaryKey, subKey, productComment);
-
-            // Return success
             return SAVE_UPDATE_SUCCESS;
         } catch (Exception e) {
-            // Log the error and return failure response
             logger.error("RedisCacheRepo::saveUpdateProductComment  {}", e.getMessage());
             return SAVE_UPDATE_FAILED;
         }
@@ -301,12 +293,22 @@ public class RedisProductCacheRepo {
     }
 
     //The start of product media catch
+    public Boolean saveUpdateProductMediaContent(ProductContentMediaCacheEntity productMedia) {
+        try {
+            String subKey = productMedia.getId().toString();
+            String primaryKey =  PRODUCT_MEDIA_CONTENT_KEY +"_"+ productMedia.getOrganisation_id() +"_"+ productMedia.getProduct_id();
+            redisTemplate.opsForHash().put(primaryKey, subKey, productMedia);
+            return SAVE_UPDATE_SUCCESS;
+        } catch (Exception e) {
+            logger.error("RedisCacheRepo::saveUpdateProductMediaContent  {}", e.getMessage());
+            return SAVE_UPDATE_FAILED;
+        }
+    }
+
     public Boolean saveUpdateProductMedia(ProductMediaCacheEntity productMedia) {
         try {
-            // Sub-key for identifying the user by their email
             String subKey = productMedia.getId().toString();
             String primaryKey =  PRODUCT_MEDIA_KEY +"_"+ productMedia.getOrganisation_id() +"_"+ productMedia.getProduct_id();
-            // Save or update user details in Redis hash
             redisTemplate.opsForHash().put(primaryKey, subKey, productMedia);
 
             // Return success
@@ -322,30 +324,30 @@ public class RedisProductCacheRepo {
         try {
 
             String subKey = mediaId.toString();
-            String primaryKey =  PRODUCT_MEDIA_KEY +"_"+ organisationId +"_"+ productId;
+            String primaryKey =  PRODUCT_MEDIA_CONTENT_KEY +"_"+ organisationId +"_"+ productId;
             Object cachedObject = redisTemplate.opsForHash().get(primaryKey, subKey);
 
             if (cachedObject == null) {
                 return new FetchProductMediaModel(false,  "No user found in redis", null);
             }
-            ProductMediaCacheEntity cacheModel = objectMapper.convertValue(cachedObject, ProductMediaCacheEntity.class);
+            ProductContentMediaCacheEntity cacheModel = objectMapper.convertValue(cachedObject, ProductContentMediaCacheEntity.class);
             return new FetchProductMediaModel(true, "", cacheModel);
 
         } catch (Exception e) {
             logger.error("RedisCacheService::findOneProductMedia - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
-            return new FetchProductMediaModel(false, e.getMessage(), new ProductMediaCacheEntity());
+            return new FetchProductMediaModel(false, e.getMessage(), new ProductContentMediaCacheEntity());
         }
     }
 
     public FetchAllProductMediaModel findAllProductMedia(String organisationId, String productId) {
         try {
-            String key = PRODUCT_MEDIA_KEY + "_" + organisationId + "_" + productId;
+            String key = PRODUCT_MEDIA_CONTENT_KEY + "_" + organisationId + "_" + productId;
             Map<Object, Object> productMediaMap = redisTemplate.opsForHash().entries(key);
 
             if (!productMediaMap.isEmpty()) {
-                List<ProductMediaCacheEntity> productMedia = productMediaMap.values().stream()
-                        .map(value -> objectMapper.convertValue(value, ProductMediaCacheEntity.class))
-                        .sorted(Comparator.comparing(ProductMediaCacheEntity::getMedia_url))
+                List<ProductContentMediaCacheEntity> productMedia = productMediaMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductContentMediaCacheEntity.class))
+                        .sorted(Comparator.comparing(ProductContentMediaCacheEntity::getMedia_url))
                         .collect(Collectors.toList());
                 return new FetchAllProductMediaModel(true, "Media fetched successfully", productMedia);
             }
@@ -359,14 +361,38 @@ public class RedisProductCacheRepo {
 
     public FetchAllProductMediaModel findAllProductMediaByOrganisationId(String organisationId) {
         try {
-            String keyPattern = PRODUCT_MEDIA_KEY + "_" + organisationId + "_*";
-            Set<String> keys = redisTemplate.keys(keyPattern); // Fetch all matching keys
+
+            String keyPattern = PRODUCT_MEDIA_CONTENT_KEY + "_" + organisationId + "_*";
+            Set<String> keys = redisTemplate.keys(keyPattern);
 
             if (keys != null && !keys.isEmpty()) {
-                List<ProductMediaCacheEntity> productMediaList = keys.stream()
+                List<ProductContentMediaCacheEntity> productMediaList = keys.stream()
                         .flatMap(matchedKey -> redisTemplate.opsForHash().entries(matchedKey).values().stream())
-                        .map(value -> objectMapper.convertValue(value, ProductMediaCacheEntity.class))
-                        .sorted(Comparator.comparing(ProductMediaCacheEntity::getMedia_url))
+                        .map(value -> objectMapper.convertValue(value, ProductContentMediaCacheEntity.class))
+                        .sorted(Comparator.comparing(ProductContentMediaCacheEntity::getMedia_url))
+                        .collect(Collectors.toList());
+
+                return new FetchAllProductMediaModel(true, "Media fetched successfully", productMediaList);
+            }
+
+            return new FetchAllProductMediaModel(false, "No media found", Collections.emptyList());
+        } catch (Exception e) {
+            logger.error("FetchAllProductMediaModel::findAllProductMediaByOrganisationId {}: {}", organisationId, e.getMessage());
+            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+    public FetchAllProductMediaModel findOnlyFilteredProductMediaByOrganisationId(String organisationId, List<Integer> productIds) {
+        try {
+            String keyPattern = PRODUCT_MEDIA_CONTENT_KEY + "_" + organisationId + "_*";
+            Set<String> keys = redisTemplate.keys(keyPattern);
+
+            if (keys != null && !keys.isEmpty()) {
+                List<ProductContentMediaCacheEntity> productMediaList = keys.stream()
+                        .flatMap(matchedKey -> redisTemplate.opsForHash().entries(matchedKey).values().stream())
+                        .map(value -> objectMapper.convertValue(value, ProductContentMediaCacheEntity.class))
+                        .filter(media -> productIds.contains(media.getProduct_id()))
+                        .sorted(Comparator.comparing(ProductContentMediaCacheEntity::getMedia_url))
                         .collect(Collectors.toList());
 
                 return new FetchAllProductMediaModel(true, "Media fetched successfully", productMediaList);
@@ -376,6 +402,28 @@ public class RedisProductCacheRepo {
         } catch (Exception e) {
             logger.error("Error fetching media for organisationId {}: {}", organisationId, e.getMessage());
             return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+        }
+    }
+
+    public FetchPageProductMediaModel findPagingProductMediaByOrganisationId(String organisationId) {
+        try {
+
+            String keyPattern = PRODUCT_MEDIA_KEY + "_" + organisationId + "_*";
+            Set<String> keys = redisTemplate.keys(keyPattern);
+
+            if (keys != null && !keys.isEmpty()) {
+                List<ProductMediaCacheEntity> productMediaList = keys.stream()
+                        .flatMap(matchedKey -> redisTemplate.opsForHash().entries(matchedKey).values().stream())
+                        .map(value -> objectMapper.convertValue(value, ProductMediaCacheEntity.class))
+                        .collect(Collectors.toList());
+
+                return new FetchPageProductMediaModel(true, "Media fetched successfully", productMediaList);
+            }
+
+            return new FetchPageProductMediaModel(false, "No media found", Collections.emptyList());
+        } catch (Exception e) {
+            logger.error("ProductMediaCacheEntity::findPagingProductMediaByOrganisationId {}: {}", organisationId, e.getMessage());
+            return new FetchPageProductMediaModel(false, e.getMessage(), Collections.emptyList());
         }
     }
 

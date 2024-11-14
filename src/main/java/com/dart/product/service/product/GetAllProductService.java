@@ -41,10 +41,10 @@ public class GetAllProductService {
         validateRequestToken(authToken);
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
+        validateBruteForceProtection(userId.toString());
         String roles = jwtService.extractRole(jwtToken);
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
         validationUserRole(roles);
-        validateBruteForceProtection(userId.toString());
 
         limit = getValidLimit(limit);
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));
@@ -69,11 +69,9 @@ public class GetAllProductService {
             pagination = buildPaginationMetadataFromCache(totalProducts, limit, offset);
 
         } else {
-
             Page<ProductDbEntity> productPage = findByOrganisationIdAndIsActive(organisationId, pageable);
             itemFilter = productPage.getContent();
             pagination = buildPaginationMetadataFromRepo(productPage);
-
         }
 
         List<AllProductResDTO.Product> productList = itemFilter.stream()

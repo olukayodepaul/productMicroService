@@ -1,6 +1,8 @@
 package com.dart.product.mapper;
 
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.ProductContentMediaCacheEntity;
 import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
 import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
@@ -322,7 +324,7 @@ public class ProductMappers {
     }
 
     //product media
-    public ProductMediaResDTO toProductMediaResponse(MediaDbEntity productMedia, String message) {
+    public ProductMediaResDTO toProductMediaResponse(MediaContentDbEntity productMedia, String message) {
         return ProductMediaResDTO.builder()
                 .status(true)
                 .message(message)
@@ -341,7 +343,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductMediaResDTO toProductMediaToResDTO(ProductMediaCacheEntity productMedia, String message) {
+    public ProductMediaResDTO toProductMediaToResDTO(ProductContentMediaCacheEntity productMedia, String message) {
         return ProductMediaResDTO.builder()
                 .status(true)
                 .message(message)
@@ -360,9 +362,10 @@ public class ProductMappers {
                 .build();
     }
 
-    public MediaDbEntity toProductMedia(MediaUploadReqModel mediaData) {
-        return MediaDbEntity.builder()
+    public MediaContentDbEntity toProductMedia(MediaUploadReqModel mediaData) {
+        return MediaContentDbEntity.builder()
                 .id(mediaData.getId())
+                .product_media_id(mediaData.getProduct_media_id())
                 .productId(mediaData.getProduct_id())
                 .organisationId(mediaData.getOrganisation_id())
                 .mediaType(mediaData.getMedia_type())
@@ -374,7 +377,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public PrimaryProductResDTO productMediaBuilder(MediaDbEntity newMedia, MediaDbEntity oldMedia, String message) {
+    public PrimaryProductResDTO productMediaBuilder(MediaContentDbEntity newMedia, MediaContentDbEntity oldMedia, String message) {
         return PrimaryProductResDTO.builder()
                 .status(true)
                 .message(message)
@@ -403,7 +406,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public GetSpecMediaDTO getAllSpecificMedia(List<ProductMediaCacheEntity> reqBody, String message) {
+    public GetSpecMediaDTO getAllSpecificMedia(List<ProductContentMediaCacheEntity> reqBody, String message) {
         return GetSpecMediaDTO.builder()
                 .status(true)
                 .message(message)
@@ -422,9 +425,10 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductMediaCacheEntity toCacheProductMedia(MediaDbEntity productMedia) {
-        return ProductMediaCacheEntity.builder()
+    public ProductContentMediaCacheEntity toCacheProductMedia(MediaContentDbEntity productMedia) {
+        return ProductContentMediaCacheEntity.builder()
                 .id(productMedia.getId())
+                .product_media_id(productMedia.getProduct_media_id())
                 .product_id(productMedia.getProductId())
                 .organisation_id(productMedia.getOrganisationId())
                 .media_type(productMedia.getMediaType())
@@ -436,10 +440,11 @@ public class ProductMappers {
                 .build();
     }
 
-    public List<ProductMediaCacheEntity> mapProductMedia(List<MediaDbEntity> productMedia) {
-        return productMedia.stream().map(media -> ProductMediaCacheEntity
+    public List<ProductContentMediaCacheEntity> mapProductMedia(List<MediaContentDbEntity> productMedia) {
+        return productMedia.stream().map(media -> ProductContentMediaCacheEntity
                 .builder()
                 .id(media.getId())
+                .product_media_id(media.getProduct_media_id())
                 .product_id(media.getProductId())
                 .organisation_id(media.getOrganisationId())
                 .media_type(media.getMediaType())
@@ -452,11 +457,12 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
-    public List<MediaDbEntity> mapProductMediaCacheToProductDTO(List<ProductMediaCacheEntity> productMedia) {
-        return productMedia.stream().map(media -> MediaDbEntity
+    public List<MediaContentDbEntity> mapProductMediaCacheToProductDTO(List<ProductContentMediaCacheEntity> productMedia) {
+        return productMedia.stream().map(media -> MediaContentDbEntity
                 .builder()
                 .id(media.getId())
                 .productId(media.getProduct_id())
+                .product_media_id(media.getProduct_id())
                 .organisationId(media.getOrganisation_id())
                 .mediaType(media.getMedia_type())
                 .mediaUrl(media.getMedia_url())
@@ -468,9 +474,20 @@ public class ProductMappers {
         ).collect(Collectors.toList());
     }
 
-    public Page<MediaDbEntity> mapToAllProductMediaToPage(List<ProductMediaCacheEntity> reqModel, Pageable pageable) {
-        List<MediaDbEntity> productDbEntities = reqModel.stream()
-                .map(media -> MediaDbEntity.builder()
+    public List<MediaDbEntity> mapProductMediaCachePage(List<ProductMediaCacheEntity> productMedia) {
+        return productMedia.stream().map(media -> MediaDbEntity
+                .builder()
+                .id(media.getId())
+                .productId(media.getProduct_id())
+                .organisationId(media.getOrganisation_id())
+                .createdAt(media.getCreated_at())
+                .build()
+        ).collect(Collectors.toList());
+    }
+
+    public List<MediaContentDbEntity> mapToAllProductMediaToPage(List<ProductContentMediaCacheEntity> reqModel) {
+        return reqModel.stream()
+                .map(media -> MediaContentDbEntity.builder()
                         .id(media.getId())
                         .productId(media.getProduct_id())
                         .organisationId(media.getOrganisation_id())
@@ -482,17 +499,16 @@ public class ProductMappers {
                         .createdAt(media.getCreated_at())
                         .build())
                 .collect(Collectors.toList());
-        return new PageImpl<>(productDbEntities, pageable, reqModel.size());
     }
 
-    public GetAllMediaDTO mapProductMediaEntityProductDTO(List<MediaDbEntity> productMedia, String message) {
-        List<MediaDbEntity> image = productMedia.stream()
+    public GetAllMediaDTO mapProductMediaEntityProductDTO(List<MediaContentDbEntity> productMedia, String message) {
+        List<MediaContentDbEntity> image = productMedia.stream()
                 .filter(filter -> filter.getMediaType().equalsIgnoreCase("image"))
-                .sorted(Comparator.comparing(MediaDbEntity::getId))
+                .sorted(Comparator.comparing(MediaContentDbEntity::getId))
                 .toList();
-        List<MediaDbEntity> video = productMedia.stream()
+        List<MediaContentDbEntity> video = productMedia.stream()
                 .filter(filter -> filter.getMediaType().equalsIgnoreCase("video"))
-                .sorted(Comparator.comparing((MediaDbEntity::getId)))
+                .sorted(Comparator.comparing((MediaContentDbEntity::getId)))
                 .toList();
         return GetAllMediaDTO.builder()
                 .status(true)
@@ -522,29 +538,20 @@ public class ProductMappers {
     }
 
     public GetProductMediaByOrganisationResDTO mapProductMediaByOrganisation(
-            List<MediaDbEntity> productMedia,
+            List<MediaContentDbEntity> productMedia,
             GetProductMediaByOrganisationResDTO.PaginationMetadata pagination,
             String message) {
-
-        // Apply pagination only to the product_media list
-        int totalProducts = productMedia.size();
-        int start = Math.min(pagination.getPreviousOffset() != null ? pagination.getPreviousOffset() : 0, totalProducts);
-        int end = Math.min(start + pagination.getPageSize(), totalProducts);
-
-        List<MediaDbEntity> paginatedProducts = productMedia.subList(start, end);
 
         return GetProductMediaByOrganisationResDTO.builder()
                 .status(true)
                 .message(message)
-                .product_media(paginatedProducts.stream()
-                        .sorted(Comparator.comparing(MediaDbEntity::getId))
-                        .collect(Collectors.groupingBy(MediaDbEntity::getProductId))
+                .product_media(productMedia.stream()
+                        .collect(Collectors.groupingBy(MediaContentDbEntity::getProductId))
                         .entrySet()
                         .stream()
                         .map(entry -> {
                             Integer productId = entry.getKey();
-                            List<MediaDbEntity> mediaList = entry.getValue();
-
+                            List<MediaContentDbEntity> mediaList = entry.getValue();
                             return GetProductMediaByOrganisationResDTO.ProductMedia.builder()
                                     .product_id(productId)
                                     .is_active(mediaList.getFirst().getIsActive())
@@ -579,53 +586,15 @@ public class ProductMappers {
                 .build();
     }
 
+    public ProductMediaCacheEntity mapProductMediaCacheEntityToMediaDbEntity(MediaDbEntity productMedia) {
+        return ProductMediaCacheEntity.builder()
+                .id(productMedia.getId())
+                .product_id(productMedia.getProductId())
+                .organisation_id(productMedia.getOrganisationId())
+                .created_at(productMedia.getCreatedAt())
+                .build();
+    }
 
-//    public GetProductMediaByOrganisationResDTO mapProductMediaByOrganisation(
-//            List<MediaDbEntity> productMedia, GetProductMediaByOrganisationResDTO.PaginationMetadata pagination,  String message) {
-//        return GetProductMediaByOrganisationResDTO.builder()
-//                .status(true)
-//                .message(message)
-//                .product_media(productMedia.stream()
-//                        .sorted(Comparator.comparing(MediaDbEntity::getId))
-//                        .collect(Collectors.groupingBy(MediaDbEntity::getProductId))
-//                        .entrySet()
-//                        .stream()
-//                        .map(entry -> {
-//                            Integer productId = entry.getKey();
-//                            List<MediaDbEntity> mediaList = entry.getValue();
-//                            return GetProductMediaByOrganisationResDTO.ProductMedia.builder()
-//                                    .product_id(productId)
-//                                    .is_active(mediaList.getFirst().getIsActive())
-//                                    .image_media_type(mediaList.stream()
-//                                            .filter(media -> "image".equalsIgnoreCase(media.getMediaType()))
-//                                            .map(image -> GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia.builder()
-//                                                    .id(image.getId())
-//                                                    .is_primary(image.getIsPrimary())
-//                                                    .media_type(image.getMediaType())
-//                                                    .media_url(image.getMediaUrl())
-//                                                    .updated_at(image.getUpdatedAt())
-//                                                    .created_at(image.getCreatedAt())
-//                                                    .build())
-//                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia::getId)))
-//                                            .collect(Collectors.toList()))
-//                                    .video_media_type(mediaList.stream()
-//                                            .filter(media -> "video".equalsIgnoreCase(media.getMediaType()))
-//                                            .map(video -> GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia.builder()
-//                                                    .id(video.getId())
-//                                                    .is_primary(video.getIsPrimary())
-//                                                    .media_type(video.getMediaType())
-//                                                    .media_url(video.getMediaUrl())
-//                                                    .updated_at(video.getUpdatedAt())
-//                                                    .created_at(video.getCreatedAt())
-//                                                    .build())
-//                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia::getId)))
-//                                            .collect(Collectors.toList()))
-//                                    .build();
-//                        })
-//                        .collect(Collectors.toList()))
-//                .pagination(pagination)
-//                .build();
-//    }
 
 //    public GetSpecMediaDTO getAllSpecificMedia(List<ProductMediaCacheEntity> reqBody, String message) {
 //        return GetSpecMediaDTO.builder()

@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 public class SaveAndUpdateRecord {
 
     private final ProductsRepo productsRepo;
-    private final ProductMediaRepo productMediaRepo;
+    private final ProductMediaContentRepo productMediaRepo;
     private final ProductSpecificationRepo productSpecificationRepo;
     private final ShippingDetailsRepo shippingDetailsRepo;
     private final ProductPolicyRepo productPolicyRepo;
@@ -34,7 +34,7 @@ public class SaveAndUpdateRecord {
     private final ProductCommentRepo productCommentRepo;
     private final ProductFeedBackRepo productFeedBackRepo;
 
-    public SaveAndUpdateRecord(ProductsRepo productsRepo, ProductMediaRepo productMediaRepo, ProductSpecificationRepo productSpecificationRepo, ShippingDetailsRepo shippingDetailsRepo, ProductPolicyRepo productPolicyRepo, ProductReviewRepo productReviewRepo, RelatedProductsRepo relatedProductsRepo, SpecialOffersRepo specialOffersRepo, ProductTagRepo productTagRepo, ProductCommentRepo productCommentRepo, ProductFeedBackRepo productFeedBackRepo) {
+    public SaveAndUpdateRecord(ProductsRepo productsRepo, ProductMediaContentRepo productMediaRepo, ProductSpecificationRepo productSpecificationRepo, ShippingDetailsRepo shippingDetailsRepo, ProductPolicyRepo productPolicyRepo, ProductReviewRepo productReviewRepo, RelatedProductsRepo relatedProductsRepo, SpecialOffersRepo specialOffersRepo, ProductTagRepo productTagRepo, ProductCommentRepo productCommentRepo, ProductFeedBackRepo productFeedBackRepo) {
         this.productsRepo = productsRepo;
         this.productMediaRepo = productMediaRepo;
         this.productSpecificationRepo = productSpecificationRepo;

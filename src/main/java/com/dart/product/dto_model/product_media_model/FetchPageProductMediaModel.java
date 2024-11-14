@@ -1,7 +1,10 @@
 package com.dart.product.dto_model.product_media_model;
 
 import com.dart.product.entity.prodct_media.ProductContentMediaCacheEntity;
+import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
 import lombok.*;
+
+import java.util.List;
 
 
 @Data
@@ -10,8 +13,8 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FetchProductMediaModel {
+public class FetchPageProductMediaModel {
     private Boolean status;
     private String message;
-    private ProductContentMediaCacheEntity productMedia;
+    private List<ProductMediaCacheEntity> productMedia;
 }

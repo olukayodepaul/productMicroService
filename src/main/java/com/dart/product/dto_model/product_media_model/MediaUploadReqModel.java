@@ -20,6 +20,7 @@ public class MediaUploadReqModel {
     //not part of the request
 
     private Integer id;
+    private Integer product_media_id;
     private UUID organisation_id;
     private Integer product_id;
     private String media_type;

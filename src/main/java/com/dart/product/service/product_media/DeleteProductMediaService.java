@@ -2,9 +2,9 @@ package com.dart.product.service.product_media;
 
 import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;
 import com.dart.product.dto_model.product_media_model.SaveAndUpdateMediaResponse;
-import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.mapper.ProductMappers;
-import com.dart.product.repository.ProductMediaRepo;
+import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -23,7 +23,7 @@ public class DeleteProductMediaService {
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
     private final RedisProductCacheRepo redisProductCacheRepo;
-    private final ProductMediaRepo productMediaRepo;
+    private final ProductMediaContentRepo productMediaRepo;
 
     public DeleteProductMediaService(
             UtilitiesManager utilitiesManager,
@@ -31,7 +31,7 @@ public class DeleteProductMediaService {
             FilterService jwtService,
             ProductMappers productMappers,
             RedisProductCacheRepo redisProductCacheRepo,
-            ProductMediaRepo productMediaRepo
+            ProductMediaContentRepo productMediaRepo
     ) {
         this.utilitiesManager = utilitiesManager;
         this.validationUtils = validationUtils;
@@ -53,7 +53,7 @@ public class DeleteProductMediaService {
         validMediaId(mediaId);
         validateUserRole(roles);
 
-        MediaDbEntity getPersistedProduct = getPersistedProductMedia(mediaId, organisationId);
+        MediaContentDbEntity getPersistedProduct = getPersistedProductMedia(mediaId, organisationId);
         validateIfPrimaryMedia(getPersistedProduct.getIsPrimary());
 
         getPersistedProduct.setUpdatedAt(LocalDateTime.now());
@@ -61,7 +61,7 @@ public class DeleteProductMediaService {
         SaveAndUpdateMediaResponse persistRecord = saveProductMedia(getPersistedProduct);
         checkIfRecordPersisted(persistRecord);
 
-        boolean cacheResult = redisProductCacheRepo.saveUpdateProductMedia(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
+        boolean cacheResult = redisProductCacheRepo.saveUpdateProductMediaContent(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
         checkIfRecordCache(cacheResult);
 
         return new ResponseEntity<>(productMappers.toProductMediaResponse(persistRecord.getProductMedia(), AppConfig.DELETE_MEDIA_UPDATED_RESPONSE), HttpStatus.OK);
@@ -103,7 +103,7 @@ public class DeleteProductMediaService {
         }
     }
 
-    private MediaDbEntity getPersistedProductMedia(Integer mediaId, UUID organisationId) {
+    private MediaContentDbEntity getPersistedProductMedia(Integer mediaId, UUID organisationId) {
         return productMediaRepo.findByIdAndOrganisationIdAndIsActive(mediaId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 
@@ -112,11 +112,11 @@ public class DeleteProductMediaService {
                 ));
     }
 
-    private SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails) {
+    private SaveAndUpdateMediaResponse saveProductMedia(MediaContentDbEntity regDetails) {
         try {
             return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
         } catch (Exception e) {
-            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaDbEntity.builder().build());
+            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaContentDbEntity.builder().build());
         }
     }
 

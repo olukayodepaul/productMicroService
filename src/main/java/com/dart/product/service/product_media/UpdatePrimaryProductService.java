@@ -3,9 +3,9 @@ package com.dart.product.service.product_media;
 
 import com.dart.product.dto_model.product_media_model.PrimaryProductResDTO;
 import com.dart.product.dto_model.product_media_model.SaveAndUpdateMediaResponse;
-import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.mapper.ProductMappers;
-import com.dart.product.repository.ProductMediaRepo;
+import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -23,7 +23,7 @@ public class UpdatePrimaryProductService {
     private final UtilitiesManager utilitiesManager;
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
-    private final ProductMediaRepo productMediaRepo;
+    private final ProductMediaContentRepo productMediaRepo;
     private final RedisProductCacheRepo redisProductCacheRepo;
 
     public UpdatePrimaryProductService(
@@ -31,7 +31,7 @@ public class UpdatePrimaryProductService {
             ValidationUtils validationUtils,
             FilterService jwtService,
             ProductMappers productMappers,
-            ProductMediaRepo productMediaRepo,
+            ProductMediaContentRepo productMediaRepo,
             RedisProductCacheRepo redisProductCacheRepo
     ) {
         this.utilitiesManager = utilitiesManager;
@@ -56,9 +56,9 @@ public class UpdatePrimaryProductService {
         validMediaId(mediaId);
         validateUserRole(roles);
 
-        MediaDbEntity setToCurrentMedia = findPreviousPrimaryMedia(mediaId, productId, organisationId);
+        MediaContentDbEntity setToCurrentMedia = findPreviousPrimaryMedia(mediaId, productId, organisationId);
         validateIfRecordIfPrimaryMedia(setToCurrentMedia.getIsPrimary());
-        MediaDbEntity setToPreviousMedia = findCurrentPrimaryMedia(productId, organisationId, setToCurrentMedia.getMediaType());
+        MediaContentDbEntity setToPreviousMedia = findCurrentPrimaryMedia(productId, organisationId, setToCurrentMedia.getMediaType());
 
         setToCurrentMedia.setUpdatedAt(LocalDateTime.now());
         setToCurrentMedia.setIsPrimary(true);
@@ -68,10 +68,10 @@ public class UpdatePrimaryProductService {
         setToPreviousMedia.setUpdatedAt(LocalDateTime.now());
         saveProductMedia(setToPreviousMedia);
 
-        boolean cacheCurrentMedia = redisProductCacheRepo.saveUpdateProductMedia(productMappers.toCacheProductMedia(setToCurrentMedia));
+        boolean cacheCurrentMedia = redisProductCacheRepo.saveUpdateProductMediaContent(productMappers.toCacheProductMedia(setToCurrentMedia));
         checkIfRecordCache(cacheCurrentMedia);
 
-        boolean cachePreviousMedia = redisProductCacheRepo.saveUpdateProductMedia(productMappers.toCacheProductMedia(setToPreviousMedia));
+        boolean cachePreviousMedia = redisProductCacheRepo.saveUpdateProductMediaContent(productMappers.toCacheProductMedia(setToPreviousMedia));
         checkIfRecordCache(cachePreviousMedia);
 
         return new ResponseEntity<>(productMappers.productMediaBuilder(setToCurrentMedia, setToPreviousMedia, AppConfig.PRODUCT_PRIMARY_MEDIA_UPDATED_RESPONSE), HttpStatus.OK);
@@ -116,7 +116,7 @@ public class UpdatePrimaryProductService {
         validationUtils.mediaIdValidation(mediaId);
     }
 
-    private MediaDbEntity findPreviousPrimaryMedia(Integer mediaId, Integer productId, UUID organisationId) {
+    private MediaContentDbEntity findPreviousPrimaryMedia(Integer mediaId, Integer productId, UUID organisationId) {
         return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 
@@ -125,7 +125,7 @@ public class UpdatePrimaryProductService {
                 ));
     }
 
-    private MediaDbEntity findCurrentPrimaryMedia(Integer productId, UUID organisationId, String mediaType) {
+    private MediaContentDbEntity findCurrentPrimaryMedia(Integer productId, UUID organisationId, String mediaType) {
         return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, mediaType, true, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.UPDATE_RESOURCES_RESPONSE),
@@ -133,11 +133,11 @@ public class UpdatePrimaryProductService {
                 ));
     }
 
-    private SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails) {
+    private SaveAndUpdateMediaResponse saveProductMedia(MediaContentDbEntity regDetails) {
         try {
             return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
         } catch (Exception e) {
-            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaDbEntity.builder().build());
+            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaContentDbEntity.builder().build());
         }
     }
 

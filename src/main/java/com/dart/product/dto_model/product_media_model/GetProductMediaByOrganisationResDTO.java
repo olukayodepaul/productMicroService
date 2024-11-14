@@ -2,7 +2,6 @@ package com.dart.product.dto_model.product_media_model;
 
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,7 +16,7 @@ public class GetProductMediaByOrganisationResDTO {
     private boolean status;
     private String message;
     private List<ProductMedia> product_media;
-    private PaginationMetadata pagination; // Pagination applies here, not on media types.
+    private PaginationMetadata pagination;
 
     @Builder
     @Data
@@ -70,4 +69,5 @@ public class GetProductMediaByOrganisationResDTO {
         private boolean hasPreviousPage;
         private boolean hasNextPage;
     }
+
 }

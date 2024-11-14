@@ -2,8 +2,9 @@ package com.dart.product.service.product_media;
 
 import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.dto_model.product_media_model.GetAllMediaDTO;
-import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.mapper.ProductMappers;
+import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
@@ -23,6 +24,7 @@ public class GetProductMediaByProductIdService {
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
     private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ProductMediaContentRepo productMediaContentRepo;
     private final ProductMediaRepo productMediaRepo;
 
     public GetProductMediaByProductIdService(
@@ -31,6 +33,7 @@ public class GetProductMediaByProductIdService {
             FilterService jwtService,
             ProductMappers productMappers,
             RedisProductCacheRepo redisProductCacheRepo,
+            ProductMediaContentRepo productMediaContentRepo,
             ProductMediaRepo productMediaRepo
     ) {
         this.utilitiesManager = utilitiesManager;
@@ -38,6 +41,7 @@ public class GetProductMediaByProductIdService {
         this.jwtService = jwtService;
         this.productMappers = productMappers;
         this.redisProductCacheRepo = redisProductCacheRepo;
+        this.productMediaContentRepo = productMediaContentRepo;
         this.productMediaRepo = productMediaRepo;
     }
 
@@ -56,11 +60,11 @@ public class GetProductMediaByProductIdService {
         FetchAllProductMediaModel cachedProductMedia = redisProductCacheRepo.findAllProductMedia(organisationId.toString(), productId.toString());
 
         if (cachedProductMedia.getStatus()) {
-            List<MediaDbEntity> mapResult = productMappers.mapProductMediaCacheToProductDTO(cachedProductMedia.getProductMedia());
+            List<MediaContentDbEntity> mapResult = productMappers.mapProductMediaCacheToProductDTO(cachedProductMedia.getProductMedia());
             return new ResponseEntity<>(productMappers.mapProductMediaEntityProductDTO(mapResult, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
         }
 
-        List<MediaDbEntity> getPersistedProduct = getPersistedProductMedia(productId, organisationId);
+        List<MediaContentDbEntity> getPersistedProduct = getPersistedProductMedia(productId, organisationId);
         return new ResponseEntity<>(productMappers.mapProductMediaEntityProductDTO(getPersistedProduct, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
 
     }
@@ -81,12 +85,13 @@ public class GetProductMediaByProductIdService {
         validationUtils.bruteForceProtection(AppConfig.FETCH_PRIMARY_PRODUCT_MEDIA_BY_PRODUCT_ID_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    private List<MediaDbEntity> getPersistedProductMedia(Integer productId, UUID organisationId) {
-        return productMediaRepo.findByProductIdAndOrganisationIdAndIsActiveOrderByIdAsc(productId, organisationId, true)
+    private List<MediaContentDbEntity> getPersistedProductMedia(Integer productId, UUID organisationId) {
+        return productMediaContentRepo.findByProductIdAndOrganisationIdAndIsActiveOrderByIdAsc(productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
                 ));
     }
+
 }

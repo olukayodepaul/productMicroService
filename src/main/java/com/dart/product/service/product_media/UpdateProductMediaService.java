@@ -4,9 +4,9 @@ import com.dart.product.dto_model.product_media_model.MediaUploadReqModel;
 import com.dart.product.dto_model.product_media_model.MediaUploadResponse;
 import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;
 import com.dart.product.dto_model.product_media_model.SaveAndUpdateMediaResponse;
-import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.mapper.ProductMappers;
-import com.dart.product.repository.ProductMediaRepo;
+import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -28,7 +28,7 @@ public class UpdateProductMediaService {
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
     private final RedisProductCacheRepo redisProductCacheRepo;
-    private final ProductMediaRepo productMediaRepo;
+    private final ProductMediaContentRepo productMediaRepo;
 
     public UpdateProductMediaService(
             UtilitiesManager utilitiesManager,
@@ -37,7 +37,7 @@ public class UpdateProductMediaService {
             MediaService mediaService,
             ProductMappers productMappers,
             RedisProductCacheRepo redisProductCacheRepo,
-            ProductMediaRepo productMediaRepo
+            ProductMediaContentRepo productMediaRepo
     ) {
         this.utilitiesManager = utilitiesManager;
         this.validationUtils = validationUtils;
@@ -64,7 +64,7 @@ public class UpdateProductMediaService {
         validateBruteForceProtection(userId.toString());
 
         MediaUploadReqModel mediaData = new MediaUploadReqModel();
-        MediaDbEntity getPersistedMedia = getPersistedProductMedia(mediaId, productId, organisationId);
+        MediaContentDbEntity getPersistedMedia = getPersistedProductMedia(mediaId, productId, organisationId);
 
         compareFormalAgainstCurrentMediaType(utilitiesManager.getFileExtension(file.getOriginalFilename()), getPersistedMedia.getMediaType(), file);
         MediaUploadResponse uploadMedia = mediaService.uploadFile(file);
@@ -85,7 +85,7 @@ public class UpdateProductMediaService {
 
         mediaService.deleteMedia(mediaToDelete);
 
-        boolean cacheResult = redisProductCacheRepo.saveUpdateProductMedia(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
+        boolean cacheResult = redisProductCacheRepo.saveUpdateProductMediaContent(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
         checkIfRecordCache(cacheResult);
 
         return new ResponseEntity<>(productMappers.toProductMediaResponse(persistRecord.getProductMedia(), AppConfig.PRODUCT_MEDIA_UPDATED_RESPONSE), HttpStatus.OK);
@@ -163,12 +163,12 @@ public class UpdateProductMediaService {
         return false;
     }
 
-    private SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails, String deleteMedia) {
+    private SaveAndUpdateMediaResponse saveProductMedia(MediaContentDbEntity regDetails, String deleteMedia) {
         try {
             return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
         } catch (Exception e) {
             mediaService.deleteMedia(deleteMedia);
-            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaDbEntity.builder().build());
+            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaContentDbEntity.builder().build());
         }
     }
 
@@ -181,7 +181,7 @@ public class UpdateProductMediaService {
         }
     }
 
-    private MediaDbEntity getPersistedProductMedia(Integer mediaId, Integer productId, UUID organisationId) {
+    private MediaContentDbEntity getPersistedProductMedia(Integer mediaId, Integer productId, UUID organisationId) {
         return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 

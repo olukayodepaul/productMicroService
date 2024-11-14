@@ -2,8 +2,10 @@ package com.dart.product.service.product_media;
 
 
 import com.dart.product.dto_model.product_media_model.*;
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.entity.prodct_media.MediaDbEntity;
 import com.dart.product.mapper.ProductMappers;
+import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
@@ -19,7 +21,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 
-//first uploaded image or picture if primary image or picture
 @Service
 public class CreateProductMediaService {
 
@@ -35,6 +36,7 @@ public class CreateProductMediaService {
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
     private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ProductMediaContentRepo productMediaContentRepo;
     private final ProductMediaRepo productMediaRepo;
 
     public CreateProductMediaService(
@@ -44,6 +46,7 @@ public class CreateProductMediaService {
             MediaService mediaService,
             ProductMappers productMappers,
             RedisProductCacheRepo redisProductCacheRepo,
+            ProductMediaContentRepo productMediaContentRepo,
             ProductMediaRepo productMediaRepo
     ) {
         this.utilitiesManager = utilitiesManager;
@@ -52,6 +55,7 @@ public class CreateProductMediaService {
         this.mediaService = mediaService;
         this.productMappers = productMappers;
         this.redisProductCacheRepo = redisProductCacheRepo;
+        this.productMediaContentRepo = productMediaContentRepo;
         this.productMediaRepo = productMediaRepo;
     }
 
@@ -59,13 +63,36 @@ public class CreateProductMediaService {
 
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
-        validateBruteForceProtection(userId.toString()); //reduce number of process before brute force protection
+
+        validateBruteForceProtection(userId.toString());
         validateRequestToken(authToken);
         validProductId(productId);
+
         String roles = jwtService.extractRole(jwtToken);
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
         validateUserRole(roles);
+
+        Optional<MediaDbEntity> isProductMediaIdPresentInDb = confirmIfProductMediaContentIsPresentInDb(productId, organisationId);
+        int setProductMediaId = 0;
+
+        if(isProductMediaIdPresentInDb.isPresent()) {
+            setProductMediaId = isProductMediaIdPresentInDb.get().getId();
+        }else{
+
+            MediaDbEntity persistProductMediaId = MediaDbEntity.builder()
+                    .id(0)
+                    .productId(productId)
+                    .organisationId(organisationId)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            ProductMedia getAutoId = saveProductMediaContent(persistProductMediaId);
+            boolean cacheProductMedia = redisProductCacheRepo.saveUpdateProductMedia(productMappers.mapProductMediaCacheEntityToMediaDbEntity(getAutoId.getProductMedia()));
+            checkCacheForMediaContent(cacheProductMedia);
+            setProductMediaId = getAutoId.getProductMedia().getId();
+        }
+
         validateMediaCount(productId, organisationId, file.getContentType().split("/")[0]);
 
         MediaUploadReqModel mediaData = new MediaUploadReqModel();
@@ -81,13 +108,14 @@ public class CreateProductMediaService {
         mediaData.setPrimary(!mediaState);
         mediaData.setOrganisation_id(organisationId);
         mediaData.setProduct_id(productId);
+        mediaData.setProduct_media_id(setProductMediaId);
         mediaData.setId(0);
 
-        SaveAndUpdateMediaResponse persistRecord = saveProductMedia(productMappers.toProductMedia(mediaData),uploadMedia.getFileName());
+        SaveAndUpdateMediaResponse persistRecord = saveProductContentMedia(productMappers.toProductMedia(mediaData),uploadMedia.getFileName());
         checkIfRecordPersisted(persistRecord);
 
-        boolean cacheResult = redisProductCacheRepo.saveUpdateProductMedia(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
-        checkIfRecordCache(cacheResult);
+        boolean cacheResult = redisProductCacheRepo.saveUpdateProductMediaContent(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));
+        checkCacheForMediaContent(cacheResult);
 
         return new ResponseEntity<>(productMappers.toProductMediaResponse(persistRecord.getProductMedia(), AppConfig.PRODUCT_MEDIA_RESPONSE), HttpStatus.CREATED);
     }
@@ -96,7 +124,7 @@ public class CreateProductMediaService {
         validationUtils.validProductId(productId);
     }
 
-    private void checkIfRecordCache(boolean isRecord) {
+    private void checkCacheForMediaContent(boolean isRecord) {
         if (!isRecord) {
             publishKafkaMessage("ProductFeedbackCacheFailure", "Failed to save feedback in cache for product ID: ");
         }
@@ -118,8 +146,8 @@ public class CreateProductMediaService {
         validationUtils.bruteForceProtection(AppConfig.CREATE_PRODUCT_MEDIA_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    private Optional<MediaDbEntity> findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(Integer productId, UUID organisationId, String mediaType) {
-        return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, mediaType, true, true);
+    private Optional<MediaContentDbEntity> findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(Integer productId, UUID organisationId, String mediaType) {
+        return productMediaContentRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, mediaType, true, true);
     }
 
     private void checkIfRecordPersisted(SaveAndUpdateMediaResponse isSave) {
@@ -131,24 +159,35 @@ public class CreateProductMediaService {
         }
     }
 
-    private SaveAndUpdateMediaResponse saveProductMedia(MediaDbEntity regDetails, String deleteMedia) {
+    private SaveAndUpdateMediaResponse saveProductContentMedia(MediaContentDbEntity regDetails, String deleteMedia) {
         try {
-            return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
+            return new SaveAndUpdateMediaResponse(true, "", productMediaContentRepo.save(regDetails));
         } catch (Exception e) {
             mediaService.deleteMedia(deleteMedia);
-            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaDbEntity.builder().build());
+            return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaContentDbEntity.builder().build());
+        }
+    }
+
+    private ProductMedia saveProductMediaContent(MediaDbEntity regDetails) {
+        try {
+            return new ProductMedia(true, "", productMediaRepo.save(regDetails));
+        } catch (Exception e) {
+            return new ProductMedia(false, e.getMessage(), MediaDbEntity.builder().build());
         }
     }
 
     private void validateMediaCount(Integer productId, UUID organisationId, String mediaType) {
-        long currentMediaCount = productMediaRepo.countByProductIdAndOrganisationIdAndMediaTypeAndIsActive(productId, organisationId, mediaType, true);
-        System.out.println(currentMediaCount);
+        long currentMediaCount = productMediaContentRepo.countByProductIdAndOrganisationIdAndMediaTypeAndIsActive(productId, organisationId, mediaType, true);
         if ("image".equalsIgnoreCase(mediaType) && currentMediaCount >= maxImages) {
             throw new CustomRuntimeException(new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), AppConfig.PRODUCT_MEDIA_MAX_IMAGE), HttpStatus.BAD_REQUEST);
         }
         if ("video".equalsIgnoreCase(mediaType) && currentMediaCount >= maxVideos) {
             throw new CustomRuntimeException(new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST), AppConfig.PRODUCT_MEDIA_MAX_VIDEO), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private Optional<MediaDbEntity> confirmIfProductMediaContentIsPresentInDb(Integer productId, UUID organisationId) {
+        return productMediaRepo.findByProductIdAndOrganisationId(productId, organisationId);
     }
 
 }

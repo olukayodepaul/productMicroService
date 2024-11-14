@@ -3,8 +3,11 @@ package com.dart.product.service.product_media;
 
 import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.dto_model.product_media_model.GetProductMediaByOrganisationResDTO;
+import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.entity.prodct_media.MediaDbEntity;
+import com.dart.product.entity.prodct_media.ProductContentMediaCacheEntity;
 import com.dart.product.mapper.ProductMappers;
+import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
@@ -19,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -32,6 +36,7 @@ public class GetAllProductMediaByOrganisation {
     private final ValidationUtils validationUtils;
     private final FilterService jwtService;
     private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ProductMediaContentRepo productMediaContentRepo;
     private final ProductMediaRepo productMediaRepo;
 
     public GetAllProductMediaByOrganisation(
@@ -40,6 +45,7 @@ public class GetAllProductMediaByOrganisation {
             FilterService jwtService,
             ProductMappers productMappers,
             RedisProductCacheRepo redisProductCacheRepo,
+            ProductMediaContentRepo productMediaContentRepo,
             ProductMediaRepo productMediaRepo
     ) {
         this.utilitiesManager = utilitiesManager;
@@ -47,6 +53,7 @@ public class GetAllProductMediaByOrganisation {
         this.jwtService = jwtService;
         this.productMappers = productMappers;
         this.redisProductCacheRepo = redisProductCacheRepo;
+        this.productMediaContentRepo = productMediaContentRepo;
         this.productMediaRepo = productMediaRepo;
     }
 
@@ -66,39 +73,53 @@ public class GetAllProductMediaByOrganisation {
 
         FetchAllProductMediaModel cachedProductMedia = redisProductCacheRepo.findAllProductMediaByOrganisationId(organisationId.toString());
 
-
-        List<MediaDbEntity> itemFilter;
+        List<MediaContentDbEntity> itemFilter;
         GetProductMediaByOrganisationResDTO.PaginationMetadata pagination;
-
 
         if (cachedProductMedia.getStatus()) {
 
-            List<MediaDbEntity> allProducts = productMappers.mapProductMediaCacheToProductDTO(cachedProductMedia.getProductMedia());
+            System.out.println(1);
+
+            List<MediaDbEntity> allProducts = productMappers.mapProductMediaCachePage(redisProductCacheRepo.findPagingProductMediaByOrganisationId(organisationId.toString()).getProductMedia());
+
             int totalProducts = allProducts.size();
             int start = Math.min(offset, totalProducts);
             int end = Math.min(start + limit, totalProducts);
 
-            itemFilter = (start >= totalProducts) ?
+            List<MediaDbEntity>  itemFilters = (start >= totalProducts) ?
                     List.of() :
                     allProducts.subList(start, end);
+
+            List<Integer> productIds = itemFilters.stream()
+                    .map(MediaDbEntity::getProductId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            List<ProductContentMediaCacheEntity> finds = redisProductCacheRepo.findOnlyFilteredProductMediaByOrganisationId(organisationId.toString(), productIds).getProductMedia();
+            itemFilter = productMappers.mapProductMediaCacheToProductDTO(finds);
 
             pagination = buildPaginationMetadataFromCache(totalProducts, limit, offset);
 
         } else {
+
+            System.out.println(2);
+
             Page<MediaDbEntity> persistedProducts = getPersistedProductMedia(organisationId, pageable);
+            List<MediaDbEntity> itemFilters = persistedProducts.getContent();
 
-            System.out.println("Page Content: " + persistedProducts.getContent());
-            System.out.println("Total Elements: " + persistedProducts.getTotalElements());
-            System.out.println("Total Pages: " + persistedProducts.getTotalPages());
-            System.out.println("Current Page: " + persistedProducts.getNumber());
-            System.out.println("Page Size: " + persistedProducts.getSize());
-
-            itemFilter = persistedProducts.getContent();
+            List<Integer> productIds = itemFilters.stream()
+                    .map(MediaDbEntity::getProductId)
+                    .distinct()
+                    .collect(Collectors.toList());
 
             pagination = buildPaginationMetadataFromRepo(persistedProducts);
+            itemFilter  = getPersistedProductMediaContent(organisationId, productIds);
+
         }
 
-        return new ResponseEntity<>(productMappers.mapProductMediaByOrganisation(itemFilter, pagination, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE), HttpStatus.OK);
+        GetProductMediaByOrganisationResDTO result  = productMappers.mapProductMediaByOrganisation(itemFilter, pagination, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+
     }
 
     private void validateRequestToken(String token) {
@@ -117,8 +138,16 @@ public class GetAllProductMediaByOrganisation {
         return limit == null ? 10 : Math.max(1, Math.min(limit, maxOffset));
     }
 
+    private List<MediaContentDbEntity> getPersistedProductMediaContent(UUID organisationId,  List<Integer> productIdList) {
+        return productMediaContentRepo.findByOrganisationIdAndIsActiveAndProductIdIn(organisationId, true, productIdList)
+                .orElseThrow(() -> new CustomRuntimeException(
+                        new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
+                        HttpStatus.NOT_FOUND
+                ));
+    }
+
     private Page<MediaDbEntity> getPersistedProductMedia(UUID organisationId, Pageable pageable) {
-        return productMediaRepo.findByOrganisationIdAndIsActive(organisationId, true, pageable)
+        return productMediaRepo.findByOrganisationId(organisationId,  pageable)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
@@ -146,7 +175,7 @@ public class GetAllProductMediaByOrganisation {
 
     private GetProductMediaByOrganisationResDTO.PaginationMetadata buildPaginationMetadataFromRepo(Page<MediaDbEntity> productPage) {
         int pageSize = productPage.getSize();
-        int currentPage = productPage.getNumber(); // 0-based
+        int currentPage = productPage.getNumber();
 
         Integer previousOffset = currentPage > 0 ? (currentPage - 1) * pageSize : null;
         Integer nextOffset = productPage.hasNext() ? (currentPage + 1) * pageSize : null;
