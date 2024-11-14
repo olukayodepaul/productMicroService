@@ -63,8 +63,8 @@ public class GetAllProductMediaByOrganisation {
         String roles = jwtService.extractRole(jwtToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
         validateBruteForceProtection(userId.toString());
-        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
+        UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
         validateRequestToken(authToken);
         validateUserRole(roles);
 
@@ -77,8 +77,6 @@ public class GetAllProductMediaByOrganisation {
         GetProductMediaByOrganisationResDTO.PaginationMetadata pagination;
 
         if (cachedProductMedia.getStatus()) {
-
-            System.out.println(1);
 
             List<MediaDbEntity> allProducts = productMappers.mapProductMediaCachePage(redisProductCacheRepo.findPagingProductMediaByOrganisationId(organisationId.toString()).getProductMedia());
 
@@ -101,8 +99,6 @@ public class GetAllProductMediaByOrganisation {
             pagination = buildPaginationMetadataFromCache(totalProducts, limit, offset);
 
         } else {
-
-            System.out.println(2);
 
             Page<MediaDbEntity> persistedProducts = getPersistedProductMedia(organisationId, pageable);
             List<MediaDbEntity> itemFilters = persistedProducts.getContent();
