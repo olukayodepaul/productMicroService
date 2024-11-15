@@ -19,13 +19,13 @@ public class ProductController {
     private final GetProductService getProductByIdService;
 
     public ProductController(
-            ProductControllerDi productControllerDi
+            ProductControllerDi di
     ) {
-        this.createProductService = productControllerDi.createProductService();
-        this.updateProductService = productControllerDi.updateProductService();
-        this.deleteProductService = productControllerDi.deleteProductService();
-        this.getAllProductService = productControllerDi.getAllProductService();
-        this.getProductByIdService = productControllerDi.getProductByIdService();
+        this.createProductService = di.createProductService();
+        this.updateProductService = di.updateProductService();
+        this.deleteProductService = di.deleteProductService();
+        this.getAllProductService = di.getAllProductService();
+        this.getProductByIdService = di.getProductByIdService();
     }
 
     /**

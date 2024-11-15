@@ -1,5 +1,6 @@
 package com.dart.product.controller;
 
+import com.dart.product.dependency.di.ProductCommentControllerDi;
 import com.dart.product.dto_model.product_comments_model.AddProductCommentReqlDTO;
 import com.dart.product.dto_model.product_comments_model.AllProductCommentAllResDTO;
 import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
@@ -19,18 +20,14 @@ public class ProductCommentController {
     private final GetAllProductCommentsService getAllProductCommentsService;
 
     ProductCommentController(
-            CreateProductCommentsService createProductCommentsService,
-            UpdateProductCommentsService updateProductCommentsService,
-            DeleteProductCommentsService deleteProductCommentsService,
-            GetProductCommentsService getProductCommentsService,
-            GetAllProductCommentsService getAllProductCommentsService
+            ProductCommentControllerDi di
     )
     {
-        this.createProductCommentsService = createProductCommentsService;
-        this.updateProductCommentsService = updateProductCommentsService;
-        this.deleteProductCommentsService = deleteProductCommentsService;
-        this.getProductCommentsService = getProductCommentsService;
-        this.getAllProductCommentsService = getAllProductCommentsService;
+        this.createProductCommentsService = di.createProductCommentsService();
+        this.updateProductCommentsService = di.updateProductCommentsService();
+        this.deleteProductCommentsService = di.deleteProductCommentsService();
+        this.getProductCommentsService = di.getProductCommentsService();
+        this.getAllProductCommentsService = di.getAllProductCommentsService();
     }
 
 

@@ -1,6 +1,7 @@
 package com.dart.product.controller;
 
 
+import com.dart.product.dependency.di.ProductFeedBackControllerDi;
 import com.dart.product.dto_model.product_feedback.AddProductFeedBackReqDTO;
 import com.dart.product.dto_model.product_feedback.ProductFeedBackAllResDTO;
 import com.dart.product.dto_model.product_feedback.ProductFeedBackResDTO;
@@ -20,13 +21,11 @@ public class ProductFeedBackController {
     private final GetAllProductFeedBackService getAllProductFeedBackService;
 
     public ProductFeedBackController(
-            CreateProductFeedBackService createProductFeedBackService,
-            GetProductFeedBackService getProductFeedBackService,
-            GetAllProductFeedBackService getAllProductFeedBackService
+           ProductFeedBackControllerDi di
     ) {
-        this.createProductFeedBackService = createProductFeedBackService;
-        this.getProductFeedBackService = getProductFeedBackService;
-        this.getAllProductFeedBackService = getAllProductFeedBackService;
+        this.createProductFeedBackService = di.createProductFeedBackService();
+        this.getProductFeedBackService = di.getProductFeedBackService();
+        this.getAllProductFeedBackService = di.getAllProductFeedBackService();
     }
 
     @PostMapping("/{product_id}/feedback")

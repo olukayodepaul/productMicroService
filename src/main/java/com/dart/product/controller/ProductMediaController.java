@@ -1,6 +1,7 @@
 package com.dart.product.controller;
 
 
+import com.dart.product.dependency.di.ProductMediaControllerDi;
 import com.dart.product.dto_model.product_media_model.*;
 import com.dart.product.service.product_media.*;
 import com.dart.product.utilities.AppConfig;
@@ -27,24 +28,16 @@ public class ProductMediaController {
     private final GetAllProductMediaByOrganisation getAllProductMediaByOrganisation;
 
     public ProductMediaController(
-            CreateProductMediaService createProductMediaService,
-            UpdateProductMediaService updateProductMediaService,
-            UpdatePrimaryProductService updatePrimaryProductService,
-            GetProductMediaByIdService getProductMediaService,
-            GetSpecificProductMediaByProductIdService getSpecificProductMediaService,
-            DeleteProductMediaService deleteProductMediaService,
-            GetProductMediaByProductIdService getProductMediaByProductIdService,
-            GetAllProductMediaByOrganisation getAllProductMediaByOrganisation
-
+            ProductMediaControllerDi di
     ) {
-        this.createProductMediaService = createProductMediaService;
-        this.updateProductMediaService = updateProductMediaService;
-        this.updatePrimaryProductService = updatePrimaryProductService;
-        this.getProductMediaService = getProductMediaService;
-        this.getSpecificProductMediaService = getSpecificProductMediaService;
-        this.deleteProductMediaService = deleteProductMediaService;
-        this.getProductMediaByProductIdService = getProductMediaByProductIdService;
-        this.getAllProductMediaByOrganisation = getAllProductMediaByOrganisation;
+        this.createProductMediaService = di.createProductMediaService();
+        this.updateProductMediaService = di.updateProductMediaService();
+        this.updatePrimaryProductService = di.updatePrimaryProductService();
+        this.getProductMediaService = di.getProductMediaService();
+        this.getSpecificProductMediaService = di.getSpecificProductMediaService();
+        this.deleteProductMediaService = di.deleteProductMediaService();
+        this.getProductMediaByProductIdService = di.getProductMediaByProductIdService();
+        this.getAllProductMediaByOrganisation = di.getAllProductMediaByOrganisation();
     }
 
     @PostMapping("/{product_id}/media")
