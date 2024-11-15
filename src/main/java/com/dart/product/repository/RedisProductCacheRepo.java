@@ -8,7 +8,7 @@ import com.dart.product.entity.product_comment_entity.ProductCommentCacheEntity;
 import com.dart.product.dto_model.product_feedback.FetchAllProductFeedBackModel;
 import com.dart.product.dto_model.product_feedback.FetchProductFeedBackModel;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
-import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
+import com.dart.product.dto_model.product_media_model.ProductMediaListModel;
 import com.dart.product.dto_model.product_media_model.FetchProductMediaModel;
 import com.dart.product.entity.prodct_media.ProductContentMediaCacheEntity;
 import com.dart.product.dto_model.product_dto_model.FetchAllProductsResModel;
@@ -339,7 +339,7 @@ public class RedisProductCacheRepo {
         }
     }
 
-    public FetchAllProductMediaModel findAllProductMedia(String organisationId, String productId) {
+    public ProductMediaListModel findAllProductMedia(String organisationId, String productId) {
         try {
             String key = PRODUCT_MEDIA_CONTENT_KEY + "_" + organisationId + "_" + productId;
             Map<Object, Object> productMediaMap = redisTemplate.opsForHash().entries(key);
@@ -349,17 +349,17 @@ public class RedisProductCacheRepo {
                         .map(value -> objectMapper.convertValue(value, ProductContentMediaCacheEntity.class))
                         .sorted(Comparator.comparing(ProductContentMediaCacheEntity::getMedia_url))
                         .collect(Collectors.toList());
-                return new FetchAllProductMediaModel(true, "Media fetched successfully", productMedia);
+                return new ProductMediaListModel(true, "Media fetched successfully", productMedia);
             }
-            return new FetchAllProductMediaModel(false, "No media found", Collections.emptyList());
+            return new ProductMediaListModel(false, "No media found", Collections.emptyList());
 
         } catch (Exception e) {
             logger.error("Error fetching media for getAllProductMedia {}: {}", organisationId, e.getMessage());
-            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+            return new ProductMediaListModel(false, e.getMessage(), Collections.emptyList());
         }
     }
 
-    public FetchAllProductMediaModel findAllProductMediaByOrganisationId(String organisationId) {
+    public ProductMediaListModel findAllProductMediaByOrganisationId(String organisationId) {
         try {
 
             String keyPattern = PRODUCT_MEDIA_CONTENT_KEY + "_" + organisationId + "_*";
@@ -372,17 +372,17 @@ public class RedisProductCacheRepo {
                         .sorted(Comparator.comparing(ProductContentMediaCacheEntity::getMedia_url))
                         .collect(Collectors.toList());
 
-                return new FetchAllProductMediaModel(true, "Media fetched successfully", productMediaList);
+                return new ProductMediaListModel(true, "Media fetched successfully", productMediaList);
             }
 
-            return new FetchAllProductMediaModel(false, "No media found", Collections.emptyList());
+            return new ProductMediaListModel(false, "No media found", Collections.emptyList());
         } catch (Exception e) {
             logger.error("FetchAllProductMediaModel::findAllProductMediaByOrganisationId {}: {}", organisationId, e.getMessage());
-            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+            return new ProductMediaListModel(false, e.getMessage(), Collections.emptyList());
         }
     }
 
-    public FetchAllProductMediaModel findOnlyFilteredProductMediaByOrganisationId(String organisationId, List<Integer> productIds) {
+    public ProductMediaListModel findOnlyFilteredProductMediaByOrganisationId(String organisationId, List<Integer> productIds) {
         try {
             String keyPattern = PRODUCT_MEDIA_CONTENT_KEY + "_" + organisationId + "_*";
             Set<String> keys = redisTemplate.keys(keyPattern);
@@ -395,13 +395,13 @@ public class RedisProductCacheRepo {
                         .sorted(Comparator.comparing(ProductContentMediaCacheEntity::getMedia_url))
                         .collect(Collectors.toList());
 
-                return new FetchAllProductMediaModel(true, "Media fetched successfully", productMediaList);
+                return new ProductMediaListModel(true, "Media fetched successfully", productMediaList);
             }
 
-            return new FetchAllProductMediaModel(false, "No media found", Collections.emptyList());
+            return new ProductMediaListModel(false, "No media found", Collections.emptyList());
         } catch (Exception e) {
             logger.error("Error fetching media for organisationId {}: {}", organisationId, e.getMessage());
-            return new FetchAllProductMediaModel(false, e.getMessage(), Collections.emptyList());
+            return new ProductMediaListModel(false, e.getMessage(), Collections.emptyList());
         }
     }
 
@@ -415,6 +415,7 @@ public class RedisProductCacheRepo {
                 List<ProductMediaCacheEntity> productMediaList = keys.stream()
                         .flatMap(matchedKey -> redisTemplate.opsForHash().entries(matchedKey).values().stream())
                         .map(value -> objectMapper.convertValue(value, ProductMediaCacheEntity.class))
+                        .sorted(Comparator.comparing(ProductMediaCacheEntity::getId))
                         .collect(Collectors.toList());
 
                 return new FetchPageProductMediaModel(true, "Media fetched successfully", productMediaList);

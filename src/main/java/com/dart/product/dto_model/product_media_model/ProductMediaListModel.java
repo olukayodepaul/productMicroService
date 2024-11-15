@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FetchAllProductMediaModel {
+public class ProductMediaListModel {
     private Boolean status;
     private String message;
     private List<ProductContentMediaCacheEntity> productMedia;

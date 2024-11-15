@@ -537,12 +537,12 @@ public class ProductMappers {
                 .build();
     }
 
-    public GetProductMediaByOrganisationResDTO mapProductMediaByOrganisation(
+    public ProductMediaResponseDTO mapProductMediaByOrganisation(
             List<MediaContentDbEntity> productMedia,
-            GetProductMediaByOrganisationResDTO.PaginationMetadata pagination,
+            ProductMediaResponseDTO.PaginationMetadata pagination,
             String message) {
 
-        return GetProductMediaByOrganisationResDTO.builder()
+        return ProductMediaResponseDTO.builder()
                 .status(true)
                 .message(message)
                 .product_media(productMedia.stream()
@@ -552,12 +552,12 @@ public class ProductMappers {
                         .map(entry -> {
                             Integer productId = entry.getKey();
                             List<MediaContentDbEntity> mediaList = entry.getValue();
-                            return GetProductMediaByOrganisationResDTO.ProductMedia.builder()
+                            return ProductMediaResponseDTO.ProductMedia.builder()
                                     .product_id(productId)
                                     .is_active(mediaList.getFirst().getIsActive())
                                     .image_media_type(mediaList.stream()
                                             .filter(media -> "image".equalsIgnoreCase(media.getMediaType()))
-                                            .map(image -> GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia.builder()
+                                            .map(image -> ProductMediaResponseDTO.ProductMedia.ImageMedia.builder()
                                                     .id(image.getId())
                                                     .is_primary(image.getIsPrimary())
                                                     .media_type(image.getMediaType())
@@ -565,11 +565,11 @@ public class ProductMappers {
                                                     .updated_at(image.getUpdatedAt())
                                                     .created_at(image.getCreatedAt())
                                                     .build())
-                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.ImageMedia::getId)))
+                                            .sorted(Comparator.comparing((ProductMediaResponseDTO.ProductMedia.ImageMedia::getId)))
                                             .collect(Collectors.toList()))
                                     .video_media_type(mediaList.stream()
                                             .filter(media -> "video".equalsIgnoreCase(media.getMediaType()))
-                                            .map(video -> GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia.builder()
+                                            .map(video -> ProductMediaResponseDTO.ProductMedia.VideoMedia.builder()
                                                     .id(video.getId())
                                                     .is_primary(video.getIsPrimary())
                                                     .media_type(video.getMediaType())
@@ -577,7 +577,7 @@ public class ProductMappers {
                                                     .updated_at(video.getUpdatedAt())
                                                     .created_at(video.getCreatedAt())
                                                     .build())
-                                            .sorted(Comparator.comparing((GetProductMediaByOrganisationResDTO.ProductMedia.VideoMedia::getId)))
+                                            .sorted(Comparator.comparing((ProductMediaResponseDTO.ProductMedia.VideoMedia::getId)))
                                             .collect(Collectors.toList()))
                                     .build();
                         })

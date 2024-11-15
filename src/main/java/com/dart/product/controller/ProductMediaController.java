@@ -109,12 +109,12 @@ public class ProductMediaController {
     }
 
     @GetMapping("/media")
-    public ResponseEntity<GetProductMediaByOrganisationResDTO> getProductMediaByOrganisation(
+    public ResponseEntity<ProductMediaResponseDTO> getProductMediaByOrganisation(
             @RequestHeader("Authorization") String authToken,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        return getAllProductMediaByOrganisation.getProductMediaByOrganisation(authToken, offset, limit);
+        return getAllProductMediaByOrganisation.fetchProductMediaByOrganisation(authToken, offset, limit);
     }
 
     @DeleteMapping("/media/{id}")

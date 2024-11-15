@@ -2,11 +2,12 @@ package com.dart.product.service.product_media;
 
 
 import com.dart.product.dependency.di.ServicesDi;
-import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
-import com.dart.product.dto_model.product_media_model.GetProductMediaByOrganisationResDTO;
+import com.dart.product.dto_model.product_media_model.ProductMediaListModel;
+import com.dart.product.dto_model.product_media_model.ProductMediaResponseDTO;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.entity.prodct_media.MediaDbEntity;
 import com.dart.product.entity.prodct_media.ProductContentMediaCacheEntity;
+import com.dart.product.entity.prodct_media.ProductMediaCacheEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.ProductMediaRepo;
@@ -34,6 +35,8 @@ public class GetAllProductMediaByOrganisation {
     @Value("${pagination.maxOffset}")
     private int maxOffset;
 
+    private int DEFAULT_PAGE_LIMIT = 10;
+
     private static final Logger logger = LoggerFactory.getLogger(GetAllProductMediaByOrganisation.class);
     private final ProductMediaContentRepo productMediaContentRepo;
     private final ProductMediaRepo productMediaRepo;
@@ -58,67 +61,54 @@ public class GetAllProductMediaByOrganisation {
         this.validationUtils = di.validationUtils();
     }
 
-
-
-    public ResponseEntity<GetProductMediaByOrganisationResDTO> getProductMediaByOrganisation(String authToken, int offset, int limit) {
+    public ResponseEntity<ProductMediaResponseDTO> fetchProductMediaByOrganisation(String authToken, int offset, int limit) {
 
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         String roles = jwtService.extractRole(jwtToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
-        validateBruteForceProtection(userId.toString());
+        checkBruteForceProtection(userId.toString());
 
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
         validateRequestToken(authToken);
         validateUserRole(roles);
 
-        limit = getValidLimit(limit);
+        limit = calculateValidLimit(limit);
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));
 
-        FetchAllProductMediaModel cachedProductMedia = redisProductCacheRepo.findAllProductMediaByOrganisationId(organisationId.toString());
+        ProductMediaListModel findPersistedProductMediaContent = redisProductCacheRepo.findAllProductMediaByOrganisationId(organisationId.toString());
 
         List<MediaContentDbEntity> itemFilter;
-        GetProductMediaByOrganisationResDTO.PaginationMetadata pagination;
+        ProductMediaResponseDTO.PaginationMetadata pagination;
 
-        if (cachedProductMedia.getStatus()) {
+        if (findPersistedProductMediaContent.getStatus()) {
 
-            List<MediaDbEntity> allProducts = productMappers.mapProductMediaCachePage(redisProductCacheRepo.findPagingProductMediaByOrganisationId(organisationId.toString()).getProductMedia());
+            List<ProductMediaCacheEntity> findPagingProductMedia = redisProductCacheRepo.findPagingProductMediaByOrganisationId(organisationId.toString()).getProductMedia();
+            List<MediaDbEntity> paginatedProduct = productMappers.mapProductMediaCachePage(findPagingProductMedia);
 
-            int totalProducts = allProducts.size();
+            int totalProducts = paginatedProduct.size();
             int start = Math.min(offset, totalProducts);
             int end = Math.min(start + limit, totalProducts);
 
             List<MediaDbEntity>  itemFilters = (start >= totalProducts) ?
                     List.of() :
-                    allProducts.subList(start, end);
+                    paginatedProduct.subList(start, end);
 
-            List<Integer> productIds = itemFilters.stream()
-                    .map(MediaDbEntity::getProductId)
-                    .distinct()
-                    .collect(Collectors.toList());
+            List<ProductContentMediaCacheEntity> finds = redisProductCacheRepo
+                    .findOnlyFilteredProductMediaByOrganisationId(organisationId.toString(), ListOfProductId(itemFilters))
+                    .getProductMedia();
 
-            List<ProductContentMediaCacheEntity> finds = redisProductCacheRepo.findOnlyFilteredProductMediaByOrganisationId(organisationId.toString(), productIds).getProductMedia();
             itemFilter = productMappers.mapProductMediaCacheToProductDTO(finds);
-
-            pagination = buildPaginationMetadataFromCache(totalProducts, limit, offset);
+            pagination = createPaginationMetadataFromCache(totalProducts, limit, offset);
 
         } else {
-
-            Page<MediaDbEntity> persistedProducts = getPersistedProductMedia(organisationId, pageable);
+            Page<MediaDbEntity> persistedProducts = fetchProductMediaPage(organisationId, pageable);
             List<MediaDbEntity> itemFilters = persistedProducts.getContent();
-
-            List<Integer> productIds = itemFilters.stream()
-                    .map(MediaDbEntity::getProductId)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            pagination = buildPaginationMetadataFromRepo(persistedProducts);
-            itemFilter  = getPersistedProductMediaContent(organisationId, productIds);
-
+            pagination = createPaginationMetadataFromRepo(persistedProducts);
+            itemFilter  = fetchActiveProductMediaContent(organisationId, ListOfProductId(itemFilters));
         }
 
-        GetProductMediaByOrganisationResDTO result  = productMappers.mapProductMediaByOrganisation(itemFilter, pagination, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE);
+        ProductMediaResponseDTO result  = productMappers.mapProductMediaByOrganisation(itemFilter, pagination, AppConfig.PRODUCT_MEDIA_FETCH_RESPONSE);
         return new ResponseEntity<>(result, HttpStatus.OK);
-
     }
 
     private void validateRequestToken(String token) {
@@ -129,15 +119,15 @@ public class GetAllProductMediaByOrganisation {
         validationUtils.adminRoleValidation(role);
     }
 
-    private void validateBruteForceProtection(String userId) {
+    private void checkBruteForceProtection(String userId) {
         validationUtils.bruteForceProtection(AppConfig.FETCH_PRIMARY_PRODUCT_MEDIA_BY_ORGANISATION_ID_BRUTE_FORCE_PROTECTION + userId);
     }
 
-    private int getValidLimit(Integer limit) {
-        return limit == null ? 10 : Math.max(1, Math.min(limit, maxOffset));
+    private int calculateValidLimit(Integer limit) {
+        return limit == null ? DEFAULT_PAGE_LIMIT : Math.max(1, Math.min(limit, maxOffset));
     }
 
-    private List<MediaContentDbEntity> getPersistedProductMediaContent(UUID organisationId,  List<Integer> productIdList) {
+    private List<MediaContentDbEntity> fetchActiveProductMediaContent(UUID organisationId, List<Integer> productIdList) {
         return productMediaContentRepo.findByOrganisationIdAndIsActiveAndProductIdIn(organisationId, true, productIdList)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
@@ -145,7 +135,7 @@ public class GetAllProductMediaByOrganisation {
                 ));
     }
 
-    private Page<MediaDbEntity> getPersistedProductMedia(UUID organisationId, Pageable pageable) {
+    private Page<MediaDbEntity> fetchProductMediaPage(UUID organisationId, Pageable pageable) {
         return productMediaRepo.findByOrganisationId(organisationId,  pageable)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.INVALID_RESOURCES_RESPONSE),
@@ -153,41 +143,88 @@ public class GetAllProductMediaByOrganisation {
                 ));
     }
 
-    private GetProductMediaByOrganisationResDTO.PaginationMetadata buildPaginationMetadataFromCache(int totalProducts, int limit, int offset) {
+//    private ProductMediaResponseDTO.PaginationMetadata createPaginationMetadataFromCache(int totalProducts, int limit, int offset) {
+//        int totalPages = (int) Math.ceil((double) totalProducts / limit);
+//        int currentPage = offset / limit;
+//
+//        Integer previousOffset = currentPage > 0 ? (currentPage - 1) * limit : null;
+//        Integer nextOffset = currentPage < totalPages - 1 ? (currentPage + 1) * limit : null;
+//
+//        return ProductMediaResponseDTO.PaginationMetadata.builder()
+//                .currentPage(currentPage + 1)
+//                .pageSize(limit)
+//                .totalElements(totalProducts)
+//                .totalPages(totalPages)
+//                .previousOffset(previousOffset)
+//                .nextOffset(nextOffset)
+//                .hasPreviousPage(currentPage > 0)
+//                .hasNextPage(currentPage < totalPages - 1)
+//                .build();
+//    }
+//
+
+    private ProductMediaResponseDTO.PaginationMetadata createPaginationMetadataFromRepo(
+            Page<MediaDbEntity> productPage
+    ) {
+        int pageSize = productPage.getSize();
+        int currentPage = productPage.getNumber();
+        long totalElements = productPage.getTotalElements();
+        int totalPages = productPage.getTotalPages();
+        return createPaginationMetadata(
+                totalElements,
+                pageSize,
+                currentPage,
+                totalPages,
+                productPage.hasNext(),
+                productPage.hasPrevious()
+        );
+    }
+
+    private ProductMediaResponseDTO.PaginationMetadata createPaginationMetadataFromCache(
+            int totalProducts,
+            int limit,
+            int offset
+    ) {
         int totalPages = (int) Math.ceil((double) totalProducts / limit);
         int currentPage = offset / limit;
+        return createPaginationMetadata(
+                totalProducts,
+                limit,
+                currentPage,
+                totalPages,
+                currentPage < totalPages - 1,
+                currentPage > 0
+        );
+    }
 
-        Integer previousOffset = currentPage > 0 ? (currentPage - 1) * limit : null;
-        Integer nextOffset = currentPage < totalPages - 1 ? (currentPage + 1) * limit : null;
+    private ProductMediaResponseDTO.PaginationMetadata createPaginationMetadata(
+            long totalElements,
+            int pageSize,
+            int currentPage,
+            int totalPages,
+            boolean hasNext,
+            boolean hasPrevious
+    ) {
+        Integer previousOffset = currentPage > 0 ? (currentPage - 1) * pageSize : null;
+        Integer nextOffset = hasNext ? (currentPage + 1) * pageSize : null;
 
-        return GetProductMediaByOrganisationResDTO.PaginationMetadata.builder()
+        return ProductMediaResponseDTO.PaginationMetadata.builder()
                 .currentPage(currentPage + 1)
-                .pageSize(limit)
-                .totalElements(totalProducts)
+                .pageSize(pageSize)
+                .totalElements(totalElements)
                 .totalPages(totalPages)
                 .previousOffset(previousOffset)
                 .nextOffset(nextOffset)
-                .hasPreviousPage(currentPage > 0)
-                .hasNextPage(currentPage < totalPages - 1)
+                .hasPreviousPage(hasPrevious)
+                .hasNextPage(hasNext)
                 .build();
     }
 
-    private GetProductMediaByOrganisationResDTO.PaginationMetadata buildPaginationMetadataFromRepo(Page<MediaDbEntity> productPage) {
-        int pageSize = productPage.getSize();
-        int currentPage = productPage.getNumber();
-
-        Integer previousOffset = currentPage > 0 ? (currentPage - 1) * pageSize : null;
-        Integer nextOffset = productPage.hasNext() ? (currentPage + 1) * pageSize : null;
-
-        return GetProductMediaByOrganisationResDTO.PaginationMetadata.builder()
-                .currentPage(currentPage + 1)
-                .pageSize(pageSize)
-                .totalElements(productPage.getTotalElements())
-                .totalPages(productPage.getTotalPages())
-                .previousOffset(previousOffset)
-                .nextOffset(nextOffset)
-                .hasPreviousPage(productPage.hasPrevious())
-                .hasNextPage(productPage.hasNext())
-                .build();
+    private List<Integer> ListOfProductId (List<MediaDbEntity> itemFilters){
+        return itemFilters.stream()
+                .map(MediaDbEntity::getProductId)
+                .distinct()
+                .collect(Collectors.toList());
     }
+
 }

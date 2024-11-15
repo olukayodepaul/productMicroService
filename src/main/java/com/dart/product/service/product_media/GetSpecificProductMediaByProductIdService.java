@@ -2,7 +2,7 @@ package com.dart.product.service.product_media;
 
 
 import com.dart.product.dependency.di.ServicesDi;
-import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
+import com.dart.product.dto_model.product_media_model.ProductMediaListModel;
 import com.dart.product.dto_model.product_media_model.GetSpecMediaDTO;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.entity.prodct_media.ProductContentMediaCacheEntity;
@@ -59,7 +59,7 @@ public class GetSpecificProductMediaByProductIdService {
         validMediaType(mediaType);
         validateUserRole(roles);
 
-        FetchAllProductMediaModel cachedProductMedia = redisProductCacheRepo.findAllProductMedia(organisationId.toString(), productId.toString());
+        ProductMediaListModel cachedProductMedia = redisProductCacheRepo.findAllProductMedia(organisationId.toString(), productId.toString());
 
         if (cachedProductMedia.getStatus()) {
             List<ProductContentMediaCacheEntity> filter = cachedProductMedia.getProductMedia().stream().filter(

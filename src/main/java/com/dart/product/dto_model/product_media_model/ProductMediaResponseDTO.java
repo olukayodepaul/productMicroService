@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetProductMediaByOrganisationResDTO {
+public class ProductMediaResponseDTO {
     private boolean status;
     private String message;
     private List<ProductMedia> product_media;

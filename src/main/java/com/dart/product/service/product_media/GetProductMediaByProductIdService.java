@@ -1,7 +1,7 @@
 package com.dart.product.service.product_media;
 
 import com.dart.product.dependency.di.ServicesDi;
-import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
+import com.dart.product.dto_model.product_media_model.ProductMediaListModel;
 import com.dart.product.dto_model.product_media_model.GetAllMediaDTO;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.mapper.ProductMappers;
@@ -55,7 +55,7 @@ public class GetProductMediaByProductIdService {
         validProductId(productId);
         validateUserRole(roles);
 
-        FetchAllProductMediaModel cachedProductMedia = redisProductCacheRepo.findAllProductMedia(organisationId.toString(), productId.toString());
+        ProductMediaListModel cachedProductMedia = redisProductCacheRepo.findAllProductMedia(organisationId.toString(), productId.toString());
 
         if (cachedProductMedia.getStatus()) {
             List<MediaContentDbEntity> mapResult = productMappers.mapProductMediaCacheToProductDTO(cachedProductMedia.getProductMedia());
