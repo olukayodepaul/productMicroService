@@ -1,5 +1,6 @@
 package com.dart.product.service.product_comments;
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_comments_model.AddProductCommentReqlDTO;
 import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;
 import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
@@ -8,7 +9,10 @@ import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductCommentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
+import com.dart.product.service.product.CreateProductService;
 import com.dart.product.utilities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,20 +29,15 @@ public class CreateProductCommentsService {
     private final RedisProductCacheRepo redisProductCacheRepo;
     private final ValidationUtils validationUtils;
 
-    public CreateProductCommentsService(
-            ProductCommentRepo productCommentRepo,
-            FilterService jwtService,
-            UtilitiesManager utilitiesManager,
-            ProductMappers productMappers,
-            RedisProductCacheRepo redisProductCacheRepo,
-            ValidationUtils validationUtils
-    ) {
+    private static final Logger logger = LoggerFactory.getLogger(CreateProductService.class);
+
+    public CreateProductCommentsService(ProductCommentRepo productCommentRepo, ServicesDi servicesDi) {
         this.productCommentRepo = productCommentRepo;
-        this.jwtService = jwtService;
-        this.utilitiesManager = utilitiesManager;
-        this.productMappers = productMappers;
-        this.redisProductCacheRepo = redisProductCacheRepo;
-        this.validationUtils = validationUtils;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
 
     public ResponseEntity<ProductCommentResDTO> createProductComment(String authToken, AddProductCommentReqlDTO reqBody, Integer productId) {

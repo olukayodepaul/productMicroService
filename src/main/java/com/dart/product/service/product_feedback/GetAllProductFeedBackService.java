@@ -1,6 +1,7 @@
 package com.dart.product.service.product_feedback;
 
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_feedback.FetchAllProductFeedBackModel;
 import com.dart.product.dto_model.product_feedback.ProductFeedBackAllResDTO;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
@@ -10,6 +11,8 @@ import com.dart.product.repository.ProductFeedBackRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,20 +39,15 @@ public class GetAllProductFeedBackService {
     private final RedisProductCacheRepo redisProductCacheRepo;
     private final ValidationUtils validationUtils;
 
-    public GetAllProductFeedBackService(
-            ProductFeedBackRepo productFeedBackRepo,
-            FilterService jwtService,
-            UtilitiesManager utilitiesManager,
-            ProductMappers productMappers,
-            RedisProductCacheRepo redisProductCacheRepo,
-            ValidationUtils validationUtils
-    ) {
+    private static final Logger logger = LoggerFactory.getLogger(GetAllProductFeedBackService.class);
+
+    public GetAllProductFeedBackService(ProductFeedBackRepo productFeedBackRepo, ServicesDi servicesDi) {
         this.productFeedBackRepo = productFeedBackRepo;
-        this.jwtService = jwtService;
-        this.utilitiesManager = utilitiesManager;
-        this.productMappers = productMappers;
-        this.redisProductCacheRepo = redisProductCacheRepo;
-        this.validationUtils = validationUtils;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
 
     public ResponseEntity<ProductFeedBackAllResDTO> getAllProductFeedBack(String authToken, int offset, int limit) {

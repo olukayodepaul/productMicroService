@@ -1,20 +1,26 @@
 package com.dart.product.service.product_media;
 
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_media_model.*;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.entity.prodct_media.MediaDbEntity;
 import com.dart.product.mapper.ProductMappers;
+import com.dart.product.repository.ProductFeedBackRepo;
 import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
+import com.dart.product.service.product_feedback.GetProductFeedBackService;
 import com.dart.product.utilities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Value;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -24,39 +30,37 @@ import java.util.UUID;
 @Service
 public class CreateProductMediaService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CreateProductMediaService.class);
+    private final ProductMediaContentRepo productMediaContentRepo;
+    private final ProductMediaRepo productMediaRepo;
+    private final MediaService mediaService;
+    private final FilterService jwtService;
+    private final UtilitiesManager utilitiesManager;
+    private final ProductMappers productMappers;
+    private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ValidationUtils validationUtils;
+
     @Value("${media.maxImages}")
     private int maxImages;
 
     @Value("${media.maxVideos}")
     private int maxVideos;
 
-    private final MediaService mediaService;
-    private final ProductMappers productMappers;
-    private final UtilitiesManager utilitiesManager;
-    private final ValidationUtils validationUtils;
-    private final FilterService jwtService;
-    private final RedisProductCacheRepo redisProductCacheRepo;
-    private final ProductMediaContentRepo productMediaContentRepo;
-    private final ProductMediaRepo productMediaRepo;
-
     public CreateProductMediaService(
-            UtilitiesManager utilitiesManager,
-            ValidationUtils validationUtils,
-            FilterService jwtService,
-            MediaService mediaService,
-            ProductMappers productMappers,
-            RedisProductCacheRepo redisProductCacheRepo,
             ProductMediaContentRepo productMediaContentRepo,
-            ProductMediaRepo productMediaRepo
-    ) {
-        this.utilitiesManager = utilitiesManager;
-        this.validationUtils = validationUtils;
-        this.jwtService = jwtService;
-        this.mediaService = mediaService;
-        this.productMappers = productMappers;
-        this.redisProductCacheRepo = redisProductCacheRepo;
+            ProductMediaRepo productMediaRepo,
+            MediaService mediaService,
+            ServicesDi servicesDi
+    )
+    {
         this.productMediaContentRepo = productMediaContentRepo;
         this.productMediaRepo = productMediaRepo;
+        this.mediaService = mediaService;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
 
     public ResponseEntity<ProductMediaResDTO> createProductMedia(String authToken, MultipartFile file, Integer productId) throws IOException {
@@ -76,9 +80,9 @@ public class CreateProductMediaService {
         Optional<MediaDbEntity> isProductMediaIdPresentInDb = confirmIfProductMediaContentIsPresentInDb(productId, organisationId);
         int setProductMediaId = 0;
 
-        if(isProductMediaIdPresentInDb.isPresent()) {
+        if (isProductMediaIdPresentInDb.isPresent()) {
             setProductMediaId = isProductMediaIdPresentInDb.get().getId();
-        }else{
+        } else {
 
             MediaDbEntity persistProductMediaId = MediaDbEntity.builder()
                     .id(0)
@@ -111,7 +115,7 @@ public class CreateProductMediaService {
         mediaData.setProduct_media_id(setProductMediaId);
         mediaData.setId(0);
 
-        SaveAndUpdateMediaResponse persistRecord = saveProductContentMedia(productMappers.toProductMedia(mediaData),uploadMedia.getFileName());
+        SaveAndUpdateMediaResponse persistRecord = saveProductContentMedia(productMappers.toProductMedia(mediaData), uploadMedia.getFileName());
         checkIfRecordPersisted(persistRecord);
 
         boolean cacheResult = redisProductCacheRepo.saveUpdateProductMediaContent(productMappers.toCacheProductMedia(persistRecord.getProductMedia()));

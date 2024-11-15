@@ -1,6 +1,7 @@
 package com.dart.product.service.product_media;
 
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_media_model.PrimaryProductResDTO;
 import com.dart.product.dto_model.product_media_model.SaveAndUpdateMediaResponse;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
@@ -10,6 +11,8 @@ import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,28 +22,27 @@ import java.util.UUID;
 @Service
 public class UpdatePrimaryProductService {
 
-    private final ProductMappers productMappers;
-    private final UtilitiesManager utilitiesManager;
-    private final ValidationUtils validationUtils;
+    private static final Logger logger = LoggerFactory.getLogger(UpdatePrimaryProductService.class);
+    private final ProductMediaContentRepo productMediaContentRepo;
     private final FilterService jwtService;
-    private final ProductMediaContentRepo productMediaRepo;
+    private final UtilitiesManager utilitiesManager;
+    private final ProductMappers productMappers;
     private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ValidationUtils validationUtils;
 
     public UpdatePrimaryProductService(
-            UtilitiesManager utilitiesManager,
-            ValidationUtils validationUtils,
-            FilterService jwtService,
-            ProductMappers productMappers,
-            ProductMediaContentRepo productMediaRepo,
-            RedisProductCacheRepo redisProductCacheRepo
-    ) {
-        this.utilitiesManager = utilitiesManager;
-        this.validationUtils = validationUtils;
-        this.jwtService = jwtService;
-        this.productMappers = productMappers;
-        this.productMediaRepo = productMediaRepo;
-        this.redisProductCacheRepo = redisProductCacheRepo;
+            ProductMediaContentRepo productMediaContentRepo,
+            ServicesDi servicesDi
+    )
+    {
+        this.productMediaContentRepo = productMediaContentRepo;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
+
 
     @Transactional
     public ResponseEntity<PrimaryProductResDTO> updatePrimaryMedia(String authToken, Integer productId, Integer mediaId) {
@@ -117,7 +119,7 @@ public class UpdatePrimaryProductService {
     }
 
     private MediaContentDbEntity findPreviousPrimaryMedia(Integer mediaId, Integer productId, UUID organisationId) {
-        return productMediaRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
+        return productMediaContentRepo.findByIdAndProductIdAndOrganisationIdAndIsActive(mediaId, productId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.UPDATE_RESOURCES_RESPONSE),
@@ -126,7 +128,7 @@ public class UpdatePrimaryProductService {
     }
 
     private MediaContentDbEntity findCurrentPrimaryMedia(Integer productId, UUID organisationId, String mediaType) {
-        return productMediaRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, mediaType, true, true)
+        return productMediaContentRepo.findByProductIdAndOrganisationIdAndMediaTypeAndIsPrimaryAndIsActive(productId, organisationId, mediaType, true, true)
                 .orElseThrow(() -> new CustomRuntimeException(
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.UPDATE_RESOURCES_RESPONSE),
                         HttpStatus.NOT_FOUND
@@ -135,7 +137,7 @@ public class UpdatePrimaryProductService {
 
     private SaveAndUpdateMediaResponse saveProductMedia(MediaContentDbEntity regDetails) {
         try {
-            return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
+            return new SaveAndUpdateMediaResponse(true, "", productMediaContentRepo.save(regDetails));
         } catch (Exception e) {
             return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaContentDbEntity.builder().build());
         }

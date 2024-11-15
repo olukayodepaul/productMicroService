@@ -1,6 +1,7 @@
 package com.dart.product.service.product_media;
 
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.dto_model.product_media_model.GetProductMediaByOrganisationResDTO;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
@@ -12,6 +13,8 @@ import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,31 +34,31 @@ public class GetAllProductMediaByOrganisation {
     @Value("${pagination.maxOffset}")
     private int maxOffset;
 
-    private final ProductMappers productMappers;
-    private final UtilitiesManager utilitiesManager;
-    private final ValidationUtils validationUtils;
-    private final FilterService jwtService;
-    private final RedisProductCacheRepo redisProductCacheRepo;
+    private static final Logger logger = LoggerFactory.getLogger(GetAllProductMediaByOrganisation.class);
     private final ProductMediaContentRepo productMediaContentRepo;
     private final ProductMediaRepo productMediaRepo;
+    private final FilterService jwtService;
+    private final UtilitiesManager utilitiesManager;
+    private final ProductMappers productMappers;
+    private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ValidationUtils validationUtils;
 
     public GetAllProductMediaByOrganisation(
-            UtilitiesManager utilitiesManager,
-            ValidationUtils validationUtils,
-            FilterService jwtService,
-            ProductMappers productMappers,
-            RedisProductCacheRepo redisProductCacheRepo,
             ProductMediaContentRepo productMediaContentRepo,
-            ProductMediaRepo productMediaRepo
-    ) {
-        this.utilitiesManager = utilitiesManager;
-        this.validationUtils = validationUtils;
-        this.jwtService = jwtService;
-        this.productMappers = productMappers;
-        this.redisProductCacheRepo = redisProductCacheRepo;
+            ProductMediaRepo productMediaRepo,
+            ServicesDi servicesDi
+    )
+    {
         this.productMediaContentRepo = productMediaContentRepo;
         this.productMediaRepo = productMediaRepo;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
+
+
 
     public ResponseEntity<GetProductMediaByOrganisationResDTO> getProductMediaByOrganisation(String authToken, int offset, int limit) {
 

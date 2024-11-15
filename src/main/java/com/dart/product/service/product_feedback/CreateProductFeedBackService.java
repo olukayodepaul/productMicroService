@@ -1,15 +1,20 @@
 package com.dart.product.service.product_feedback;
 
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_feedback.AddProductFeedBackReqDTO;
 import com.dart.product.dto_model.product_feedback.ProductFeedBackResDTO;
 import com.dart.product.dto_model.product_feedback.SaveAndUpdateProductFeedBackResponse;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackDbEntity;
 import com.dart.product.mapper.ProductMappers;
+import com.dart.product.repository.ProductCommentRepo;
 import com.dart.product.repository.ProductFeedBackRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
+import com.dart.product.service.product_comments.UpdateProductCommentsService;
 import com.dart.product.utilities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,20 +34,15 @@ public class CreateProductFeedBackService {
     private final RedisProductCacheRepo redisProductCacheRepo;
     private final ValidationUtils validationUtils;
 
-    public CreateProductFeedBackService(
-            ProductFeedBackRepo productFeedBackRepo,
-            FilterService jwtService,
-            UtilitiesManager utilitiesManager,
-            ProductMappers productMappers,
-            RedisProductCacheRepo redisProductCacheRepo,
-            ValidationUtils validationUtils
-    ) {
+    private static final Logger logger = LoggerFactory.getLogger(CreateProductFeedBackService.class);
+
+    public CreateProductFeedBackService(ProductFeedBackRepo productFeedBackRepo, ServicesDi servicesDi) {
         this.productFeedBackRepo = productFeedBackRepo;
-        this.jwtService = jwtService;
-        this.utilitiesManager = utilitiesManager;
-        this.productMappers = productMappers;
-        this.redisProductCacheRepo = redisProductCacheRepo;
-        this.validationUtils = validationUtils;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
 
     public ResponseEntity<ProductFeedBackResDTO> createProductFeedBack(String authToken, AddProductFeedBackReqDTO reqBody, Integer productId) {

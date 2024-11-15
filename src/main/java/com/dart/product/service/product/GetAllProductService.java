@@ -1,5 +1,6 @@
 package com.dart.product.service.product;
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_dto_model.AllProductResDTO;
 import com.dart.product.dto_model.product_dto_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
@@ -9,7 +10,8 @@ import com.dart.product.repository.ProductsRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +25,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class GetAllProductService {
 
     @Value("${pagination.maxOffset}")
@@ -33,18 +34,29 @@ public class GetAllProductService {
     private final FilterService jwtService;
     private final UtilitiesManager utilitiesManager;
     private final ProductMappers productMappers;
-    private final ValidationUtils validationUtils;
     private final RedisProductCacheRepo redisProductCacheRepo;
+    private final ValidationUtils validationUtils;
+
+    private static final Logger logger = LoggerFactory.getLogger(GetAllProductService.class);
+
+    public GetAllProductService(ProductsRepo productsRepo, ServicesDi servicesDi){
+        this.productsRepo = productsRepo;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
+    }
 
     public ResponseEntity<AllProductResDTO> getAllProduct(String authToken, int offset, int limit) {
 
         validateRequestToken(authToken);
         String jwtToken = jwtService.extractTokenFromHeader(authToken);
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
-        validateBruteForceProtection(userId.toString());
         String roles = jwtService.extractRole(jwtToken);
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
         validationUserRole(roles);
+        validateBruteForceProtection(userId.toString());
 
         limit = getValidLimit(limit);
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));
@@ -69,9 +81,11 @@ public class GetAllProductService {
             pagination = buildPaginationMetadataFromCache(totalProducts, limit, offset);
 
         } else {
+
             Page<ProductDbEntity> productPage = findByOrganisationIdAndIsActive(organisationId, pageable);
             itemFilter = productPage.getContent();
             pagination = buildPaginationMetadataFromRepo(productPage);
+
         }
 
         List<AllProductResDTO.Product> productList = itemFilter.stream()

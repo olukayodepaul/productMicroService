@@ -1,5 +1,6 @@
 package com.dart.product.service.product_media;
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;
 import com.dart.product.dto_model.product_media_model.SaveAndUpdateMediaResponse;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
@@ -8,6 +9,8 @@ import com.dart.product.repository.ProductMediaContentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,27 +21,26 @@ import java.util.UUID;
 @Service
 public class DeleteProductMediaService {
 
-    private final ProductMappers productMappers;
-    private final UtilitiesManager utilitiesManager;
-    private final ValidationUtils validationUtils;
+    private static final Logger logger = LoggerFactory.getLogger(DeleteProductMediaService.class);
+    private final ProductMediaContentRepo productMediaContentRepo;
     private final FilterService jwtService;
+    private final UtilitiesManager utilitiesManager;
+    private final ProductMappers productMappers;
     private final RedisProductCacheRepo redisProductCacheRepo;
-    private final ProductMediaContentRepo productMediaRepo;
+    private final ValidationUtils validationUtils;
 
     public DeleteProductMediaService(
-            UtilitiesManager utilitiesManager,
-            ValidationUtils validationUtils,
-            FilterService jwtService,
-            ProductMappers productMappers,
-            RedisProductCacheRepo redisProductCacheRepo,
-            ProductMediaContentRepo productMediaRepo
-    ) {
-        this.utilitiesManager = utilitiesManager;
-        this.validationUtils = validationUtils;
-        this.jwtService = jwtService;
-        this.productMappers = productMappers;
-        this.redisProductCacheRepo = redisProductCacheRepo;
-        this.productMediaRepo = productMediaRepo;
+            ProductMediaContentRepo productMediaContentRepo,
+            ServicesDi servicesDi
+    )
+    {
+        this.productMediaContentRepo = productMediaContentRepo;
+
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
 
     public ResponseEntity<ProductMediaResDTO> deleteProductMedia(String authToken, Integer mediaId) {
@@ -104,7 +106,7 @@ public class DeleteProductMediaService {
     }
 
     private MediaContentDbEntity getPersistedProductMedia(Integer mediaId, UUID organisationId) {
-        return productMediaRepo.findByIdAndOrganisationIdAndIsActive(mediaId, organisationId, true)
+        return productMediaContentRepo.findByIdAndOrganisationIdAndIsActive(mediaId, organisationId, true)
                 .orElseThrow(() -> new CustomRuntimeException(
 
                         new ErrorHandler(false, String.valueOf(HttpStatus.NOT_FOUND), AppConfig.DELETE_RESOURCES_RESPONSE),
@@ -114,7 +116,7 @@ public class DeleteProductMediaService {
 
     private SaveAndUpdateMediaResponse saveProductMedia(MediaContentDbEntity regDetails) {
         try {
-            return new SaveAndUpdateMediaResponse(true, "", productMediaRepo.save(regDetails));
+            return new SaveAndUpdateMediaResponse(true, "", productMediaContentRepo.save(regDetails));
         } catch (Exception e) {
             return new SaveAndUpdateMediaResponse(false, e.getMessage(), MediaContentDbEntity.builder().build());
         }

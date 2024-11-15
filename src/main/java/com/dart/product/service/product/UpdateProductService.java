@@ -1,6 +1,7 @@
 package com.dart.product.service.product;
 
 
+import com.dart.product.di.ServicesDi;
 import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
 import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
 import com.dart.product.entity.product_entity.ProductDbEntity;
@@ -27,22 +28,15 @@ public class UpdateProductService {
     private final ProductMappers productMappers;
     private final RedisProductCacheRepo redisProductCacheRepo;
     private final ValidationUtils validationUtils;
-    private static final Logger logger = LoggerFactory.getLogger(CreateProductService.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpdateProductService.class);
 
-    public UpdateProductService(
-            ProductsRepo productsRepo,
-            FilterService jwtService,
-            UtilitiesManager utilitiesManager,
-            ProductMappers productMappers,
-            RedisProductCacheRepo redisProductCacheRepo,
-            ValidationUtils validationUtils
-    ) {
+    public UpdateProductService(ProductsRepo productsRepo, ServicesDi servicesDi) {
         this.productsRepo = productsRepo;
-        this.jwtService = jwtService;
-        this.utilitiesManager = utilitiesManager;
-        this.productMappers = productMappers;
-        this.redisProductCacheRepo = redisProductCacheRepo;
-        this.validationUtils = validationUtils;
+        this.jwtService = servicesDi.jwtService();
+        this.utilitiesManager = servicesDi.utilitiesManager();
+        this.productMappers = servicesDi.productMappers();
+        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
+        this.validationUtils = servicesDi.validationUtils();
     }
 
     public ResponseEntity<ProductResModelDTO> updateProduct( String authToken, ProductReqDTO reqBody, Integer id) {
