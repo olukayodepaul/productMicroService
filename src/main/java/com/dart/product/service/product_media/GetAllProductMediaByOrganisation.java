@@ -35,8 +35,6 @@ public class GetAllProductMediaByOrganisation {
     @Value("${pagination.maxOffset}")
     private int maxOffset;
 
-    private int DEFAULT_PAGE_LIMIT = 10;
-
     private static final Logger logger = LoggerFactory.getLogger(GetAllProductMediaByOrganisation.class);
     private final ProductMediaContentRepo productMediaContentRepo;
     private final ProductMediaRepo productMediaRepo;
@@ -124,7 +122,8 @@ public class GetAllProductMediaByOrganisation {
     }
 
     private int calculateValidLimit(Integer limit) {
-        return limit == null ? DEFAULT_PAGE_LIMIT : Math.max(1, Math.min(limit, maxOffset));
+        int defaultPageLimit = 10;
+        return limit == null ? defaultPageLimit : Math.max(1, Math.min(limit, maxOffset));
     }
 
     private List<MediaContentDbEntity> fetchActiveProductMediaContent(UUID organisationId, List<Integer> productIdList) {
@@ -142,26 +141,6 @@ public class GetAllProductMediaByOrganisation {
                         HttpStatus.NOT_FOUND
                 ));
     }
-
-//    private ProductMediaResponseDTO.PaginationMetadata createPaginationMetadataFromCache(int totalProducts, int limit, int offset) {
-//        int totalPages = (int) Math.ceil((double) totalProducts / limit);
-//        int currentPage = offset / limit;
-//
-//        Integer previousOffset = currentPage > 0 ? (currentPage - 1) * limit : null;
-//        Integer nextOffset = currentPage < totalPages - 1 ? (currentPage + 1) * limit : null;
-//
-//        return ProductMediaResponseDTO.PaginationMetadata.builder()
-//                .currentPage(currentPage + 1)
-//                .pageSize(limit)
-//                .totalElements(totalProducts)
-//                .totalPages(totalPages)
-//                .previousOffset(previousOffset)
-//                .nextOffset(nextOffset)
-//                .hasPreviousPage(currentPage > 0)
-//                .hasNextPage(currentPage < totalPages - 1)
-//                .build();
-//    }
-//
 
     private ProductMediaResponseDTO.PaginationMetadata createPaginationMetadataFromRepo(
             Page<MediaDbEntity> productPage

@@ -482,6 +482,7 @@ public class ProductMappers {
                 .organisationId(media.getOrganisation_id())
                 .createdAt(media.getCreated_at())
                 .build()
+
         ).collect(Collectors.toList());
     }
 
@@ -581,6 +582,7 @@ public class ProductMappers {
                                             .collect(Collectors.toList()))
                                     .build();
                         })
+                        .sorted(Comparator.comparing((ProductMediaResponseDTO.ProductMedia::getProduct_id)))
                         .collect(Collectors.toList()))
                 .pagination(pagination)
                 .build();
