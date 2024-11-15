@@ -32,13 +32,13 @@ public class UpdateProductCommentsService {
 
     private static final Logger logger = LoggerFactory.getLogger(UpdateProductCommentsService.class);
 
-    public UpdateProductCommentsService(ProductCommentRepo productCommentRepo, ServicesDi servicesDi) {
+    public UpdateProductCommentsService(ProductCommentRepo productCommentRepo, ServicesDi di) {
         this.productCommentRepo = productCommentRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<ProductCommentResDTO> updateProductComment(

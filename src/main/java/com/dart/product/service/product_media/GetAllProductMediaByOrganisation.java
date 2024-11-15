@@ -46,16 +46,16 @@ public class GetAllProductMediaByOrganisation {
     public GetAllProductMediaByOrganisation(
             ProductMediaContentRepo productMediaContentRepo,
             ProductMediaRepo productMediaRepo,
-            ServicesDi servicesDi
+            ServicesDi di
     )
     {
         this.productMediaContentRepo = productMediaContentRepo;
         this.productMediaRepo = productMediaRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
 

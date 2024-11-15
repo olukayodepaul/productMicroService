@@ -29,13 +29,13 @@ public class DeleteProductService {
 
     private static final Logger logger = LoggerFactory.getLogger(DeleteProductService.class);
 
-    public DeleteProductService(ProductsRepo productsRepo, ServicesDi servicesDi) {
+    public DeleteProductService(ProductsRepo productsRepo, ServicesDi di) {
         this.productsRepo = productsRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<ProductResModelDTO> deleteProduct(String authToken, Integer id)

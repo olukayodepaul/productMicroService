@@ -34,13 +34,13 @@ public class CreateProductFeedBackService {
 
     private static final Logger logger = LoggerFactory.getLogger(CreateProductFeedBackService.class);
 
-    public CreateProductFeedBackService(ProductFeedBackRepo productFeedBackRepo, ServicesDi servicesDi) {
+    public CreateProductFeedBackService(ProductFeedBackRepo productFeedBackRepo, ServicesDi di) {
         this.productFeedBackRepo = productFeedBackRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<ProductFeedBackResDTO> createProductFeedBack(String authToken, AddProductFeedBackReqDTO reqBody, Integer productId) {

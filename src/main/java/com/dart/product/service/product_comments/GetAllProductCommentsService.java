@@ -38,13 +38,13 @@ public class GetAllProductCommentsService {
 
     private static final Logger logger = LoggerFactory.getLogger(GetAllProductCommentsService.class);
 
-    public GetAllProductCommentsService(ProductCommentRepo productCommentRepo, ServicesDi servicesDi) {
+    public GetAllProductCommentsService(ProductCommentRepo productCommentRepo, ServicesDi di) {
         this.productCommentRepo = productCommentRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<AllProductCommentAllResDTO> getAllProductComment(String authToken, Integer productId, int offset, int limit) {

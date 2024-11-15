@@ -31,13 +31,13 @@ public class CreateProductService {
 
    private static final Logger logger = LoggerFactory.getLogger(CreateProductService.class);
 
-    public CreateProductService(ProductsRepo productsRepo, ServicesDi servicesDi) {
+    public CreateProductService(ProductsRepo productsRepo, ServicesDi di) {
         this.productsRepo = productsRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<ProductResModelDTO> createProduct(String authToken, ProductReqDTO reqBody) {

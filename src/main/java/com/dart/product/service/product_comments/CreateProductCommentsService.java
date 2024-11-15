@@ -29,15 +29,15 @@ public class CreateProductCommentsService {
     private final RedisProductCacheRepo redisProductCacheRepo;
     private final ValidationUtils validationUtils;
 
-    private static final Logger logger = LoggerFactory.getLogger(CreateProductService.class);
+    private static final Logger logger = LoggerFactory.getLogger(CreateProductCommentsService.class);
 
-    public CreateProductCommentsService(ProductCommentRepo productCommentRepo, ServicesDi servicesDi) {
+    public CreateProductCommentsService(ProductCommentRepo productCommentRepo, ServicesDi di) {
         this.productCommentRepo = productCommentRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<ProductCommentResDTO> createProductComment(String authToken, AddProductCommentReqlDTO reqBody, Integer productId) {

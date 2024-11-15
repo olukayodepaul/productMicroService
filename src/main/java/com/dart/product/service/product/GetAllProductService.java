@@ -38,13 +38,13 @@ public class GetAllProductService {
     @Value("${pagination.maxOffset}")
     private int maxOffset;
 
-    public GetAllProductService(ProductsRepo productsRepo, ServicesDi servicesDi){
+    public GetAllProductService(ProductsRepo productsRepo, ServicesDi di){
         this.productsRepo = productsRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<AllProductResDTO> getAllProduct(String authToken, int offset, int limit) {

@@ -41,13 +41,13 @@ public class GetAllProductFeedBackService {
 
     private static final Logger logger = LoggerFactory.getLogger(GetAllProductFeedBackService.class);
 
-    public GetAllProductFeedBackService(ProductFeedBackRepo productFeedBackRepo, ServicesDi servicesDi) {
+    public GetAllProductFeedBackService(ProductFeedBackRepo productFeedBackRepo, ServicesDi di) {
         this.productFeedBackRepo = productFeedBackRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<ProductFeedBackAllResDTO> getAllProductFeedBack(String authToken, int offset, int limit) {

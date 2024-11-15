@@ -30,13 +30,13 @@ public class UpdateProductService {
     private final ValidationUtils validationUtils;
     private static final Logger logger = LoggerFactory.getLogger(UpdateProductService.class);
 
-    public UpdateProductService(ProductsRepo productsRepo, ServicesDi servicesDi) {
+    public UpdateProductService(ProductsRepo productsRepo, ServicesDi di) {
         this.productsRepo = productsRepo;
-        this.jwtService = servicesDi.jwtService();
-        this.utilitiesManager = servicesDi.utilitiesManager();
-        this.productMappers = servicesDi.productMappers();
-        this.redisProductCacheRepo = servicesDi.redisProductCacheRepo();
-        this.validationUtils = servicesDi.validationUtils();
+        this.jwtService = di.jwtService();
+        this.utilitiesManager = di.utilitiesManager();
+        this.productMappers = di.productMappers();
+        this.redisProductCacheRepo = di.redisProductCacheRepo();
+        this.validationUtils = di.validationUtils();
     }
 
     public ResponseEntity<ProductResModelDTO> updateProduct( String authToken, ProductReqDTO reqBody, Integer id) {
