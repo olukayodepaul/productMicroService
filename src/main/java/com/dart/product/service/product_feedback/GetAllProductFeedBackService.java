@@ -1,7 +1,7 @@
 package com.dart.product.service.product_feedback;
 
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_feedback.FetchAllProductFeedBackModel;
 import com.dart.product.dto_model.product_feedback.ProductFeedBackAllResDTO;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;

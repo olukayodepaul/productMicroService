@@ -1,7 +1,7 @@
 package com.dart.product.service.product;
 
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
 import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
 import com.dart.product.entity.product_entity.ProductDbEntity;

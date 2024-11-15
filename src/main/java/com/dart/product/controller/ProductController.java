@@ -1,5 +1,6 @@
 package com.dart.product.controller;
 
+import com.dart.product.dependency.di.ProductControllerDi;
 import com.dart.product.dto_model.product_dto_model.AllProductResDTO;
 import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
 import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
@@ -18,17 +19,13 @@ public class ProductController {
     private final GetProductService getProductByIdService;
 
     public ProductController(
-            CreateProductService createProductService,
-            UpdateProductService updateProductService,
-            DeleteProductService deleteProductService,
-            GetAllProductService getAllProductService,
-            GetProductService getProductByIdService
+            ProductControllerDi productControllerDi
     ) {
-        this.createProductService = createProductService;
-        this.updateProductService = updateProductService;
-        this.deleteProductService = deleteProductService;
-        this.getAllProductService = getAllProductService;
-        this.getProductByIdService = getProductByIdService;
+        this.createProductService = productControllerDi.createProductService();
+        this.updateProductService = productControllerDi.updateProductService();
+        this.deleteProductService = productControllerDi.deleteProductService();
+        this.getAllProductService = productControllerDi.getAllProductService();
+        this.getProductByIdService = productControllerDi.getProductByIdService();
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.dart.product.service.product;
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_dto_model.AllProductResDTO;
 import com.dart.product.dto_model.product_dto_model.FetchAllProductsResModel;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
@@ -27,9 +27,7 @@ import java.util.stream.Collectors;
 @Service
 public class GetAllProductService {
 
-    @Value("${pagination.maxOffset}")
-    private int maxOffset;
-
+    private static final Logger logger = LoggerFactory.getLogger(GetAllProductService.class);
     private final ProductsRepo productsRepo;
     private final FilterService jwtService;
     private final UtilitiesManager utilitiesManager;
@@ -37,7 +35,8 @@ public class GetAllProductService {
     private final RedisProductCacheRepo redisProductCacheRepo;
     private final ValidationUtils validationUtils;
 
-    private static final Logger logger = LoggerFactory.getLogger(GetAllProductService.class);
+    @Value("${pagination.maxOffset}")
+    private int maxOffset;
 
     public GetAllProductService(ProductsRepo productsRepo, ServicesDi servicesDi){
         this.productsRepo = productsRepo;

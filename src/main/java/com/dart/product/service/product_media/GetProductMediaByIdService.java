@@ -1,7 +1,7 @@
 package com.dart.product.service.product_media;
 
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_media_model.FetchProductMediaModel;
 import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
@@ -12,7 +12,6 @@ import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

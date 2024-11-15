@@ -1,12 +1,11 @@
 package com.dart.product.service.product_media;
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_media_model.FetchAllProductMediaModel;
 import com.dart.product.dto_model.product_media_model.GetAllMediaDTO;
 import com.dart.product.entity.prodct_media.MediaContentDbEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductMediaContentRepo;
-import com.dart.product.repository.ProductMediaRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;

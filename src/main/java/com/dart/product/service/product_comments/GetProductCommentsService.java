@@ -1,7 +1,7 @@
 package com.dart.product.service.product_comments;
 
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_comments_model.FetchProductCommentModel;
 import com.dart.product.dto_model.product_comments_model.ProductCommentResDTO;
 import com.dart.product.entity.product_comment_entity.ProductCommentDbEntity;

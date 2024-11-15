@@ -1,6 +1,6 @@
 package com.dart.product.service.product_media;
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_media_model.MediaUploadReqModel;
 import com.dart.product.dto_model.product_media_model.MediaUploadResponse;
 import com.dart.product.dto_model.product_media_model.ProductMediaResDTO;

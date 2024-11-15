@@ -1,17 +1,15 @@
 package com.dart.product.service.product_feedback;
 
 
-import com.dart.product.di.ServicesDi;
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_feedback.AddProductFeedBackReqDTO;
 import com.dart.product.dto_model.product_feedback.ProductFeedBackResDTO;
 import com.dart.product.dto_model.product_feedback.SaveAndUpdateProductFeedBackResponse;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackDbEntity;
 import com.dart.product.mapper.ProductMappers;
-import com.dart.product.repository.ProductCommentRepo;
 import com.dart.product.repository.ProductFeedBackRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
-import com.dart.product.service.product_comments.UpdateProductCommentsService;
 import com.dart.product.utilities.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

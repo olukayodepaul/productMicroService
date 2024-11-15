@@ -1,5 +1,6 @@
-package com.dart.product.di;
+package com.dart.product.dependency.impl;
 
+import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
