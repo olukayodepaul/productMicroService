@@ -5,6 +5,7 @@ import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
 import com.dart.product.dto_model.product_feedback.AddProductFeedBackReqDTO;
 import com.dart.product.dto_model.product_specification_model.AddProductSpecReqModel;
 import com.dart.product.dto_model.shipping_details_model.AddShippingDetailsReqModel;
+import com.dart.product.dto_model.product_policy_model.CreateProductPolicyReqDTO;
 import com.dart.product.rate_limit.BruteForceRateLimitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,9 @@ public class ValidationUtils {
     }
 
     public void productValidateRequest(ProductReqDTO request) {
+        validateField(request.getCurrency(), AppConfig.PRODUCT_CURRENCY_VALIDATION);
+        validateField(request.getWarranty_policy_id(), AppConfig.PRODUCT_WARRANTY_VALIDATION);
+        validateField(request.getReturn_policy_id(), AppConfig.PRODUCT_RETURN_POLICY_VALIDATION);
         validateField(request.getName(), AppConfig.PRODUCT_NAME_VALIDATION);
         validateField(request.getDescription(), AppConfig.PRODUCT_DESCRIPTION_VALIDATION );
         validateField(request.getPrice(), AppConfig.PRODUCT_PRICE_VALIDATION);
@@ -70,6 +74,16 @@ public class ValidationUtils {
         }
     }
 
+    public void productPolicyValidateRequest(CreateProductPolicyReqDTO request) {
+//        validateField(request.getComment_text(), AppConfig.PRODUCT_COMMENT_VALIDATION );
+//        if(request.getComment_text().isEmpty()){
+//            throw new CustomRuntimeException(
+//                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.EMPTY_PRODUCT_COMMENT_VALIDATION),
+//                    HttpStatus.BAD_REQUEST
+//            );
+//        }
+    }
+
     public void productFeedBackValidateRequest(AddProductFeedBackReqDTO request) {
         validateField(request.getFeedback_type(), AppConfig.PRODUCT_FEEDBACK_TYPE_VALIDATION );
         if(request.getFeedback_type().isEmpty() ||
@@ -85,6 +99,28 @@ public class ValidationUtils {
     }
 
     public void validateProductRecord(ProductReqDTO request) {
+
+        if(request.getCurrency().isEmpty()){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.EMPTY_PRODUCT_CURRENCY_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+
+        if(!utilitiesManager.isWholeNumberGreaterThanZero(request.getWarranty_policy_id())){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.PRODUCT_WARRANTY_NUMBER_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        if(!utilitiesManager.isWholeNumberGreaterThanZero(request.getReturn_policy_id())){
+            throw new CustomRuntimeException(
+                    new ErrorHandler(false, String.valueOf(HttpStatus.BAD_REQUEST),AppConfig.PRODUCT_RETURN_POLICY_NUMBER_VALIDATION),
+                    HttpStatus.BAD_REQUEST
+            );
+        }
 
         if(request.getName().isEmpty()){
             throw new CustomRuntimeException(

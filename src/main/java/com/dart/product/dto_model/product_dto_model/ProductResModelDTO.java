@@ -27,10 +27,13 @@ public class ProductResModelDTO {
         private String description;
 
         private Double price;
+        private String currency;
         private Double discount;
         private Integer category_id;
         private Integer brand_id;
         private Boolean is_active;
+        private Integer return_policy_id;
+        private Integer warranty_policy_id;
         private LocalDateTime updated_at;
         private LocalDateTime created_at;
     }

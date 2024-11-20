@@ -1,7 +1,7 @@
 package com.dart.product.utilities;
 
 
-import com.dart.product.dto_model.product_policy_model.ProductPolicyDbModel;
+import com.dart.product.entity.product_policy_warranty_entity.ProductPolicyDbEntity;
 import com.dart.product.dto_model.product_policy_model.SaveAndUpdateProductPolicyResponse;
 import com.dart.product.dto_model.product_reviews_model.ProductReviewDbModel;
 import com.dart.product.dto_model.product_reviews_model.SaveAndUpdateProductReviewResponse;
@@ -69,11 +69,11 @@ public class SaveAndUpdateRecord {
         }
     }
 
-    public SaveAndUpdateProductPolicyResponse saveProductPolicy(ProductPolicyDbModel regDetails) {
+    public SaveAndUpdateProductPolicyResponse saveProductPolicy(ProductPolicyDbEntity regDetails) {
         try {
             return new SaveAndUpdateProductPolicyResponse(true, "", productPolicyRepo.save(regDetails)) ;
         } catch (Exception e) {
-            return new SaveAndUpdateProductPolicyResponse(false, e.getMessage(), ProductPolicyDbModel.builder().build());
+            return new SaveAndUpdateProductPolicyResponse(false, e.getMessage(), ProductPolicyDbEntity.builder().build());
         }
     }
 

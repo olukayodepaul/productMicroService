@@ -111,6 +111,7 @@ public class CreateProductMediaService {
         mediaData.setOrganisation_id(organisationId);
         mediaData.setProduct_id(productId);
         mediaData.setProduct_media_id(setProductMediaId);
+        mediaData.setCreated_by(userId);
         mediaData.setId(0);
 
         SaveAndUpdateMediaResponse persistRecord = saveProductContentMedia(productMappers.toProductMedia(mediaData), uploadMedia.getFileName());

@@ -5,8 +5,10 @@ import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
 import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
 import com.dart.product.entity.product_entity.ProductDbEntity;
+import com.dart.product.entity.product_entity.ProductDbTrailEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductsRepo;
+import com.dart.product.repository.ProductsTrailRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -23,6 +25,7 @@ import java.util.UUID;
 public class CreateProductService {
 
    private final ProductsRepo productsRepo;
+   private final ProductsTrailRepo productsTrailRepo;
    private final FilterService jwtService;
    private final UtilitiesManager utilitiesManager;
    private final ProductMappers productMappers;
@@ -31,13 +34,15 @@ public class CreateProductService {
 
    private static final Logger logger = LoggerFactory.getLogger(CreateProductService.class);
 
-    public CreateProductService(ProductsRepo productsRepo, ServicesDi di) {
+    public CreateProductService(ProductsRepo productsRepo, ProductsTrailRepo productsTrailRepo, ServicesDi di) {
         this.productsRepo = productsRepo;
+        this.productsTrailRepo = productsTrailRepo;
         this.jwtService = di.jwtService();
         this.utilitiesManager = di.utilitiesManager();
         this.productMappers = di.productMappers();
         this.redisProductCacheRepo = di.redisProductCacheRepo();
         this.validationUtils = di.validationUtils();
+
     }
 
     public ResponseEntity<ProductResModelDTO> createProduct(String authToken, ProductReqDTO reqBody) {
@@ -50,6 +55,7 @@ public class CreateProductService {
         UUID userId = utilitiesManager.convertStringToUUID(jwtService.extractUserId(jwtToken));
         UUID organisationId = utilitiesManager.convertStringToUUID(jwtService.extractOrganisationId(jwtToken));
 
+
         validateUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
@@ -57,6 +63,7 @@ public class CreateProductService {
         reqBody.setCreated_at(LocalDateTime.now());
         reqBody.setUpdated_at(LocalDateTime.now());
         reqBody.set_active(true);
+        reqBody.setCreated_by(userId);
         reqBody.setId(0);
 
         SaveAndUpdateProductResponse persistRecord = saveProductRecord(productMappers.toProduct(reqBody));
@@ -69,6 +76,10 @@ public class CreateProductService {
         checkIfRecordCached(cacheRecord);
 
         // TODO: Send newly created product to searchMicroService through (gRPC)
+        String email = jwtService.extractEmail(jwtToken);
+        UUID mapOldAndNewRecordWithSingleId = utilitiesManager.generateUUID(email);
+        saveProductTrailRecord(productMappers.mapProductToProductTrail(persistRecord.getProduct(),"create","new", mapOldAndNewRecordWithSingleId));
+
         return new ResponseEntity<>(productMappers
                 .toProductResponseBuilder(persistRecord.getProduct(), AppConfig.CREATE_PRODUCT_RESPONSE), HttpStatus.CREATED);
     }
@@ -113,4 +124,10 @@ public class CreateProductService {
             return new SaveAndUpdateProductResponse(false, e.getMessage(), ProductDbEntity.builder().build());
         }
     }
+
+    //find a way to better manage this
+    private void saveProductTrailRecord(ProductDbTrailEntity regDetails) {
+            productsTrailRepo.save(regDetails) ;
+    }
+
 }

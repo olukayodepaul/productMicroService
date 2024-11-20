@@ -13,7 +13,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddProductPolicyReqModel {
+public class CreateProductPolicyReqDTO {
 
     private Integer product_id;
     private String warranty_description;

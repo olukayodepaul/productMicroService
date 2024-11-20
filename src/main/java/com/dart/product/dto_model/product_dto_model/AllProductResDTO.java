@@ -25,9 +25,12 @@ public class AllProductResDTO {
         private String name;
         private String description;
         private Double price;
+        private String currency;
         private Double discount;
         private Integer category_id;
         private Integer brand_id;
+        private Integer return_policy_id;
+        private Integer warranty_policy_id;
         private Boolean is_active;
         private LocalDateTime updated_at;
         private LocalDateTime created_at;

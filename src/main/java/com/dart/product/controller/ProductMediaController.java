@@ -27,9 +27,7 @@ public class ProductMediaController {
     private final GetProductMediaByProductIdService getProductMediaByProductIdService;
     private final GetAllProductMediaByOrganisation getAllProductMediaByOrganisation;
 
-    public ProductMediaController(
-            ProductMediaControllerDi di
-    ) {
+    public ProductMediaController(ProductMediaControllerDi di) {
         this.createProductMediaService = di.createProductMediaService();
         this.updateProductMediaService = di.updateProductMediaService();
         this.updatePrimaryProductService = di.updatePrimaryProductService();

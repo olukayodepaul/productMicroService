@@ -12,7 +12,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductPolicyOneResModel {
+public class ProductPolicyResDTO {
 
     private boolean status;
     private String message;

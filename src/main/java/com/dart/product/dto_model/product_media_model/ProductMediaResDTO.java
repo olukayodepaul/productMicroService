@@ -27,6 +27,7 @@ public class ProductMediaResDTO {
 
         private Integer product_id;
         private UUID organisation_id;
+        private UUID created_by ;
         private String media_type;
         private Boolean is_primary;
         private Boolean is_active;

@@ -4,8 +4,10 @@ package com.dart.product.service.product;
 import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
 import com.dart.product.entity.product_entity.ProductDbEntity;
+import com.dart.product.entity.product_entity.ProductDbTrailEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductsRepo;
+import com.dart.product.repository.ProductsTrailRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @Service
 public class DeleteProductService {
 
+    private final ProductsTrailRepo productsTrailRepo;
     private final ProductsRepo productsRepo;
     private final FilterService jwtService;
     private final UtilitiesManager utilitiesManager;
@@ -29,8 +32,9 @@ public class DeleteProductService {
 
     private static final Logger logger = LoggerFactory.getLogger(DeleteProductService.class);
 
-    public DeleteProductService(ProductsRepo productsRepo, ServicesDi di) {
+    public DeleteProductService(ProductsRepo productsRepo, ProductsTrailRepo productsTrailRepo, ServicesDi di) {
         this.productsRepo = productsRepo;
+        this.productsTrailRepo = productsTrailRepo;
         this.jwtService = di.jwtService();
         this.utilitiesManager = di.utilitiesManager();
         this.productMappers = di.productMappers();
@@ -63,6 +67,10 @@ public class DeleteProductService {
         boolean deleteCacheRecord = redisProductCacheRepo.deleteProduct(organisationId.toString(), id);
 
         isCacheRecordDeleted(deleteCacheRecord);
+
+        String email = jwtService.extractEmail(jwtToken);
+        UUID mapOldAndNewRecordWithSingleId = utilitiesManager.generateUUID(email);
+        saveProductTrailRecord(productMappers.mapProductToProductTrail(persistRecord.getProduct(),"delete","new", mapOldAndNewRecordWithSingleId));
 
         // TODO: Send newly created product to searchMicroService through (gRPC)
         return new ResponseEntity<>(productMappers.toProductResponseBuilder(persistRecord.getProduct(), AppConfig.DELETE_PRODUCT_RESPONSE), HttpStatus.OK);
@@ -114,6 +122,11 @@ public class DeleteProductService {
             //logger.error("DbSaveUpdatedService::updateProductRecord: {}", e.getMessage());
             return new SaveAndUpdateProductResponse(false, e.getMessage(), ProductDbEntity.builder().build());
         }
+    }
+
+    //find a way to better manage this
+    private void saveProductTrailRecord(ProductDbTrailEntity regDetails) {
+        productsTrailRepo.save(regDetails) ;
     }
 
 }

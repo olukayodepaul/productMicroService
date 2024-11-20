@@ -24,20 +24,30 @@ public class MediaContentDbEntity {
     @Column(name = "product_media_id")
     private Integer product_media_id;
 
+    @Column(name = "created_by")
+    private UUID createdBy ;
+
     @Column(name = "product_id")
     private Integer productId;
+
     @Column(name = "organisation_id")
     private UUID organisationId;
+
     @Column(name = "media_type")
     private String mediaType;
+
     @Column(name = "media_url")
     private String mediaUrl;
+
     @Column(name = "is_primary")
     private Boolean isPrimary;
+
     @Column(name = "is_active")
     private Boolean isActive;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

@@ -57,7 +57,7 @@ public class CreateProductFeedBackService {
         validationUserRole(roles);
         validateBruteForceProtection(userId.toString());
 
-        Optional<ProductFeedBackDbEntity> isUserPresent =  productFeedBackRepo.findByProductIdAndOrganisationIdAndUserId(productId, organisationId, userId);
+        Optional<ProductFeedBackDbEntity> isUserPresent =  checkIfProductFeedBackExist(productId, organisationId, userId);
 
         reqBody.setId(0);
         reqBody.setCreated_at(LocalDateTime.now());
@@ -131,6 +131,11 @@ public class CreateProductFeedBackService {
         } catch (Exception e) {
             return new SaveAndUpdateProductFeedBackResponse(false, e.getMessage(), ProductFeedBackDbEntity.builder().build());
         }
+    }
+
+    private Optional<ProductFeedBackDbEntity> checkIfProductFeedBackExist(Integer productId, UUID organisationId, UUID userId){
+        return    productFeedBackRepo.findByProductIdAndOrganisationIdAndUserId(productId, organisationId, userId);
+
     }
 
 }

@@ -1,11 +1,6 @@
 package com.dart.product.controller;
 
 
-import com.dart.product.dto_model.product_policy_model.AddProductPolicyReqModel;
-import com.dart.product.dto_model.product_policy_model.ProductPolicyAllResModel;
-import com.dart.product.dto_model.product_policy_model.ProductPolicyOneResModel;
-import com.dart.product.service.product_policies.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

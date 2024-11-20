@@ -1,4 +1,4 @@
-package com.dart.product.service.product_policies;
+package com.dart.product.service.product_policies_warranty;
 
 import org.springframework.stereotype.Service;
 

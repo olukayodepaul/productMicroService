@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-
 @Service
 public class GetAllProductMediaByOrganisation {
 
@@ -73,29 +72,29 @@ public class GetAllProductMediaByOrganisation {
         limit = calculateValidLimit(limit);
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));
 
-        ProductMediaListModel findPersistedProductMediaContent = redisProductCacheRepo.findAllProductMediaByOrganisationId(organisationId.toString());
+        ProductMediaListModel getPersistedProductMediaContent = redisProductCacheRepo.findAllProductMediaByOrganisationId(organisationId.toString());
 
         List<MediaContentDbEntity> itemFilter;
         ProductMediaResponseDTO.PaginationMetadata pagination;
 
-        if (findPersistedProductMediaContent.getStatus()) {
+        if (getPersistedProductMediaContent.getStatus()) {
 
-            List<ProductMediaCacheEntity> findPagingProductMedia = redisProductCacheRepo.findPagingProductMediaByOrganisationId(organisationId.toString()).getProductMedia();
-            List<MediaDbEntity> paginatedProduct = productMappers.mapProductMediaCachePage(findPagingProductMedia);
+            List<ProductMediaCacheEntity> getPersistedPageProductMedia = redisProductCacheRepo.findPagingProductMediaByOrganisationId(organisationId.toString()).getProductMedia();
+            List<MediaDbEntity> pageProductMedia = productMappers.mapProductMediaCachePage(getPersistedPageProductMedia);
 
-            int totalProducts = paginatedProduct.size();
+            int totalProducts = pageProductMedia.size();
             int start = Math.min(offset, totalProducts);
             int end = Math.min(start + limit, totalProducts);
 
             List<MediaDbEntity>  itemFilters = (start >= totalProducts) ?
                     List.of() :
-                    paginatedProduct.subList(start, end);
+                    pageProductMedia.subList(start, end);
 
-            List<ProductContentMediaCacheEntity> finds = redisProductCacheRepo
+            List<ProductContentMediaCacheEntity> getProductMediaByFilterOrganisationId = redisProductCacheRepo
                     .findOnlyFilteredProductMediaByOrganisationId(organisationId.toString(), ListOfProductId(itemFilters))
                     .getProductMedia();
 
-            itemFilter = productMappers.mapProductMediaCacheToProductDTO(finds);
+            itemFilter = productMappers.mapProductMediaCacheToProductDTO(getProductMediaByFilterOrganisationId);
             pagination = createPaginationMetadataFromCache(totalProducts, limit, offset);
 
         } else {
@@ -199,7 +198,7 @@ public class GetAllProductMediaByOrganisation {
                 .build();
     }
 
-    private List<Integer> ListOfProductId (List<MediaDbEntity> itemFilters){
+    private List<Integer> ListOfProductId (List<MediaDbEntity> itemFilters) {
         return itemFilters.stream()
                 .map(MediaDbEntity::getProductId)
                 .distinct()

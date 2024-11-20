@@ -19,8 +19,13 @@ import com.dart.product.dto_model.product_tags_model.*;
 import com.dart.product.dto_model.related_products_model.*;
 import com.dart.product.dto_model.shipping_details_model.*;
 import com.dart.product.dto_model.special_offers_model.*;
+import com.dart.product.entity.product_entity.ProductDbTrailEntity;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackCacheEntity;
 import com.dart.product.entity.product_feedback_entity.ProductFeedBackDbEntity;
+import com.dart.product.dto_model.product_policy_model.CreateProductPolicyReqDTO;
+import com.dart.product.dto_model.product_policy_model.ProductPolicyResDTO;
+import com.dart.product.entity.product_policy_warranty_entity.ProductPolicyCacheEntity;
+import com.dart.product.entity.product_policy_warranty_entity.ProductPolicyDbEntity;
 import com.dart.product.utilities.UtilitiesManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -30,6 +35,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -49,15 +55,17 @@ public class ProductMappers {
                 .name(productDbEntity.getName())
                 .description(productDbEntity.getDescription())
                 .price(productDbEntity.getPrice())
+                .currency(productDbEntity.getCurrency())
                 .discount(productDbEntity.getDiscount())
                 .category_id(productDbEntity.getCategory_id())
                 .brand_id(productDbEntity.getBrand_id())
+                .return_policy_id(productDbEntity.getReturn_policy_id())
+                .warranty_policy_id(productDbEntity.getWarranty_policy_id())
                 .is_active(productDbEntity.getIsActive())
                 .updated_at(productDbEntity.getUpdated_at())
                 .created_at(productDbEntity.getCreated_at())
                 .build();
     }
-
 
     public ProductDbEntity toProduct(ProductReqDTO product) {
         return ProductDbEntity.builder()
@@ -66,12 +74,39 @@ public class ProductMappers {
                 .name(product.getName().toLowerCase())
                 .description(product.getDescription().toLowerCase())
                 .price(product.getPrice())
+                .currency(product.getCurrency())
                 .discount(product.getDiscount())
-                .category_id(product.getCategory_id())
-                .brand_id(product.getBrand_id())
+                .category_id(Integer.parseInt(product.getCategory_id()))
+                .created_by(product.getCreated_by())
+                .brand_id(Integer.parseInt(product.getBrand_id()))
+                .warranty_policy_id(Integer.parseInt(product.getWarranty_policy_id()))
+                .return_policy_id(Integer.parseInt(product.getReturn_policy_id()))
                 .created_at(LocalDateTime.now())
                 .updated_at(LocalDateTime.now())
                 .isActive(true)
+                .build();
+    }
+
+    public ProductDbTrailEntity mapProductToProductTrail(ProductDbEntity product,String changeType, String oldNew, UUID consolidated){
+        return ProductDbTrailEntity.builder()
+                .products_id(product.getId())
+                .organisationId(product.getOrganisationId())
+                .created_updated_deleted_by(product.getCreated_by())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .currency(product.getCurrency())
+                .discount(product.getDiscount())
+                .category_id(product.getCategory_id())
+                .brand_id(product.getBrand_id())
+                .return_policy_id(product.getReturn_policy_id())
+                .warranty_policy_id(product.getWarranty_policy_id())
+                .change_type(changeType)
+                .old_new_change(oldNew)
+                .consolidated(consolidated)
+                .isActive(product.getIsActive())
+                .created_at(product.getCreated_at())
+                .updated_at(LocalDateTime.now())
                 .build();
     }
 
@@ -82,9 +117,12 @@ public class ProductMappers {
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
+                .currency(product.getCurrency())
                 .discount(product.getDiscount())
                 .category_id(product.getCategory_id())
                 .brand_id(product.getBrand_id())
+                .warranty_policy_id(product.getWarranty_policy_id())
+                .return_policy_id(product.getReturn_policy_id())
                 .is_active(product.getIsActive())
                 .updated_at(product.getUpdated_at())
                 .created_at(product.getCreated_at())
@@ -102,9 +140,12 @@ public class ProductMappers {
                                 .name(reqModel.getName())
                                 .description(reqModel.getDescription())
                                 .price(reqModel.getPrice())
+                                .currency(reqModel.getCurrency())
                                 .discount(reqModel.getDiscount())
                                 .category_id(reqModel.getCategory_id())
                                 .brand_id(reqModel.getBrand_id())
+                                .warranty_policy_id(reqModel.getWarranty_policy_id())
+                                .return_policy_id(reqModel.getReturn_policy_id())
                                 .created_at(reqModel.getCreated_at())
                                 .updated_at(reqModel.getUpdated_at())
                                 .is_active(reqModel.getIsActive())
@@ -129,7 +170,6 @@ public class ProductMappers {
                 .build();
     }
 
-
     public Page<ProductDbEntity> toCacheFromProduct(List<ProductCacheEntity> products, Pageable pageable) {
         List<ProductDbEntity> productDbEntities = products.stream()
                 .map(product -> ProductDbEntity.builder()
@@ -138,9 +178,12 @@ public class ProductMappers {
                         .description(product.getDescription())
                         .organisationId(product.getOrganisation_id())
                         .price(product.getPrice())
+                        .currency(product.getCurrency())
                         .discount(product.getDiscount())
                         .category_id(product.getCategory_id())
                         .brand_id(product.getBrand_id())
+                        .return_policy_id(product.getReturn_policy_id())
+                        .warranty_policy_id(product.getWarranty_policy_id())
                         .isActive(product.getIs_active())
                         .updated_at(product.getUpdated_at())
                         .created_at(product.getCreated_at())
@@ -1043,12 +1086,12 @@ public class ProductMappers {
     }
 
     //product policies
-    public ProductPolicyOneResModel productPolicyOneResponseBuilder(ProductPolicyDbModel reqBody, String message) {
-        return ProductPolicyOneResModel.builder()
+    public ProductPolicyResDTO productPolicyOneResponseBuilder(ProductPolicyDbEntity reqBody, String message) {
+        return ProductPolicyResDTO.builder()
                 .status(true)
                 .message(message)
                 .product_policies(
-                        ProductPolicyOneResModel.ProductPolicy
+                        ProductPolicyResDTO.ProductPolicy
                                 .builder()
                                 .id(reqBody.getId())
                                 .product_id(reqBody.getProductId())
@@ -1064,8 +1107,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductPolicyDbModel mapAddProductPolicyReqModelToDbModel(AddProductPolicyReqModel reqModel) {
-        return ProductPolicyDbModel.builder()
+    public ProductPolicyDbEntity mapAddProductPolicyReqModelToDbModel(CreateProductPolicyReqDTO reqModel) {
+        return ProductPolicyDbEntity.builder()
                 .id(reqModel.getId())
                 .productId(reqModel.getProduct_id())
                 .organisationId(reqModel.getOrganisation_id())
@@ -1078,8 +1121,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductPolicyCacheModel mapProductPolicyToCache(ProductPolicyDbModel reqBody) {
-        return ProductPolicyCacheModel.builder()
+    public ProductPolicyCacheEntity mapProductPolicyToCache(ProductPolicyDbEntity reqBody) {
+        return ProductPolicyCacheEntity.builder()
                 .id(reqBody.getId())
                 .productId(reqBody.getProductId())
                 .organisationId(reqBody.getOrganisationId())
@@ -1092,8 +1135,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductPolicyDbModel mapCacheToProductPolicy(ProductPolicyCacheModel reqBody) {
-        return ProductPolicyDbModel.builder()
+    public ProductPolicyDbEntity mapCacheToProductPolicy(ProductPolicyCacheEntity reqBody) {
+        return ProductPolicyDbEntity.builder()
                 .id(reqBody.getId())
                 .productId(reqBody.getProductId())
                 .organisationId(reqBody.getOrganisationId())
@@ -1106,7 +1149,7 @@ public class ProductMappers {
                 .build();
     }
 
-    public ProductPolicyAllResModel productPolicyResponseBuilder(List<ProductPolicyDbModel> reqBody) {
+    public ProductPolicyAllResModel productPolicyResponseBuilder(List<ProductPolicyDbEntity> reqBody) {
         return ProductPolicyAllResModel.builder()
                 .status(true)
                 .message("")
@@ -1128,8 +1171,8 @@ public class ProductMappers {
                 .build();
     }
 
-    public List<ProductPolicyDbModel> mapAllCacheToProductPolicy(List<ProductPolicyCacheModel> reqBody) {
-        return reqBody.stream().map(spec -> ProductPolicyDbModel.builder()
+    public List<ProductPolicyDbEntity> mapAllCacheToProductPolicy(List<ProductPolicyCacheEntity> reqBody) {
+        return reqBody.stream().map(spec -> ProductPolicyDbEntity.builder()
                 .id(spec.getId())
                 .productId(spec.getProductId())
                 .organisationId(spec.getOrganisationId())

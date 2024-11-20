@@ -5,8 +5,10 @@ import com.dart.product.dependency.di.ServicesDi;
 import com.dart.product.dto_model.product_dto_model.ProductReqDTO;
 import com.dart.product.dto_model.product_dto_model.ProductResModelDTO;
 import com.dart.product.entity.product_entity.ProductDbEntity;
+import com.dart.product.entity.product_entity.ProductDbTrailEntity;
 import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductsRepo;
+import com.dart.product.repository.ProductsTrailRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
 import com.dart.product.utilities.*;
@@ -23,6 +25,7 @@ import java.util.UUID;
 public class UpdateProductService {
 
     private final ProductsRepo productsRepo;
+    private final ProductsTrailRepo productsTrailRepo;
     private final FilterService jwtService;
     private final UtilitiesManager utilitiesManager;
     private final ProductMappers productMappers;
@@ -30,8 +33,9 @@ public class UpdateProductService {
     private final ValidationUtils validationUtils;
     private static final Logger logger = LoggerFactory.getLogger(UpdateProductService.class);
 
-    public UpdateProductService(ProductsRepo productsRepo, ServicesDi di) {
+    public UpdateProductService(ProductsRepo productsRepo, ProductsTrailRepo productsTrailRepo, ServicesDi di) {
         this.productsRepo = productsRepo;
+        this.productsTrailRepo = productsTrailRepo;
         this.jwtService = di.jwtService();
         this.utilitiesManager = di.utilitiesManager();
         this.productMappers = di.productMappers();
@@ -54,11 +58,16 @@ public class UpdateProductService {
 
         ProductDbEntity existingProduct = findByIdAndOrganisationIdAndIsActive(id, organisationId);
 
+        String email = jwtService.extractEmail(jwtToken);
+        UUID mapOldAndNewRecordWithSingleId = utilitiesManager.generateUUID(email);
+        saveProductTrailRecord(productMappers.mapProductToProductTrail(existingProduct,"update","old", mapOldAndNewRecordWithSingleId));
+
         reqBody.setOrganisation_id(existingProduct.getOrganisationId());
         reqBody.setCreated_at(existingProduct.getCreated_at());
         reqBody.setUpdated_at(LocalDateTime.now());
         reqBody.set_active(existingProduct.getIsActive());
         reqBody.setId(existingProduct.getId());
+        reqBody.setCreated_by(existingProduct.getCreated_by());
         SaveAndUpdateProductResponse persistRecord = saveProductRecord(productMappers.toProduct(reqBody));
 
         checkIfRecordPersisted(persistRecord);
@@ -66,10 +75,10 @@ public class UpdateProductService {
         boolean cacheRecord = redisProductCacheRepo.saveUpdateProduct(productMappers.toProductCache(persistRecord.getProduct()));
 
         checkIfRecordCached(cacheRecord);
+        saveProductTrailRecord(productMappers.mapProductToProductTrail(persistRecord.getProduct(),"update","new", mapOldAndNewRecordWithSingleId));
 
         // TODO: Send newly created product to searchMicroService through (gRPC)
         return new ResponseEntity<>(productMappers.toProductResponseBuilder(persistRecord.getProduct(), AppConfig.UPDATE_PRODUCT_RESPONSE), HttpStatus.OK);
-
     }
 
     private void checkIfRecordCached(boolean isRecord) {
@@ -119,6 +128,11 @@ public class UpdateProductService {
             logger.error("UpdateProductService::saveProductRecord: {}", e.getMessage());
             return new SaveAndUpdateProductResponse(false, e.getMessage(), ProductDbEntity.builder().build());
         }
+    }
+
+    //find a way to better manage this
+    private void saveProductTrailRecord(ProductDbTrailEntity regDetails) {
+        productsTrailRepo.save(regDetails) ;
     }
 
 }

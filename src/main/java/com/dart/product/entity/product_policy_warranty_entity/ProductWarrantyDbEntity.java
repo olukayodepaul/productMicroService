@@ -1,4 +1,4 @@
-package com.dart.product.dto_model.product_policy_model;
+package com.dart.product.entity.product_policy_warranty_entity;
 
 
 import jakarta.persistence.*;
@@ -6,34 +6,43 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.redis.core.RedisHash;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@RedisHash("product_policies")
-public class ProductPolicyCacheModel implements Serializable {
+@Table(name = "product_warranty")
+public class ProductWarrantyDbEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "product_id")
     private Integer productId;
+
+    @Column(name = "organisation_id")
     private UUID organisationId;
 
-    private String warrantyDescription;
-    private String warrantyPeriod;
-    private String returnPolicyDescription;
+    private UUID created_by ;
 
+    @Column(name = "warranty_description")
+    private String warrantyDescription;
+
+    @Column(name = "warranty_period")
+    private String warrantyPeriod;
+
+    @Column(name = "is_active")
     private boolean isActive;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
 }

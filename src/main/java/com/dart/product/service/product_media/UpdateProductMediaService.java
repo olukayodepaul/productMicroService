@@ -79,6 +79,7 @@ public class UpdateProductMediaService {
         mediaData.setOrganisation_id(getPersistedMedia.getOrganisationId());
         mediaData.setProduct_id(getPersistedMedia.getProductId());
         mediaData.setId(getPersistedMedia.getId());
+        mediaData.setCreated_by(getPersistedMedia.getCreatedBy());
 
         SaveAndUpdateMediaResponse persistRecord = saveProductMedia(productMappers.toProductMedia(mediaData), uploadMedia.getFileName());
         checkIfRecordPersisted(persistRecord);

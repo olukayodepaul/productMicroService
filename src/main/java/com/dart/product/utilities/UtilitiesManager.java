@@ -134,4 +134,5 @@ public class UtilitiesManager {
     public boolean isWholeNumberGreaterThanZero(String input) {
         return input.matches("^[1-9]\\d*$");
     }
+
 }

@@ -22,6 +22,7 @@ public class MediaUploadReqModel {
     private Integer id;
     private Integer product_media_id;
     private UUID organisation_id;
+    private UUID created_by ;
     private Integer product_id;
     private String media_type;
     private Boolean is_primary;

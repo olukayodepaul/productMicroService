@@ -1,4 +1,4 @@
-package com.dart.product.dto_model.product_policy_model;
+package com.dart.product.entity.product_policy_warranty_entity;
 
 
 import jakarta.persistence.*;
@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -16,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "product_policies")
-public class ProductPolicyDbModel {
+public class ProductPolicyDbEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,11 +27,7 @@ public class ProductPolicyDbModel {
     @Column(name = "organisation_id")
     private UUID organisationId;
 
-    @Column(name = "warranty_description")
-    private String warrantyDescription;
-
-    @Column(name = "warranty_period")
-    private String warrantyPeriod;
+    private UUID created_by ;
 
     @Column(name = "return_policy_description")
     private String returnPolicyDescription;
@@ -47,4 +42,3 @@ public class ProductPolicyDbModel {
     private LocalDateTime createdAt;
 
 }
-

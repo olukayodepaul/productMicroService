@@ -9,7 +9,6 @@ import com.dart.product.mapper.ProductMappers;
 import com.dart.product.repository.ProductCommentRepo;
 import com.dart.product.repository.RedisProductCacheRepo;
 import com.dart.product.security.FilterService;
-import com.dart.product.service.product.CreateProductService;
 import com.dart.product.utilities.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,4 +117,3 @@ public class CreateProductCommentsService {
     }
 
 }
-

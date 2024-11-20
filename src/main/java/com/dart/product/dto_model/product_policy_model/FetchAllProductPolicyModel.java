@@ -1,6 +1,7 @@
 package com.dart.product.dto_model.product_policy_model;
 
 
+import com.dart.product.entity.product_policy_warranty_entity.ProductPolicyCacheEntity;
 import lombok.*;
 import java.util.List;
 
@@ -14,5 +15,5 @@ import java.util.List;
 public class FetchAllProductPolicyModel {
     private Boolean status;
     private String message;
-    private List<ProductPolicyCacheModel> productPolicy;
+    private List<ProductPolicyCacheEntity> productPolicy;
 }

@@ -1,4 +1,5 @@
-package com.dart.product.entity.prodct_media;
+package com.dart.product.entity.product_policy_warranty_entity;
+
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.redis.core.RedisHash;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -16,22 +18,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@RedisHash("product_media_content")
-public class ProductContentMediaCacheEntity implements Serializable {
+@RedisHash("product_policies")
+public class ProductPolicyCacheEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Integer product_media_id;
-    private Integer product_id;
-    private UUID organisation_id;
+    private Integer productId;
+    private UUID organisationId;
     private UUID created_by ;
-    private String media_type;
-    private String media_url;
-    private Boolean is_primary;
-    private Boolean isActive;
-    private LocalDateTime updated_at;
-    private LocalDateTime created_at;
-
+    private String returnPolicyDescription;
+    private boolean isActive;
+    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt;
 }
+

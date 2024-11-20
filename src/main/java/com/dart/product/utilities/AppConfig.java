@@ -20,6 +20,12 @@ public class AppConfig {
     public static final String INVALID_PRODUCT_CATEGORY = "Invalid product category";
     public static final String INVALID_PRODUCT_BRAND_ID = "Invalid product brand id";
     public static final String INVALID_PRODUCT_ID = "Invalid product id";
+    public static final String PRODUCT_WARRANTY_VALIDATION = "Product Warranty";
+    public static final String PRODUCT_CURRENCY_VALIDATION = "Product Currency";
+    public static final String PRODUCT_RETURN_POLICY_VALIDATION = "Product Return Policy";
+    public static final String PRODUCT_WARRANTY_NUMBER_VALIDATION = "Invalid Product warranty";
+    public static final String PRODUCT_RETURN_POLICY_NUMBER_VALIDATION = "Invalid Product return policy";
+    public static final String EMPTY_PRODUCT_CURRENCY_VALIDATION = "Product Currency cant be empty";
 
 
     //user role protection response

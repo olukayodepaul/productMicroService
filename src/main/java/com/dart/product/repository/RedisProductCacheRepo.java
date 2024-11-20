@@ -16,7 +16,7 @@ import com.dart.product.dto_model.product_dto_model.FetchProductsResModel;
 import com.dart.product.entity.product_entity.ProductCacheEntity;
 import com.dart.product.dto_model.product_policy_model.FetchAllProductPolicyModel;
 import com.dart.product.dto_model.product_policy_model.FetchOnelProductPolicyModel;
-import com.dart.product.dto_model.product_policy_model.ProductPolicyCacheModel;
+import com.dart.product.entity.product_policy_warranty_entity.ProductPolicyCacheEntity;
 import com.dart.product.dto_model.product_reviews_model.FetchAllProductReviewModel;
 import com.dart.product.dto_model.product_reviews_model.FetchOneProductReviewModel;
 import com.dart.product.dto_model.product_reviews_model.ProductReviewCacheModel;
@@ -598,7 +598,7 @@ public class RedisProductCacheRepo {
     }
 
     //save record for product policies
-    public Boolean saveUpdateProductPolicy(ProductPolicyCacheModel productSpec) {
+    public Boolean saveUpdateProductPolicy(ProductPolicyCacheEntity productSpec) {
         try {
             // Sub-key for identifying the user by their email
             String subKey = productSpec.getId().toString();
@@ -615,7 +615,7 @@ public class RedisProductCacheRepo {
         }
     }
 
-    public boolean deleteProductPolicy(ProductPolicyCacheModel productSpec) {
+    public boolean deleteProductPolicy(ProductPolicyCacheEntity productSpec) {
         try {
 
             String subKey = productSpec.getId().toString();
@@ -640,12 +640,12 @@ public class RedisProductCacheRepo {
             if (cachedObject == null) {
                 return new FetchOnelProductPolicyModel(false,  "No user found in redis", null);
             }
-            ProductPolicyCacheModel cacheModel = objectMapper.convertValue(cachedObject, ProductPolicyCacheModel.class);
+            ProductPolicyCacheEntity cacheModel = objectMapper.convertValue(cachedObject, ProductPolicyCacheEntity.class);
             return new FetchOnelProductPolicyModel(true, "", cacheModel);
 
         } catch (Exception e) {
             logger.error("RedisCacheService::findOneProductPolicy - Error occurred while trying to fetch user details ID {}: {}", "", e.getMessage());
-            return new FetchOnelProductPolicyModel(false, e.getMessage(), new ProductPolicyCacheModel());
+            return new FetchOnelProductPolicyModel(false, e.getMessage(), new ProductPolicyCacheEntity());
         }
     }
 
@@ -655,8 +655,8 @@ public class RedisProductCacheRepo {
             Map<Object, Object> productPolicyMap = redisTemplate.opsForHash().entries(key);
 
             if (!productPolicyMap.isEmpty()) {
-                List<ProductPolicyCacheModel> productPolicy = productPolicyMap.values().stream()
-                        .map(value -> objectMapper.convertValue(value, ProductPolicyCacheModel.class))
+                List<ProductPolicyCacheEntity> productPolicy = productPolicyMap.values().stream()
+                        .map(value -> objectMapper.convertValue(value, ProductPolicyCacheEntity.class))
                         .collect(Collectors.toList());
                 return new FetchAllProductPolicyModel(true, "Product Specification fetched successfully", productPolicy);
             }
